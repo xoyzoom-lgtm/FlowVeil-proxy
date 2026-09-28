@@ -109,29 +109,19 @@ public partial class StatusBarView
             trayMenu.Items.Add(servers);
 
             var mode = Item("Режим транспорта");
-            var tun = vm.EnableTun;
-            mode.Items.Add(Item("Системный прокси", () =>
+            if (home != null)
             {
-                if (home != null)
+                foreach (var (id, group, title) in HuppHomeViewModel.Modes)
                 {
-                    home.ModeIndex = HuppHomeViewModel.ModeProxy;
+                    var target = id;
+                    var header = group == "TUN" ? $"TUN · {title}" : title;
+                    mode.Items.Add(Item(header, () => home.Mode = target, home.Mode == target));
                 }
-                else
-                {
-                    vm.EnableTun = false;
-                }
-            }, !tun && home?.ModeIndex != HuppHomeViewModel.ModeTun));
-            mode.Items.Add(Item("TUN (весь трафик)", () =>
+            }
+            else
             {
-                if (home != null)
-                {
-                    home.ModeIndex = HuppHomeViewModel.ModeTun;
-                }
-                else
-                {
-                    vm.EnableTun = true;
-                }
-            }, tun || home?.ModeIndex == HuppHomeViewModel.ModeTun));
+                mode.Items.Add(Item("TUN", () => vm.EnableTun = !vm.EnableTun, vm.EnableTun));
+            }
             trayMenu.Items.Add(mode);
 
             if (vm.RoutingItems.Count > 0)

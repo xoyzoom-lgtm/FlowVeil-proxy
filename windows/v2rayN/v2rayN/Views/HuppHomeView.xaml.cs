@@ -22,6 +22,7 @@ public partial class HuppHomeView : UserControl
         btnUpdateSubs.Click += async (_, _) => await Run(() => _main?.UpdateSubscriptionProcess("", false));
         btnAdd.Click += async (_, _) => await PasteAsync();
         btnEmptyPaste.Click += async (_, _) => await PasteAsync();
+        btnMode.Click += (_, _) => OpenModeMenu();
     }
 
     public void Attach(MainWindowViewModel main)
@@ -69,6 +70,39 @@ public partial class HuppHomeView : UserControl
             return;
         }
         await Run(() => _main.AddServerViaClipboardAsync(data));
+    }
+
+    /// <summary>Grouped mode list like Happ: Прокси / TUN (sing-box, gVisor, Xray) / Другое.</summary>
+    private void OpenModeMenu()
+    {
+        if (_vm == null)
+        {
+            return;
+        }
+        var menu = new ContextMenu
+        {
+            PlacementTarget = btnMode,
+            Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom,
+            MinWidth = btnMode.ActualWidth,
+        };
+        string? group = null;
+        foreach (var (id, itemGroup, title) in HuppHomeViewModel.Modes)
+        {
+            if (itemGroup != group)
+            {
+                if (group != null)
+                {
+                    menu.Items.Add(new Separator());
+                }
+                group = itemGroup;
+                menu.Items.Add(new MenuItem { Header = itemGroup, IsEnabled = false, FontWeight = FontWeights.Bold });
+            }
+            var item = new MenuItem { Header = title, IsChecked = _vm.Mode == id };
+            var mode = id;
+            item.Click += (_, _) => _vm.Mode = mode;
+            menu.Items.Add(item);
+        }
+        menu.IsOpen = true;
     }
 
     #region Subscription cards

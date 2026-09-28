@@ -111,6 +111,25 @@ jobs:
           Copy-Item xray/xray.exe Hupp/bin/xray/
           Copy-Item xray/*.dat Hupp/bin/
 
+      - name: Add sing-box and wintun (TUN mode)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # sing-box runs the TUN device by default; Hupp supports sing-box up to 1.14.x.
+          $headers = @{ Authorization = "Bearer $env:GH_TOKEN" }
+          $releases = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=100"
+          $rel = $releases | Where-Object { -not $_.prerelease -and $_.tag_name -match '^v1\.(1[0-4])\.\d+$' } | Select-Object -First 1
+          $ver = $rel.tag_name.TrimStart('v')
+          Write-Host "sing-box $ver"
+          Invoke-WebRequest "https://github.com/SagerNet/sing-box/releases/download/v$ver/sing-box-$ver-windows-amd64.zip" -OutFile singbox.zip
+          Expand-Archive singbox.zip singbox
+          New-Item -ItemType Directory -Force Hupp/bin/sing_box | Out-Null
+          Copy-Item singbox/*/* Hupp/bin/sing_box/ -Recurse -Force
+          # Xray's own TUN needs wintun.dll next to xray.exe.
+          Invoke-WebRequest https://www.wintun.net/builds/wintun-0.14.1.zip -OutFile wintun.zip
+          Expand-Archive wintun.zip wintun
+          Copy-Item wintun/wintun/bin/amd64/wintun.dll Hupp/bin/xray/
+
       - name: Build installer
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"

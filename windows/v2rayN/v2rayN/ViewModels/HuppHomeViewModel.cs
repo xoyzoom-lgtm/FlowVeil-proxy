@@ -45,13 +45,29 @@ public sealed class HuppSubCard : HuppObservable
 /// </summary>
 public sealed class HuppHomeViewModel : HuppObservable
 {
-    public const int ModeProxy = 0;
-    public const int ModeTun = 1;
+    public const string ModeProxy = "proxy";
+    public const string ModeTunSingbox = "tun-singbox";
+    public const string ModeTunGvisor = "tun-gvisor";
+    public const string ModeTunXray = "tun-xray";
+    public const string ModeLocal = "local";
+
+    /// <summary>Transport modes shown in the Happ-style picker; Group is the section header.</summary>
+    public static readonly IReadOnlyList<(string Id, string Group, string Title)> Modes =
+    [
+        (ModeProxy, "Прокси", "Системный прокси"),
+        (ModeTunSingbox, "TUN", "sing-box"),
+        (ModeTunGvisor, "TUN", "sing-box (gVisor)"),
+        (ModeTunXray, "TUN", "Xray TUN"),
+        (ModeLocal, "Другое", "Только локальный порт"),
+    ];
+
+    public static bool IsTunMode(string mode) => mode.StartsWith("tun-", StringComparison.Ordinal);
 
     private static readonly string ModeFile = "hupp_mode.txt";
     private readonly Config _config;
     private readonly DispatcherTimer _timer;
     private DateTime? _connectedSince;
+    private bool _localConnected;
 
     public ProfilesViewModel Profiles { get; }
     public StatusBarViewModel Status { get; }
@@ -62,7 +78,7 @@ public sealed class HuppHomeViewModel : HuppObservable
         _config = AppManager.Instance.Config;
         Profiles = profiles;
         Status = status;
-        _modeIndex = LoadMode();
+        _mode = LoadMode();
 
         Profiles.SubItems.CollectionChanged += (_, _) => RebuildCards();
         Profiles.ProfileItems.CollectionChanged += OnProfilesChanged;
@@ -95,20 +111,31 @@ public sealed class HuppHomeViewModel : HuppObservable
     private string _timerText = "00:00:00";
     public string TimerText { get => _timerText; private set => Set(ref _timerText, value); }
 
-    private int _modeIndex;
-    public int ModeIndex
+    private string _mode;
+    public string Mode
     {
-        get => _modeIndex;
+        get => _mode;
         set
         {
-            if (Set(ref _modeIndex, value))
+            if (value.IsNullOrEmpty() || !Set(ref _mode, value))
             {
-                SaveMode(value);
-                if (IsConnected)
-                {
-                    _ = ConnectAsync();
-                }
+                return;
             }
+            SaveMode(value);
+            Raise(nameof(ModeTitle));
+            if (IsConnected)
+            {
+                _ = ConnectAsync();
+            }
+        }
+    }
+
+    public string ModeTitle
+    {
+        get
+        {
+            var mode = Modes.FirstOrDefault(m => m.Id == _mode);
+            return mode.Id == null ? string.Empty : mode.Group == "TUN" ? $"TUN · {mode.Title}" : mode.Title;
         }
     }
 
@@ -148,23 +175,49 @@ public sealed class HuppHomeViewModel : HuppObservable
 
     public async Task ConnectAsync()
     {
-        if (ModeIndex == ModeTun)
+        if (IsTunMode(_mode))
         {
+            // TUN engine: sing-box handles the TUN device ("legacy protect"), or Xray does it itself.
+            var tun = _config.TunModeItem;
+            var legacy = _mode != ModeTunXray;
+            var stack = _mode == ModeTunGvisor ? "gvisor" : _mode == ModeTunSingbox ? "system" : tun.Stack;
+            var changed = tun.EnableLegacyProtect != legacy || tun.Stack != stack;
+            tun.EnableLegacyProtect = legacy;
+            tun.Stack = stack;
+            _localConnected = false;
             Status.SystemProxySelected = (int)ESysProxyType.ForcedClear;
+            if (changed)
+            {
+                await ConfigHandler.SaveConfig(_config);
+            }
+            if (Status.EnableTun && changed)
+            {
+                Status.ReloadRequested.Publish();
+            }
             Status.EnableTun = true;
+        }
+        else if (_mode == ModeLocal)
+        {
+            // Core already listens on the local port; just make sure nothing else is redirected.
+            Status.EnableTun = false;
+            Status.SystemProxySelected = (int)ESysProxyType.ForcedClear;
+            _localConnected = true;
         }
         else
         {
+            _localConnected = false;
             Status.EnableTun = false;
             Status.SystemProxySelected = (int)ESysProxyType.ForcedChange;
         }
-        await Task.CompletedTask;
+        UpdateConnection();
     }
 
     public async Task DisconnectAsync()
     {
+        _localConnected = false;
         Status.EnableTun = false;
         Status.SystemProxySelected = (int)ESysProxyType.ForcedClear;
+        UpdateConnection();
         await Task.CompletedTask;
     }
 
@@ -248,7 +301,7 @@ public sealed class HuppHomeViewModel : HuppObservable
 
     private void UpdateConnection()
     {
-        var connected = Status.EnableTun || Status.BlSystemProxySet || Status.BlSystemProxyPac;
+        var connected = Status.EnableTun || Status.BlSystemProxySet || Status.BlSystemProxyPac || _localConnected;
         if (connected && _connectedSince == null)
         {
             _connectedSince = DateTime.Now;
@@ -258,14 +311,13 @@ public sealed class HuppHomeViewModel : HuppObservable
             _connectedSince = null;
         }
         IsConnected = connected;
-        StatusText = connected
-            ? (Status.EnableTun ? "Подключено · TUN" : "Подключено")
-            : "Отключено";
-        if (connected && Status.EnableTun && _modeIndex != ModeTun)
+        StatusText = connected ? "Подключено" : "Отключено";
+        if (connected && Status.EnableTun && !IsTunMode(_mode))
         {
-            // Mode changed from the tray or a hotkey: update the dropdown without reconnecting.
-            _modeIndex = ModeTun;
-            Raise(nameof(ModeIndex));
+            // TUN switched on elsewhere (classic view, hotkey): show it without reconnecting.
+            _mode = _config.TunModeItem.EnableLegacyProtect ? ModeTunSingbox : ModeTunXray;
+            Raise(nameof(Mode));
+            Raise(nameof(ModeTitle));
         }
         if (connected)
         {
@@ -391,28 +443,33 @@ public sealed class HuppHomeViewModel : HuppObservable
 
     #endregion Updates
 
-    private static int LoadMode()
+    private static string LoadMode()
     {
         try
         {
             var path = Utils.GetConfigPath(ModeFile);
-            if (File.Exists(path) && int.TryParse(File.ReadAllText(path).Trim(), out var mode) && mode is ModeProxy or ModeTun)
+            if (File.Exists(path))
             {
-                return mode;
+                var saved = File.ReadAllText(path).Trim();
+                if (Modes.Any(m => m.Id == saved))
+                {
+                    return saved;
+                }
             }
         }
         catch (Exception ex)
         {
             Logging.SaveLog(nameof(HuppHomeViewModel), ex);
         }
-        return AppManager.Instance.Config.TunModeItem.EnableTun ? ModeTun : ModeProxy;
+        var tun = AppManager.Instance.Config.TunModeItem;
+        return tun.EnableTun ? (tun.EnableLegacyProtect ? ModeTunSingbox : ModeTunXray) : ModeProxy;
     }
 
-    private static void SaveMode(int mode)
+    private static void SaveMode(string mode)
     {
         try
         {
-            File.WriteAllText(Utils.GetConfigPath(ModeFile), mode.ToString());
+            File.WriteAllText(Utils.GetConfigPath(ModeFile), mode);
         }
         catch (Exception ex)
         {
