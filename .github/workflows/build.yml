@@ -161,7 +161,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="build-${{ github.run_number }}"
+          # GitHub lists releases by tag name, so "build-10" would sink below "build-2".
+          # Zero-padded "v" tags sort correctly and always above the old "build-N" ones.
+          TAG="v$(printf '%04d' ${{ github.run_number }})"
           gh release create "$TAG" out/* --repo "${{ github.repository }}" \
-            --target "${{ github.sha }}" --title "Hupp $TAG" --latest \
+            --target "${{ github.sha }}" --title "Hupp build-${{ github.run_number }}" --latest \
             --notes "Android: Hupp-android.apk. Windows: Hupp-Setup.exe (установщик) или Hupp-windows-portable.zip."
