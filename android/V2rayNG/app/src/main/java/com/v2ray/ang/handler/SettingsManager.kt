@@ -40,6 +40,7 @@ object SettingsManager {
     fun initApp(context: Context) {
         ensureDefaultSettings()
         applyRecommendedDefaultsOnce()
+        applyHuppDefaultsV2Once()
         //ensureDefaultSubscription()
         initRoutingRulesets(context)
         migrateServerListToSubscriptions()
@@ -492,9 +493,15 @@ object SettingsManager {
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_RECOMMENDED_DEFAULTS_APPLIED, false)) return
         MmkvManager.encodeSettings(AppConfig.PREF_SPEED_ENABLED, true)
         MmkvManager.encodeSettings(AppConfig.PREF_CONFIRM_REMOVE, true)
-        MmkvManager.encodeSettings(AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION, true)
-        MmkvManager.encodeSettings(AppConfig.PREF_AUTO_SORT_AFTER_TEST, true)
         MmkvManager.encodeSettings(AppConfig.PREF_RECOMMENDED_DEFAULTS_APPLIED, true)
+    }
+
+    /** Hupp: servers keep their provider order and are not pinged automatically after an update. */
+    private fun applyHuppDefaultsV2Once() {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_HUPP_DEFAULTS_V2_APPLIED, false)) return
+        MmkvManager.encodeSettings(AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION, false)
+        MmkvManager.encodeSettings(AppConfig.PREF_AUTO_SORT_AFTER_TEST, false)
+        MmkvManager.encodeSettings(AppConfig.PREF_HUPP_DEFAULTS_V2_APPLIED, true)
     }
 
     private fun ensureDefaultValue(key: String, default: String) {

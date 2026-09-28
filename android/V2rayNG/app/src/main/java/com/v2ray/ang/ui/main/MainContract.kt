@@ -47,6 +47,9 @@ sealed interface MainAction {
     data object SortByTestResults : MainAction
     data object UpdateSubscriptions : MainAction
     data object ExportAll : MainAction
+    data object SyncNewSubscriptions : MainAction
+    data class RemoveSubscription(val subId: String) : MainAction
+    data class EditSubscription(val subId: String) : MainAction
 
     data object ImportQRcode : MainAction
     data object ImportClipboard : MainAction

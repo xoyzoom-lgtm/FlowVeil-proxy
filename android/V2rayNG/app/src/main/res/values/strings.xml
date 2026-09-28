@@ -584,4 +584,22 @@
     <string name="connection_test_empty_message">no details available</string>
     <string name="value_unknown">unknown</string>
 
+    <string name="main_sub_used">Used %1$s of %2$s</string>
+    <string name="main_sub_used_unlimited">Used %1$s · Unlimited</string>
+    <string name="main_sub_left">Left %1$s</string>
+    <string name="main_sub_days_left">%1$d d. left</string>
+    <string name="main_sub_menu">Subscription menu</string>
+    <string name="sub_menu_update">Update subscription</string>
+    <string name="sub_menu_real_ping">Ping all servers</string>
+    <string name="sub_menu_tcping">TCP ping all servers</string>
+    <string name="sub_menu_sort">Sort by ping</string>
+    <string name="sub_menu_edit">Edit subscription</string>
+    <string name="sub_menu_copy">Copy subscription link</string>
+    <string name="sub_menu_export">Export servers to clipboard</string>
+    <string name="sub_menu_remove_duplicate">Remove duplicates</string>
+    <string name="sub_menu_remove_invalid">Remove unreachable servers</string>
+    <string name="sub_menu_delete">Delete subscription</string>
+    <string name="sub_menu_all">All subscriptions</string>
+    <string name="confirm_delete_subscription">Delete this subscription and its servers?</string>
+    <string name="settings_section_sections">Sections</string>
 </resources>

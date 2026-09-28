@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -44,7 +45,16 @@ import com.v2ray.ang.handler.MmkvManager.rememberMmkvBool
 import com.v2ray.ang.handler.MmkvManager.rememberMmkvString
 import com.v2ray.ang.receiver.WidgetProvider
 import com.v2ray.ang.root.RootManager
+import com.v2ray.ang.ui.AboutActivity
+import com.v2ray.ang.ui.backup.BackupActivity
 import com.v2ray.ang.ui.base.BaseComponentActivity
+import com.v2ray.ang.ui.checkupdate.CheckUpdateActivity
+import com.v2ray.ang.ui.logcat.LogcatActivity
+import com.v2ray.ang.ui.main.MainDestination
+import com.v2ray.ang.ui.perappproxy.PerAppProxyActivity
+import com.v2ray.ang.ui.routing.RoutingSettingActivity
+import com.v2ray.ang.ui.subscription.SubSettingActivity
+import com.v2ray.ang.ui.userasset.UserAssetActivity
 import com.v2ray.ang.ui.compose.AppTopBar
 import com.v2ray.ang.ui.compose.CollapsiblePreferenceGroupHeader
 import com.v2ray.ang.ui.compose.HappThemeManager
@@ -97,10 +107,38 @@ class SettingsActivity : BaseComponentActivity() {
             viewModel = viewModel,
             onBackClick = { finish() },
             onModeHelpClicked = { Utils.openUri(this, AppConfig.APP_WIKI_MODE) },
-            onSystemVpnSettingsClicked = ::openSystemVpnSettings
+            onSystemVpnSettingsClicked = ::openSystemVpnSettings,
+            onOpenSection = ::openSection
         )
     }
+
+    private fun openSection(destination: MainDestination) {
+        val target = when (destination) {
+            MainDestination.Subscriptions -> SubSettingActivity::class.java
+            MainDestination.PerAppProxy -> PerAppProxyActivity::class.java
+            MainDestination.Routing -> RoutingSettingActivity::class.java
+            MainDestination.UserAssets -> UserAssetActivity::class.java
+            MainDestination.Logcat -> LogcatActivity::class.java
+            MainDestination.CheckUpdate -> CheckUpdateActivity::class.java
+            MainDestination.BackupRestore -> BackupActivity::class.java
+            MainDestination.About -> AboutActivity::class.java
+            MainDestination.Settings, MainDestination.Promotion -> return
+        }
+        startActivity(Intent(this, target))
+    }
 }
+
+/** Sub-screens reachable from the settings menu, in display order. */
+private val SettingsSections = listOf(
+    MainDestination.Subscriptions,
+    MainDestination.PerAppProxy,
+    MainDestination.Routing,
+    MainDestination.UserAssets,
+    MainDestination.BackupRestore,
+    MainDestination.Logcat,
+    MainDestination.CheckUpdate,
+    MainDestination.About,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,7 +146,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBackClick: () -> Unit,
     onModeHelpClicked: () -> Unit,
-    onSystemVpnSettingsClicked: () -> Unit
+    onSystemVpnSettingsClicked: () -> Unit,
+    onOpenSection: (MainDestination) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -243,6 +282,17 @@ fun SettingsScreen(
                 .verticalScrollbar(scrollState)
                 .verticalScroll(scrollState)
         ) {
+            PreferenceGroupHeader(title = stringResource(R.string.settings_section_sections))
+            SettingsGroupCard {
+                SettingsSections.forEach { section ->
+                    SettingsMenuItem(
+                        icon = painterResource(section.iconRes),
+                        title = stringResource(section.labelRes),
+                        onClick = { onOpenSection(section) }
+                    )
+                }
+            }
+
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_main))
             SettingsGroupCard {
                 SettingsSwitchItem(

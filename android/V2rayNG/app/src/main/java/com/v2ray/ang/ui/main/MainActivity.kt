@@ -44,6 +44,7 @@ import com.v2ray.ang.ui.server.ServerVlessActivity
 import com.v2ray.ang.ui.server.ServerVmessActivity
 import com.v2ray.ang.ui.server.ServerWireguardActivity
 import com.v2ray.ang.ui.settings.SettingsActivity
+import com.v2ray.ang.ui.subscription.SubEditActivity
 import com.v2ray.ang.ui.subscription.SubSettingActivity
 import com.v2ray.ang.ui.userasset.UserAssetActivity
 import com.v2ray.ang.util.LogUtil
@@ -84,9 +85,10 @@ class MainActivity : HelperBaseComponentActivity() {
     private val settingsActivityLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             val restartService = SettingsChangeManager.consumeRestartService()
-            val refreshGroups = SettingsChangeManager.consumeSetupGroupTab()
+            SettingsChangeManager.consumeSetupGroupTab()
             mainViewModel.refreshUiSettings()
-            if (refreshGroups) mainViewModel.onAction(MainAction.RefreshGroups)
+            // Always resync: a subscription added in settings should show its servers right away.
+            mainViewModel.onAction(MainAction.SyncNewSubscriptions)
             if (restartService) LauncherManager.restartService(this)
         }
 
@@ -116,6 +118,9 @@ class MainActivity : HelperBaseComponentActivity() {
                     is MainAction.EditServer -> editServer(action.guid, action.profile)
                     is MainAction.ShareClipboard -> shareToClipboard(action.guid)
                     is MainAction.ShareFullContent -> shareFullContentAsync(action.guid)
+                    is MainAction.EditSubscription -> settingsActivityLauncher.launch(
+                        Intent(this, SubEditActivity::class.java).putExtra("subId", action.subId)
+                    )
                     else -> mainViewModel.onAction(action)
                 }
             },

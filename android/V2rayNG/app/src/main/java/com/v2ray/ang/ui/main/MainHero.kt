@@ -173,27 +173,15 @@ internal fun PowerButton(
         }
     }
 
-    val transition = rememberInfiniteTransition(label = "pulse")
-    val pulse by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Restart),
-        label = "pulseProgress"
-    )
-
     Box(
         modifier = modifier.size(buttonSize * 1.4f),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val base = buttonSize.toPx() / 2f
-            if (isRunning) {
-                for (i in 0..1) {
-                    val t = (pulse + i * 0.5f) % 1f
-                    drawCircle(color = accent.copy(alpha = 0.30f * (1f - t)), radius = base * (1f + 0.38f * t))
-                }
-            } else {
-                drawCircle(color = accent.copy(alpha = 0.08f), radius = base * 1.16f)
+        if (isRunning) {
+            PulseRings(accent = accent, buttonSize = buttonSize)
+        } else {
+            Canvas(Modifier.fillMaxSize()) {
+                drawCircle(color = accent.copy(alpha = 0.08f), radius = buttonSize.toPx() / 2f * 1.16f)
             }
         }
         Column(
@@ -300,7 +288,12 @@ internal fun PingPill(delayMillis: Long, modifier: Modifier = Modifier) {
                 .background(color),
             contentAlignment = Alignment.Center
         ) {
-            Text("✓", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+            Icon(
+                painter = painterResource(R.drawable.ic_action_done),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(12.dp)
+            )
         }
         Spacer(Modifier.width(5.dp))
         Text(
@@ -488,6 +481,25 @@ internal fun EmptyServersState(
             colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)
         ) {
             Text(stringResource(R.string.main_scan_qr), fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+/** Pulsing rings around the power button; composed only while connected so idle screens don't redraw every frame. */
+@Composable
+private fun PulseRings(accent: Color, buttonSize: Dp) {
+    val transition = rememberInfiniteTransition(label = "pulse")
+    val pulse by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Restart),
+        label = "pulseProgress"
+    )
+    Canvas(Modifier.fillMaxSize()) {
+        val base = buttonSize.toPx() / 2f
+        for (i in 0..1) {
+            val t = (pulse + i * 0.5f) % 1f
+            drawCircle(color = accent.copy(alpha = 0.30f * (1f - t)), radius = base * (1f + 0.38f * t))
         }
     }
 }

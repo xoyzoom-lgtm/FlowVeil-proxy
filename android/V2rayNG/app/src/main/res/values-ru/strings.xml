@@ -588,4 +588,22 @@
     <string name="connection_test_empty_message">подробности отсутствуют</string>
     <string name="value_unknown">неизвестно</string>
 
+    <string name="main_sub_used">Потрачено %1$s из %2$s</string>
+    <string name="main_sub_used_unlimited">Потрачено %1$s · Безлимит</string>
+    <string name="main_sub_left">Осталось %1$s</string>
+    <string name="main_sub_days_left">ещё %1$d дн.</string>
+    <string name="main_sub_menu">Меню подписки</string>
+    <string name="sub_menu_update">Обновить подписку</string>
+    <string name="sub_menu_real_ping">Проверить пинг всех серверов</string>
+    <string name="sub_menu_tcping">TCP-пинг всех серверов</string>
+    <string name="sub_menu_sort">Отсортировать по пингу</string>
+    <string name="sub_menu_edit">Изменить подписку</string>
+    <string name="sub_menu_copy">Скопировать ссылку подписки</string>
+    <string name="sub_menu_export">Экспорт серверов в буфер</string>
+    <string name="sub_menu_remove_duplicate">Удалить дубликаты</string>
+    <string name="sub_menu_remove_invalid">Удалить нерабочие серверы</string>
+    <string name="sub_menu_delete">Удалить подписку</string>
+    <string name="sub_menu_all">Все подписки</string>
+    <string name="confirm_delete_subscription">Удалить эту подписку и её серверы?</string>
+    <string name="settings_section_sections">Разделы</string>
 </resources>

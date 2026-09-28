@@ -285,6 +285,8 @@ class MainViewModel(
             MainAction.SortByTestResults -> sortByTestResultsAsync()
             MainAction.UpdateSubscriptions -> importConfigViaSub()
             MainAction.ExportAll -> exportAllAsync()
+            MainAction.SyncNewSubscriptions -> launchLoading { withContext(ioDispatcher) { syncNewSubscriptions() } }
+            is MainAction.RemoveSubscription -> removeSubscriptionAsync(action.subId)
             is MainAction.SelectGroup -> subscriptionIdChanged(action.groupId)
             is MainAction.SelectServer -> updateSelectedGuid(action.guid)
             is MainAction.RemoveServer -> removeServerAndRefresh(action.guid)
@@ -310,6 +312,7 @@ class MainViewModel(
             MainAction.LocateSelectedServer,
             is MainAction.EditServer,
             is MainAction.ShareClipboard,
+            is MainAction.EditSubscription,
             is MainAction.ShareFullContent -> {
                 // Handled by Activity via its onAction lambda
             }
@@ -519,13 +522,66 @@ class MainViewModel(
                             setupGroupTab(forceRefresh = true)
                         }
 
-                        countSub > 0 -> setupGroupTab(forceRefresh = true)
+                        countSub > 0 -> syncNewSubscriptions()
                         else -> toastError(R.string.toast_failure)
                     }
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (e: Exception) {
                     LogUtil.e(AppConfig.TAG, "Failed to import batch config", e)
+                    toastError(R.string.toast_failure)
+                }
+            }
+        }
+    }
+
+    /**
+     * Downloads subscriptions that have a URL but no servers yet (e.g. one that was just added),
+     * so a new link shows its servers immediately instead of after a restart.
+     */
+    private suspend fun syncNewSubscriptions() {
+        val fresh = dataSource.getSubscriptions().filter {
+            it.guid != AppConfig.DEFAULT_SUBSCRIPTION_ID &&
+                it.subscription.enabled &&
+                it.subscription.url.isNotBlank() &&
+                dataSource.getServerGuidList(it.guid).isEmpty()
+        }
+        for (sub in fresh) {
+            try {
+                dataSource.updateConfigViaSub(sub)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Failed to update new subscription", e)
+            }
+        }
+        setupGroupTab(forceRefresh = true).join()
+        val target = fresh.lastOrNull { dataSource.getServerGuidList(it.guid).isNotEmpty() }
+        if (target != null) {
+            subscriptionIdChanged(target.guid)
+            val selected = dataSource.getSelectServer()
+            if (selected.isNullOrEmpty() || dataSource.decodeServerConfig(selected) == null) {
+                dataSource.getServerGuidList(target.guid).firstOrNull()?.let { updateSelectedGuid(it) }
+            }
+        } else if (fresh.isNotEmpty()) {
+            toastError(R.string.toast_failure)
+        }
+        refreshSelectedGuid()
+    }
+
+    private fun removeSubscriptionAsync(subId: String) {
+        if (subId.isEmpty() || subId == AppConfig.DEFAULT_SUBSCRIPTION_ID) return
+        launchLoading {
+            withContext(ioDispatcher) {
+                try {
+                    com.v2ray.ang.handler.SettingsManager.removeSubscriptionWithDefault(subId)
+                    cacheMutex.withLock { groupDataCache.clear() }
+                    setupGroupTab(forceRefresh = true).join()
+                    refreshSelectedGuid()
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (e: Exception) {
+                    LogUtil.e(AppConfig.TAG, "Failed to remove subscription", e)
                     toastError(R.string.toast_failure)
                 }
             }

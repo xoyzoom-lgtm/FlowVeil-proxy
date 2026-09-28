@@ -15,6 +15,9 @@ public class DownloadService
 
     public IReadOnlyDictionary<string, string>? RequestHeaders { get; init; }
 
+    /// <summary>Response headers (lower-cased names) of the last successful string download via HttpClient.</summary>
+    public IReadOnlyDictionary<string, string>? LastResponseHeaders { get; private set; }
+
     private static readonly string _tag = "DownloadService";
 
     /// <summary>
@@ -295,7 +298,15 @@ public class DownloadService
             timeoutCts.CancelAfter(webProxy is null ? Global.DirectFetch : Global.ProxyFetch);
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-            return await client.GetStringAsync(url, linkedCts.Token);
+            using var response = await client.GetAsync(url, linkedCts.Token);
+            response.EnsureSuccessStatusCode();
+            var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (name, values) in response.Headers.Concat(response.Content.Headers))
+            {
+                headers[name.ToLowerInvariant()] = string.Join(",", values);
+            }
+            LastResponseHeaders = headers;
+            return await response.Content.ReadAsStringAsync(linkedCts.Token);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

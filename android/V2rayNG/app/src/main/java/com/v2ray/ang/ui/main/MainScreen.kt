@@ -14,19 +14,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -40,10 +36,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.entities.ProfileItem
+import com.v2ray.ang.ui.compose.DeleteConfirmDialog
 import com.v2ray.ang.ui.compose.QRCodeDialog
 import com.v2ray.ang.ui.compose.verticalScrollbar
+import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.util.Utils
-import kotlinx.coroutines.launch
 
 private const val KEY_HERO = "hero"
 private const val SERVER_KEY_PREFIX = "server-"
@@ -63,13 +60,12 @@ fun MainScreen(
     val confirmRemove = uiState.confirmRemove
     val shareQRCodeBitmap = uiState.shareQRCodeBitmap
 
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var showDelAllConfirm by remember { mutableStateOf(false) }
     var showDelDuplicateConfirm by remember { mutableStateOf(false) }
     var showDelInvalidConfirm by remember { mutableStateOf(false) }
+    var showDelSubConfirm by remember { mutableStateOf(false) }
     var showRemoveConfirm by rememberSaveable(stateSaver = ServerDeleteTarget.Saver) {
         mutableStateOf<ServerDeleteTarget?>(null)
     }
@@ -98,6 +94,18 @@ fun MainScreen(
         onConfirmRemove = { guid -> showRemoveConfirm = null; onAction(MainAction.RemoveServer(guid)) }
     )
 
+    if (showDelSubConfirm) {
+        val subId = uiState.selectedGroupId
+        DeleteConfirmDialog(
+            message = stringResource(R.string.confirm_delete_subscription),
+            onConfirm = {
+                showDelSubConfirm = false
+                onAction(MainAction.RemoveSubscription(subId))
+            },
+            onDismiss = { showDelSubConfirm = false }
+        )
+    }
+
     if (shareTarget != null) {
         val (guid, profile, more) = shareTarget!!
         ShareMethodDialog(
@@ -118,7 +126,7 @@ fun MainScreen(
         mainViewModel.serversForGroup(AppConfig.DEFAULT_SUBSCRIPTION_ID)
     }
     val defaultServers by defaultServersFlow.collectAsStateWithLifecycle()
-    val visibleGroups = if (groups.size > 1 && defaultServers.isEmpty()) {
+    val visibleGroups = if (defaultServers.isEmpty()) {
         groups.filterNot { it.id == AppConfig.DEFAULT_SUBSCRIPTION_ID }
     } else {
         groups
@@ -135,7 +143,9 @@ fun MainScreen(
     val selectedGroupState by selectedGroupStateFlow.collectAsStateWithLifecycle()
     val rows = selectedGroupState.rows
     val selectedRow = rows.firstOrNull { it.guid == selectedGuid }
-    val selectedSubscription = groups.firstOrNull { it.id == uiState.selectedGroupId }?.subscription
+    val selectedSubscription = visibleGroups
+        .firstOrNull { it.id == uiState.selectedGroupId && it.id != AppConfig.DEFAULT_SUBSCRIPTION_ID }
+        ?.subscription
     val context = LocalContext.current
     val rowActions = remember(onAction) {
         ServerRowActions(
@@ -189,7 +199,7 @@ fun MainScreen(
                 }
             }
         }
-        if (groups.isEmpty()) {
+        if (visibleGroups.isEmpty()) {
             item(key = "empty") { emptyContent() }
         } else {
             if (selectedSubscription != null && !showSearch) {
@@ -200,7 +210,25 @@ fun MainScreen(
                             isTesting = uiState.isTesting,
                             onRefresh = { onAction(MainAction.UpdateSubscriptions) },
                             onTestAll = { onAction(MainAction.TestRealAllServers) },
-                            onOpenSupport = { url -> Utils.openUri(context, url) }
+                            onOpenSupport = { url -> Utils.openUri(context, url) },
+                            onMenuAction = { action ->
+                                when (action) {
+                                    SubscriptionMenuAction.Update -> onAction(MainAction.UpdateSubscriptions)
+                                    SubscriptionMenuAction.TestRealPing -> onAction(MainAction.TestRealAllServers)
+                                    SubscriptionMenuAction.TestTcping -> onAction(MainAction.TestAllServers)
+                                    SubscriptionMenuAction.SortByPing -> onAction(MainAction.SortByTestResults)
+                                    SubscriptionMenuAction.Edit -> onAction(MainAction.EditSubscription(uiState.selectedGroupId))
+                                    SubscriptionMenuAction.CopyLink -> {
+                                        Utils.setClipboard(context, selectedSubscription.url)
+                                        context.toastSuccess(R.string.toast_success)
+                                    }
+                                    SubscriptionMenuAction.ExportAll -> onAction(MainAction.ExportAll)
+                                    SubscriptionMenuAction.RemoveDuplicate -> showDelDuplicateConfirm = true
+                                    SubscriptionMenuAction.RemoveInvalid -> showDelInvalidConfirm = true
+                                    SubscriptionMenuAction.Delete -> showDelSubConfirm = true
+                                    SubscriptionMenuAction.AllSubscriptions -> onNavigate(MainDestination.Subscriptions)
+                                }
+                            }
                         )
                         Spacer(Modifier.height(12.dp))
                     }
@@ -241,19 +269,7 @@ fun MainScreen(
         }
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = drawerState.isOpen,
-        drawerContent = {
-            MainDrawerContent(
-                drawerState = drawerState,
-                onNavigate = { route ->
-                    scope.launch { drawerState.close() }
-                    onNavigate(route)
-                }
-            )
-        }
-    ) {
+    run {
         Box(Modifier.fillMaxSize()) {
             MainBackground()
             Scaffold(
@@ -274,7 +290,7 @@ fun MainScreen(
                             showSearch = false
                         },
                         onSearchToggle = { show: Boolean -> showSearch = show },
-                        onMenuClick = { scope.launch { drawerState.open() } },
+                        onMenuClick = { onNavigate(MainDestination.Settings) },
                         onAction = onAction,
                         onMoreMenuAction = { action ->
                             when (action) {

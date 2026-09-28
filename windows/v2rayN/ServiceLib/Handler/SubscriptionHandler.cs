@@ -157,8 +157,16 @@ public static class SubscriptionHandler
             }
         }
 
-        // Download and return result directly
-        return await DownloadSubscriptionContent(downloadHandle, url, blProxy, item.UserAgent);
+        var result = await DownloadSubscriptionContent(downloadHandle, url, blProxy, item.UserAgent);
+        if (result.IsNotEmpty() && item.ConvertTarget.IsNullOrEmpty())
+        {
+            var info = SubscriptionInfoStore.Parse(downloadHandle.LastResponseHeaders);
+            if (info != null)
+            {
+                SubscriptionInfoStore.Save(item.Id, info);
+            }
+        }
+        return result;
     }
 
     private static async Task<string> DownloadAdditionalSubscriptions(SubItem item, string mainResult, bool blProxy, DownloadService downloadHandle)
