@@ -1,0 +1,147 @@
+name: Build Hupp
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Java
+        uses: actions/setup-java@v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          log-accepted-android-sdk-licenses: false
+          packages: 'platforms;android-37.0 build-tools;37.0.0 platform-tools'
+
+      - name: Install NDK
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;29.0.14206865"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
+
+      - name: Build libhev-socks5-tunnel
+        run: |
+          git clone https://github.com/heiher/hev-socks5-tunnel hev-socks5-tunnel
+          git -C hev-socks5-tunnel checkout 64cc609f945253b0e9ebc56317d544268f3c68c1
+          git -C hev-socks5-tunnel submodule update --init --recursive
+          bash compile-hevtun.sh
+          cp -r libs V2rayNG/app/
+
+      - name: Download libv2ray.aar
+        run: |
+          mkdir -p V2rayNG/app/libs
+          curl -fL -o V2rayNG/app/libs/libv2ray.aar \
+            https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.9.9/libv2ray.aar
+
+      - name: Signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.HUPP_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.HUPP_KEYSTORE_PASSWORD }}
+        run: |
+          # A stable key (repo secrets) lets new builds install over old ones.
+          # Without secrets a throwaway key is generated for this build only.
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/hupp.jks"
+            echo "SIGN_PASS=$KEYSTORE_PASSWORD" >> $GITHUB_ENV
+          else
+            PASS=$(openssl rand -hex 16)
+            echo "::add-mask::$PASS"
+            keytool -genkeypair -keystore "$RUNNER_TEMP/hupp.jks" -storepass "$PASS" -keypass "$PASS" \
+              -alias hupp -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=Hupp"
+            echo "SIGN_PASS=$PASS" >> $GITHUB_ENV
+          fi
+
+      - name: Build APK
+        working-directory: android/V2rayNG
+        run: |
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          chmod 755 gradlew
+          ./gradlew assemblePlaystoreRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/hupp.jks" \
+            -Pandroid.injected.signing.store.password="$SIGN_PASS" \
+            -Pandroid.injected.signing.key.alias=hupp \
+            -Pandroid.injected.signing.key.password="$SIGN_PASS"
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp app/build/outputs/apk/playstore/release/*universal*.apk "$GITHUB_WORKSPACE/out/Hupp-android.apk"
+          cp app/build/outputs/apk/playstore/release/*arm64-v8a*.apk "$GITHUB_WORKSPACE/out/Hupp-android-arm64.apk"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android
+          path: out/*.apk
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.1xx
+
+      - name: Build Hupp
+        run: |
+          dotnet publish v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -o Hupp
+          Rename-Item Hupp/v2rayN.exe Hupp.exe
+
+      - name: Add Xray core
+        run: |
+          Invoke-WebRequest https://github.com/XTLS/Xray-core/releases/latest/download/Xray-windows-64.zip -OutFile xray.zip
+          Expand-Archive xray.zip xray
+          New-Item -ItemType Directory -Force Hupp/bin/xray | Out-Null
+          Copy-Item xray/xray.exe Hupp/bin/xray/
+          Copy-Item xray/*.dat Hupp/bin/
+
+      - name: Build installer
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+          & $iscc /Q Hupp.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force ../out | Out-Null
+          Copy-Item Hupp-Setup.exe ../out/
+          Compress-Archive Hupp/* ../out/Hupp-windows-portable.zip
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: out/*
+
+  release:
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-${{ github.run_number }}"
+          gh release create "$TAG" out/* --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" --title "Hupp $TAG" --latest \
+            --notes "Android: Hupp-android.apk. Windows: Hupp-Setup.exe (установщик) или Hupp-windows-portable.zip."

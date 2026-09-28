@@ -1,0 +1,13 @@
+build/
+.gradle/
+local.properties
+*.jks
+*.keystore
+*.aar
+bin/
+obj/
+.vs/
+/windows/Hupp/
+/windows/Hupp-Setup.exe
+/android/libs/
+/android/hev-socks5-tunnel/
