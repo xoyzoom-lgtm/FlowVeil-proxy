@@ -10,7 +10,7 @@
     xmlns:resx="clr-namespace:ServiceLib.Resx;assembly=ServiceLib"
     xmlns:view="clr-namespace:v2rayN.Views"
     xmlns:vms="clr-namespace:ServiceLib.ViewModels;assembly=ServiceLib"
-    Title="v2rayN"
+    Title="Hupp"
     Width="1200"
     Height="800"
     MinWidth="800"
@@ -27,6 +27,35 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Popupbox.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+            <Style x:Key="HuppRailButton" TargetType="RadioButton">
+                <Setter Property="Height" Value="60" />
+                <Setter Property="Margin" Value="8,4" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Grid>
+                                <Border
+                                    x:Name="bg"
+                                    Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                                    CornerRadius="14"
+                                    Opacity="0" />
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="bg" Property="Opacity" Value="0.15" />
+                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -37,7 +66,104 @@
         SnackbarMessageQueue="{Binding ElementName=MainSnackbar, Path=MessageQueue}"
         Style="{StaticResource MaterialDesignEmbeddedDialogHost}">
         <Grid>
-            <DockPanel>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="76" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Hupp navigation rail  -->
+            <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
+                <DockPanel Margin="0,12">
+                    <StackPanel DockPanel.Dock="Top">
+                        <Image
+                            Width="40"
+                            Height="40"
+                            Margin="0,0,0,16"
+                            Source="/Resources/v2rayN.ico" />
+                        <RadioButton
+                            x:Name="navHome"
+                            GroupName="nav"
+                            IsChecked="True"
+                            Style="{StaticResource HuppRailButton}"
+                            ToolTip="Серверы">
+                            <StackPanel>
+                                <materialDesign:PackIcon
+                                    Width="24"
+                                    Height="24"
+                                    HorizontalAlignment="Center"
+                                    Kind="Home" />
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    FontSize="10"
+                                    Text="Главная" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="navAdvanced"
+                            GroupName="nav"
+                            Style="{StaticResource HuppRailButton}"
+                            ToolTip="Расширенный режим (как v2rayN)">
+                            <StackPanel>
+                                <materialDesign:PackIcon
+                                    Width="24"
+                                    Height="24"
+                                    HorizontalAlignment="Center"
+                                    Kind="ViewList" />
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    FontSize="10"
+                                    Text="Детально" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                    <StackPanel VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
+                        <materialDesign:PopupBox
+                            HorizontalAlignment="Center"
+                            PlacementMode="RightAndAlignBottomEdges"
+                            StaysOpen="True"
+                            ToolTip="Темы">
+                            <materialDesign:PopupBox.ToggleContent>
+                                <materialDesign:PackIcon
+                                    Width="24"
+                                    Height="24"
+                                    Margin="0,8"
+                                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                    Kind="Palette" />
+                            </materialDesign:PopupBox.ToggleContent>
+                            <ContentControl x:Name="pbTheme" />
+                        </materialDesign:PopupBox>
+                        <Button
+                            x:Name="btnSettings"
+                            Height="48"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            ToolTip="Настройки">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                Kind="Cog" />
+                        </Button>
+                        <Button
+                            x:Name="btnNewUpdate"
+                            Height="48"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            ToolTip="{x:Static resx:ResUI.menuNewUpdate}"
+                            Visibility="Hidden">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                Foreground="OrangeRed"
+                                Kind="ArrowUpBoldCircle" />
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <view:HuppHomeView x:Name="homeView" Grid.Column="1" />
+
+            <DockPanel
+                x:Name="advancedPanel"
+                Grid.Column="1"
+                Visibility="Hidden">
                 <ToolBarTray DockPanel.Dock="Top">
                     <ToolBar
                         HorizontalAlignment="Center"
@@ -311,20 +437,6 @@
                             </MenuItem>
                         </Menu>
 
-                        <materialDesign:PopupBox
-                            Padding="-2"
-                            HorizontalAlignment="Right"
-                            StaysOpen="True"
-                            Style="{StaticResource MaterialDesignToolForegroundPopupBox}">
-                            <ContentControl x:Name="pbTheme" />
-                        </materialDesign:PopupBox>
-
-                        <Button
-                            x:Name="btnNewUpdate"
-                            Margin="{StaticResource MarginLeftRight8}"
-                            Content="{x:Static resx:ResUI.menuNewUpdate}"
-                            Style="{StaticResource DefButton}"
-                            Visibility="Hidden" />
                     </ToolBar>
                 </ToolBarTray>
 
@@ -449,9 +561,12 @@
                             </TabItem>
                         </TabControl>
                     </Grid>
-                    <materialDesign:Snackbar x:Name="MainSnackbar" MessageQueue="{materialDesign:MessageQueue}" />
                 </Grid>
             </DockPanel>
+            <materialDesign:Snackbar
+                x:Name="MainSnackbar"
+                Grid.Column="1"
+                MessageQueue="{materialDesign:MessageQueue}" />
         </Grid>
     </materialDesign:DialogHost>
 </base:WindowBase>

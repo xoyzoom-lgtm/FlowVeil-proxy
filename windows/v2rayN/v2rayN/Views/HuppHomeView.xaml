@@ -1,0 +1,502 @@
+<UserControl
+    x:Class="v2rayN.Views.HuppHomeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:v2rayN.Converters"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Background="Transparent">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <conv:NotEmptyToVisibilityConverter x:Key="NotEmptyToVis" />
+        <conv:ProfileNameConverter x:Key="ProfileName" />
+        <conv:ProfileCodeConverter x:Key="ProfileCode" />
+        <conv:ProfileDescriptionConverter x:Key="ProfileDescription" />
+        <conv:FlagImageConverter x:Key="FlagImage" />
+        <conv:DelayTextConverter x:Key="DelayText" />
+        <conv:DelayBrushConverter x:Key="DelayBrush" />
+
+        <Style x:Key="HuppCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+
+        <Style x:Key="SubText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style
+            x:Key="RoundIconButton"
+            BasedOn="{StaticResource MaterialDesignIconButton}"
+            TargetType="Button">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+        </Style>
+
+        <!--  Flag picture with the country code underneath as a fallback  -->
+        <DataTemplate x:Key="FlagBadge">
+            <Grid Width="40" Height="28">
+                <Border
+                    Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                    CornerRadius="6"
+                    Opacity="0.15" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                    Text="{Binding}" />
+                <materialDesign:PackIcon
+                    Width="18"
+                    Height="18"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                    Kind="Earth">
+                    <materialDesign:PackIcon.Style>
+                        <Style TargetType="materialDesign:PackIcon">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding}" Value="">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </materialDesign:PackIcon.Style>
+                </materialDesign:PackIcon>
+                <Border CornerRadius="6">
+                    <Border.Background>
+                        <ImageBrush ImageSource="{Binding Converter={StaticResource FlagImage}}" Stretch="UniformToFill" />
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="380" />
+            <ColumnDefinition Width="340" />
+        </Grid.ColumnDefinitions>
+
+        <!--  Servers  -->
+        <DockPanel Grid.Column="0" Margin="20,16,10,16">
+            <DockPanel Margin="4,0,0,12" DockPanel.Dock="Top">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button
+                        x:Name="btnPingAll"
+                        Style="{StaticResource RoundIconButton}"
+                        ToolTip="Проверить пинг всех серверов">
+                        <materialDesign:PackIcon Kind="Speedometer" />
+                    </Button>
+                    <Button
+                        x:Name="btnUpdateSubs"
+                        Margin="4,0"
+                        Style="{StaticResource RoundIconButton}"
+                        ToolTip="Обновить подписки">
+                        <materialDesign:PackIcon Kind="Refresh" />
+                    </Button>
+                    <Button
+                        x:Name="btnAdd"
+                        Style="{StaticResource RoundIconButton}"
+                        ToolTip="Добавить из буфера обмена (Ctrl+V)">
+                        <materialDesign:PackIcon Kind="Plus" />
+                    </Button>
+                </StackPanel>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="26"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                    Text="Серверы" />
+            </DockPanel>
+
+            <!--  Subscription cards  -->
+            <ScrollViewer
+                MaxHeight="300"
+                DockPanel.Dock="Top"
+                VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="lstCards" ItemsSource="{Binding Cards}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border
+                                Margin="0,0,0,10"
+                                Cursor="Hand"
+                                MouseLeftButtonUp="Card_MouseLeftButtonUp">
+                                <Border.Style>
+                                    <Style BasedOn="{StaticResource HuppCard}" TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Border.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Click="CardUpdate_Click" Header="Обновить подписку" />
+                                        <MenuItem Click="CardPing_Click" Header="Проверить пинг серверов" />
+                                        <MenuItem Click="CardCopy_Click" Header="Скопировать ссылку" />
+                                        <Separator />
+                                        <MenuItem Click="CardSettings_Click" Header="Все подписки…" />
+                                    </ContextMenu>
+                                </Border.ContextMenu>
+                                <StackPanel>
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                            <Button
+                                                Click="CardSupport_Click"
+                                                Style="{StaticResource RoundIconButton}"
+                                                ToolTip="Поддержка"
+                                                Visibility="{Binding SupportUrl, Converter={StaticResource NotEmptyToVis}}">
+                                                <materialDesign:PackIcon Kind="Send" />
+                                            </Button>
+                                            <Button
+                                                Click="CardPing_Click"
+                                                Style="{StaticResource RoundIconButton}"
+                                                ToolTip="Проверить пинг">
+                                                <materialDesign:PackIcon Kind="Speedometer" />
+                                            </Button>
+                                            <Button
+                                                Click="CardUpdate_Click"
+                                                Style="{StaticResource RoundIconButton}"
+                                                ToolTip="Обновить">
+                                                <materialDesign:PackIcon Kind="Refresh" />
+                                            </Button>
+                                            <Button
+                                                Click="CardMenu_Click"
+                                                Style="{StaticResource RoundIconButton}"
+                                                ToolTip="Меню подписки">
+                                                <materialDesign:PackIcon Kind="DotsVertical" />
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="15"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                            Text="{Binding Title}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <ProgressBar
+                                        Height="6"
+                                        Margin="0,8,0,4"
+                                        materialDesign:TransitionAssist.DisableTransitions="True"
+                                        Maximum="100"
+                                        Visibility="{Binding HasProgress, Converter={StaticResource BoolToVis}}"
+                                        Value="{Binding Progress, Mode=OneWay}" />
+                                    <DockPanel Margin="0,4,0,0">
+                                        <TextBlock
+                                            DockPanel.Dock="Right"
+                                            Style="{StaticResource SubText}"
+                                            Text="{Binding ExpireText}" />
+                                        <TextBlock Style="{StaticResource SubText}" Text="{Binding TrafficText}" />
+                                    </DockPanel>
+                                    <TextBlock
+                                        Margin="0,2,0,0"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                        Text="{Binding LeftText}"
+                                        Visibility="{Binding LeftText, Converter={StaticResource NotEmptyToVis}}" />
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        MaxHeight="54"
+                                        Style="{StaticResource SubText}"
+                                        Text="{Binding Announce}"
+                                        TextWrapping="Wrap"
+                                        Visibility="{Binding Announce, Converter={StaticResource NotEmptyToVis}}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!--  Empty state  -->
+            <StackPanel
+                x:Name="panelEmpty"
+                Margin="0,40,0,0"
+                HorizontalAlignment="Center"
+                DockPanel.Dock="Top"
+                Visibility="Collapsed">
+                <materialDesign:PackIcon
+                    Width="56"
+                    Height="56"
+                    HorizontalAlignment="Center"
+                    Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                    Kind="ServerNetworkOff" />
+                <TextBlock
+                    Margin="0,12,0,4"
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                    Text="Пока нет серверов" />
+                <TextBlock
+                    MaxWidth="320"
+                    HorizontalAlignment="Center"
+                    Style="{StaticResource SubText}"
+                    Text="Скопируйте ссылку на подписку или сервер и нажмите кнопку ниже"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+                <Button
+                    x:Name="btnEmptyPaste"
+                    Margin="0,16,0,0"
+                    HorizontalAlignment="Center"
+                    materialDesign:ButtonAssist.CornerRadius="20"
+                    Content="Вставить из буфера" />
+            </StackPanel>
+
+            <!--  Server list  -->
+            <ListBox
+                x:Name="lstServers"
+                Margin="0,4,0,0"
+                HorizontalContentAlignment="Stretch"
+                ItemsSource="{Binding Profiles.ProfileItems}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                VirtualizingPanel.IsVirtualizing="True"
+                VirtualizingPanel.ScrollUnit="Pixel"
+                VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,0,6,8" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <ContentPresenter />
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border MouseLeftButtonUp="Server_MouseLeftButtonUp">
+                            <Border.Style>
+                                <Style BasedOn="{StaticResource HuppCard}" TargetType="Border">
+                                    <Setter Property="Padding" Value="12,10" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                        </DataTrigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Opacity" Value="0.92" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Border.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Click="ServerConnect_Click" Header="Выбрать сервер" />
+                                    <MenuItem Click="ServerEdit_Click" Header="Изменить" />
+                                    <MenuItem Click="ServerShare_Click" Header="Скопировать ссылку" />
+                                    <Separator />
+                                    <MenuItem Click="ServerDelete_Click" Header="Удалить" />
+                                </ContextMenu>
+                            </Border.ContextMenu>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter
+                                    Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    Content="{Binding Remarks, Converter={StaticResource ProfileCode}}"
+                                    ContentTemplate="{StaticResource FlagBadge}" />
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Margin="12,0,8,0"
+                                    VerticalAlignment="Center">
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                        Text="{Binding Remarks, Converter={StaticResource ProfileName}}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        Margin="0,2,0,0"
+                                        Style="{StaticResource SubText}"
+                                        Text="{Binding Converter={StaticResource ProfileDescription}}" />
+                                </StackPanel>
+                                <Grid
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding DelayVal, Converter={StaticResource NotEmptyToVis}}">
+                                    <Border
+                                        Background="{Binding DelayVal, Converter={StaticResource DelayBrush}}"
+                                        CornerRadius="12"
+                                        Opacity="0.15" />
+                                    <TextBlock
+                                        Margin="10,3"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{Binding DelayVal, Converter={StaticResource DelayBrush}}"
+                                        Text="{Binding DelayVal, Converter={StaticResource DelayText}}" />
+                                </Grid>
+                                <materialDesign:PackIcon
+                                    Grid.Column="3"
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                                    Kind="ChevronRight" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+
+        <!--  Connect pane  -->
+        <Border
+            Grid.Column="1"
+            Margin="10,16,20,16"
+            Padding="20"
+            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+            CornerRadius="24">
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Top">
+                    <Button
+                        x:Name="btnPower"
+                        Width="180"
+                        Height="180"
+                        Margin="0,16,0,0"
+                        HorizontalAlignment="Center"
+                        Cursor="Hand"
+                        ToolTip="Подключить / отключить">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Grid>
+                                    <Ellipse x:Name="halo" Margin="-14" Opacity="0.12" Fill="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                    <Ellipse
+                                        x:Name="circle"
+                                        Fill="{DynamicResource MaterialDesign.Brush.Background}"
+                                        Stroke="{DynamicResource MaterialDesign.Brush.Primary}"
+                                        StrokeThickness="2" />
+                                    <materialDesign:PackIcon
+                                        x:Name="icon"
+                                        Width="72"
+                                        Height="72"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                        Kind="Power" />
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                        <Setter TargetName="circle" Property="Fill" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                        <Setter TargetName="icon" Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Foreground}" />
+                                        <Setter TargetName="halo" Property="Opacity" Value="0.25" />
+                                    </DataTrigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+                                        <Setter Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="0.95" ScaleY="0.95" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <TextBlock
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Text="{Binding StatusText}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="Consolas"
+                        FontSize="16"
+                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                        Text="{Binding TimerText}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        Style="{StaticResource SubText}"
+                        Text="{Binding SpeedText}"
+                        Visibility="{Binding IsConnected, Converter={StaticResource BoolToVis}}" />
+
+                    <ComboBox
+                        Margin="0,24,0,0"
+                        materialDesign:HintAssist.Hint="Режим"
+                        SelectedIndex="{Binding ModeIndex}"
+                        Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                        <ComboBoxItem Content="Системный прокси" />
+                        <ComboBoxItem Content="TUN (весь трафик, нужен админ)" />
+                    </ComboBox>
+
+                    <ComboBox
+                        Margin="0,12,0,0"
+                        materialDesign:HintAssist.Hint="Маршрутизация"
+                        DisplayMemberPath="Remarks"
+                        ItemsSource="{Binding Status.RoutingItems}"
+                        SelectedItem="{Binding Status.SelectedRouting}"
+                        Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom">
+                    <Border
+                        Padding="12,10"
+                        Background="{DynamicResource MaterialDesign.Brush.Background}"
+                        CornerRadius="16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter
+                                VerticalAlignment="Center"
+                                Content="{Binding ServerCode}"
+                                ContentTemplate="{StaticResource FlagBadge}" />
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center">
+                                <TextBlock
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                    Text="{Binding ServerName}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock Style="{StaticResource SubText}" Text="{Binding ServerDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <DockPanel Margin="0,12,0,0">
+                        <TextBlock
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Right"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                            Text="{Binding PingText}" />
+                        <Button
+                            x:Name="btnTestPing"
+                            Height="40"
+                            materialDesign:ButtonAssist.CornerRadius="20"
+                            Content="Тест пинга"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    </DockPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

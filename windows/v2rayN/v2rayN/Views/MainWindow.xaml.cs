@@ -32,8 +32,17 @@ public partial class MainWindow
 
         pbTheme.Content ??= new ThemeSettingView();
 
+        navHome.Checked += (_, _) => ShowPage(advanced: false);
+        navAdvanced.Checked += (_, _) => ShowPage(advanced: true);
+        btnSettings.Click += BtnSettings_Click;
+
         this.WhenActivated(disposables =>
         {
+            if (homeView.HomeViewModel == null && ViewModel != null)
+            {
+                homeView.Attach(ViewModel);
+            }
+
             //servers
             this.BindCommand(ViewModel, vm => vm.AddVmessServerCmd, v => v.menuAddVmessServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.AddVlessServerCmd, v => v.menuAddVlessServer).DisposeWith(disposables);
@@ -289,6 +298,75 @@ public partial class MainWindow
         _backupAndRestoreView ??= new BackupAndRestoreView();
         _backupAndRestoreView.ViewModel = ViewModel?.BackupAndRestoreViewModel;
         DialogHost.Show(_backupAndRestoreView, "RootDialog");
+    }
+
+    public ViewModels.HuppHomeViewModel? HomeViewModel => homeView.HomeViewModel;
+
+    private void ShowPage(bool advanced)
+    {
+        // Hidden (not Collapsed) keeps the classic views loaded so their bindings stay active.
+        homeView.Visibility = advanced ? Visibility.Hidden : Visibility.Visible;
+        advancedPanel.Visibility = advanced ? Visibility.Visible : Visibility.Hidden;
+    }
+
+    private void BtnSettings_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = ViewModel;
+        if (vm == null)
+        {
+            return;
+        }
+
+        MenuItem Item(string header, ICommand? command = null, RoutedEventHandler? click = null)
+        {
+            var item = new MenuItem { Header = header, Command = command };
+            if (click != null)
+            {
+                item.Click += click;
+            }
+            return item;
+        }
+
+        var addMenu = Item("Добавить сервер");
+        addMenu.Items.Add(Item("Из буфера обмена (Ctrl+V)", vm.AddServerViaClipboardCmd));
+        addMenu.Items.Add(Item("Сканировать QR с экрана", vm.AddServerViaScanCmd));
+        addMenu.Items.Add(Item("QR из картинки", vm.AddServerViaImageCmd));
+        addMenu.Items.Add(new Separator());
+        addMenu.Items.Add(Item("VLESS", vm.AddVlessServerCmd));
+        addMenu.Items.Add(Item("VMess", vm.AddVmessServerCmd));
+        addMenu.Items.Add(Item("Trojan", vm.AddTrojanServerCmd));
+        addMenu.Items.Add(Item("Shadowsocks", vm.AddShadowsocksServerCmd));
+        addMenu.Items.Add(Item("Hysteria2", vm.AddHysteria2ServerCmd));
+        addMenu.Items.Add(Item("TUIC", vm.AddTuicServerCmd));
+        addMenu.Items.Add(Item("WireGuard", vm.AddWireguardServerCmd));
+        addMenu.Items.Add(Item("SOCKS", vm.AddSocksServerCmd));
+        addMenu.Items.Add(Item("HTTP", vm.AddHttpServerCmd));
+        addMenu.Items.Add(Item("Свой конфиг (JSON)", vm.AddCustomServerCmd));
+
+        var menu = new ContextMenu
+        {
+            PlacementTarget = btnSettings,
+            Placement = System.Windows.Controls.Primitives.PlacementMode.Right,
+        };
+        menu.Items.Add(Item("Подписки и группы", vm.SubSettingCmd));
+        menu.Items.Add(Item("Обновить подписки", vm.SubUpdateCmd));
+        menu.Items.Add(Item("Обновить подписки через прокси", vm.SubUpdateViaProxyCmd));
+        menu.Items.Add(addMenu);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Основные настройки", vm.OptionSettingCmd));
+        menu.Items.Add(Item("Маршрутизация", vm.RoutingSettingCmd));
+        menu.Items.Add(Item("DNS", vm.DNSSettingCmd));
+        menu.Items.Add(Item("Горячие клавиши", vm.GlobalHotkeySettingCmd));
+        menu.Items.Add(Item("Шаблон конфигурации", vm.FullConfigTemplateCmd));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Перезапустить от администратора (для TUN)", vm.RebootAsAdminCmd));
+        menu.Items.Add(Item("Перезапустить ядро (F5)", vm.ReloadCmd));
+        menu.Items.Add(Item("Резервная копия", click: MenuBackupAndRestore_Click));
+        menu.Items.Add(Item("Проверить обновления", click: MenuCheckUpdate_Click));
+        menu.Items.Add(Item("Открыть папку программы", vm.OpenTheFileLocationCmd));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Свернуть в трей", click: MenuClose_Click));
+        menu.IsOpen = true;
     }
 
     #endregion Event

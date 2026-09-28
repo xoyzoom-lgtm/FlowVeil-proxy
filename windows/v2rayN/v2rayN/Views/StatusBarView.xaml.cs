@@ -1,4 +1,6 @@
+using System.Windows.Controls;
 using v2rayN.Manager;
+using v2rayN.ViewModels;
 
 namespace v2rayN.Views;
 
@@ -11,40 +13,13 @@ public partial class StatusBarView
         InitializeComponent();
         _config = AppManager.Instance.Config;
 
-        menuExit.Click += menuExit_Click;
+        trayMenu.Opened += (_, _) => BuildTrayMenu();
+        BuildTrayMenu();
         txtRunningServerDisplay.PreviewMouseDown += txtRunningInfoDisplay_MouseDoubleClick;
         txtRunningInfoDisplay.PreviewMouseDown += txtRunningInfoDisplay_MouseDoubleClick;
 
         this.WhenActivated(disposables =>
         {
-            //system proxy
-            this.OneWayBind(ViewModel, vm => vm.BlSystemProxyClear, v => v.menuSystemProxyClear2.Visibility, conversionHint: BooleanToVisibilityHint.UseHidden, viewModelToViewConverterOverride: new BooleanToVisibilityTypeConverter()).DisposeWith(disposables);
-            this.OneWayBind(ViewModel, vm => vm.BlSystemProxySet, v => v.menuSystemProxySet2.Visibility, conversionHint: BooleanToVisibilityHint.UseHidden, viewModelToViewConverterOverride: new BooleanToVisibilityTypeConverter()).DisposeWith(disposables);
-            this.OneWayBind(ViewModel, vm => vm.BlSystemProxyNothing, v => v.menuSystemProxyNothing2.Visibility, conversionHint: BooleanToVisibilityHint.UseHidden, viewModelToViewConverterOverride: new BooleanToVisibilityTypeConverter()).DisposeWith(disposables);
-            this.OneWayBind(ViewModel, vm => vm.BlSystemProxyPac, v => v.menuSystemProxyPac2.Visibility, conversionHint: BooleanToVisibilityHint.UseHidden, viewModelToViewConverterOverride: new BooleanToVisibilityTypeConverter()).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SystemProxyClearCmd, v => v.menuSystemProxyClear).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SystemProxySetCmd, v => v.menuSystemProxySet).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SystemProxyNothingCmd, v => v.menuSystemProxyNothing).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SystemProxyPacCmd, v => v.menuSystemProxyPac).DisposeWith(disposables);
-
-            //routings and servers
-            this.OneWayBind(ViewModel, vm => vm.RoutingItems, v => v.cmbRoutings.ItemsSource).DisposeWith(disposables);
-            this.Bind(ViewModel, vm => vm.SelectedRouting, v => v.cmbRoutings.SelectedItem).DisposeWith(disposables);
-            this.OneWayBind(ViewModel, vm => vm.BlRouting, v => v.menuRoutings.Visibility).DisposeWith(disposables);
-            this.OneWayBind(ViewModel, vm => vm.BlRouting, v => v.sepRoutings.Visibility).DisposeWith(disposables);
-
-            this.OneWayBind(ViewModel, vm => vm.Servers, v => v.cmbServers.ItemsSource).DisposeWith(disposables);
-            this.Bind(ViewModel, vm => vm.SelectedServer, v => v.cmbServers.SelectedItem).DisposeWith(disposables);
-            this.OneWayBind(ViewModel, vm => vm.BlServers, v => v.cmbServers.Visibility).DisposeWith(disposables);
-
-            //tray menu
-            this.BindCommand(ViewModel, vm => vm.AddServerViaClipboardCmd, v => v.menuAddServerViaClipboard2).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddServerViaScanCmd, v => v.menuAddServerViaScan2).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubUpdateCmd, v => v.menuSubUpdate2).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubUpdateViaProxyCmd, v => v.menuSubUpdateViaProxy2).DisposeWith(disposables);
-
-            this.BindCommand(ViewModel, vm => vm.CopyProxyCmdToClipboardCmd, v => v.menuCopyProxyCmdToClipboard).DisposeWith(disposables);
-
             this.OneWayBind(ViewModel, vm => vm.RunningServerToolTipText, v => v.tbNotify.ToolTipText).DisposeWith(disposables);
             this.OneWayBind(ViewModel, vm => vm.NotifyLeftClickCmd, v => v.tbNotify.LeftClickCommand).DisposeWith(disposables);
 
@@ -83,6 +58,116 @@ public partial class StatusBarView
     {
         tbNotify.Icon = await WindowsManager.Instance.GetNotifyIcon(_config);
         Application.Current.MainWindow?.Icon = WindowsManager.Instance.GetAppIcon(_config);
+    }
+
+    /// <summary>Happ-style tray menu: status, connect toggle, server / mode / routing pickers.</summary>
+    private void BuildTrayMenu()
+    {
+        trayMenu.Items.Clear();
+        var vm = ViewModel;
+        var home = (Application.Current?.MainWindow as MainWindow)?.HomeViewModel;
+
+        MenuItem Item(string header, Action? onClick = null, bool isChecked = false, bool enabled = true)
+        {
+            var item = new MenuItem
+            {
+                Header = header,
+                IsCheckable = false,
+                IsChecked = isChecked,
+                IsEnabled = enabled,
+                Height = double.NaN,
+            };
+            if (onClick != null)
+            {
+                item.Click += (_, _) => onClick();
+            }
+            return item;
+        }
+
+        var connected = home?.IsConnected == true;
+        var server = home?.ServerName ?? string.Empty;
+        trayMenu.Items.Add(Item(connected ? $"Подключено · {server}" : "Отключено", enabled: false));
+        trayMenu.Items.Add(Item(connected ? "Отключиться" : "Подключиться", () => _ = home?.ToggleAsync()));
+        trayMenu.Items.Add(new Separator());
+
+        if (vm != null)
+        {
+            var servers = Item("Сменить сервер");
+            if (vm.BlServers && vm.Servers.Count > 0)
+            {
+                foreach (var it in vm.Servers)
+                {
+                    var target = it;
+                    var name = TrayServerName(it.Text);
+                    servers.Items.Add(Item(name, () => vm.SelectedServer = target, it.ID == vm.SelectedServer?.ID));
+                }
+            }
+            else
+            {
+                servers.Items.Add(Item("Открыть список серверов", () => ((ICommand)vm.ShowWindowCmd).Execute(null)));
+            }
+            trayMenu.Items.Add(servers);
+
+            var mode = Item("Режим транспорта");
+            var tun = vm.EnableTun;
+            mode.Items.Add(Item("Системный прокси", () =>
+            {
+                if (home != null)
+                {
+                    home.ModeIndex = HuppHomeViewModel.ModeProxy;
+                }
+                else
+                {
+                    vm.EnableTun = false;
+                }
+            }, !tun && home?.ModeIndex != HuppHomeViewModel.ModeTun));
+            mode.Items.Add(Item("TUN (весь трафик)", () =>
+            {
+                if (home != null)
+                {
+                    home.ModeIndex = HuppHomeViewModel.ModeTun;
+                }
+                else
+                {
+                    vm.EnableTun = true;
+                }
+            }, tun || home?.ModeIndex == HuppHomeViewModel.ModeTun));
+            trayMenu.Items.Add(mode);
+
+            if (vm.RoutingItems.Count > 0)
+            {
+                var routing = Item("Маршрутизация");
+                foreach (var it in vm.RoutingItems)
+                {
+                    var target = it;
+                    routing.Items.Add(Item(it.Remarks, () => vm.SelectedRouting = target, it.Id == vm.SelectedRouting?.Id));
+                }
+                trayMenu.Items.Add(routing);
+            }
+
+            trayMenu.Items.Add(new Separator());
+            trayMenu.Items.Add(Item("Импорт из буфера обмена", () => ((ICommand)vm.AddServerViaClipboardCmd).Execute(null)));
+            trayMenu.Items.Add(Item("Обновить подписки", () => ((ICommand)vm.SubUpdateCmd).Execute(null)));
+            trayMenu.Items.Add(Item("Скопировать команду прокси", () => ((ICommand)vm.CopyProxyCmdToClipboardCmd).Execute(null)));
+            trayMenu.Items.Add(new Separator());
+            trayMenu.Items.Add(Item("Показать окно", () => ((ICommand)vm.ShowWindowCmd).Execute(null)));
+        }
+        trayMenu.Items.Add(Item("Выйти", () => menuExit_Click(this, new RoutedEventArgs())));
+    }
+
+    /// <summary>"[VLESS] 🇩🇪 Germany(1.2.3.4:443)" → "Germany".</summary>
+    private static string TrayServerName(string? summary)
+    {
+        var text = summary ?? string.Empty;
+        if (text.StartsWith('[') && text.IndexOf("] ", StringComparison.Ordinal) is var close and > 0)
+        {
+            text = text[(close + 2)..];
+        }
+        if (text.EndsWith(')') && text.LastIndexOf('(') is var open and > 0)
+        {
+            text = text[..open];
+        }
+        return HuppProfileText.SplitFlag(text).Name;
     }
 
     private async void menuExit_Click(object sender, RoutedEventArgs e)
