@@ -132,17 +132,10 @@ public class TaskManager
     {
         Logging.SaveLog("Execute check update");
 
-        var updateService = new UpdateService(_config, async (success, msg) => await Task.CompletedTask);
-
-        var msgs = await updateService.CheckHasUpdateOnlyAll(_config.CheckUpdateItem.CheckPreReleaseUpdate, _config.CheckUpdateItem.UpdateViaProxy);
-        foreach (var msg in msgs)
+        var info = await HuppUpdater.CheckAsync();
+        if (info?.HasUpdate == true)
         {
-            await _updateFunc?.Invoke(false, msg);
-        }
-        NoticeManager.Instance.Enqueue(string.Join("\n", msgs));
-
-        if (msgs.Count > 0)
-        {
+            NoticeManager.Instance.Enqueue($"Доступно обновление Hupp ({info.Tag}). Настройки → Проверить обновления");
             AppEvents.HasUpdateNotified.Publish(true);
         }
     }

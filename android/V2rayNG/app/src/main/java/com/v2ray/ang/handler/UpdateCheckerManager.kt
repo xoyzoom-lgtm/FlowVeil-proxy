@@ -15,11 +15,7 @@ import kotlinx.coroutines.withContext
 
 object UpdateCheckerManager {
     suspend fun checkForUpdate(includePreRelease: Boolean = false): CheckUpdateResult = withContext(Dispatchers.IO) {
-        val url = if (includePreRelease) {
-            AppConfig.APP_API_URL
-        } else {
-            AppConfig.APP_API_URL.concatUrl("latest")
-        }
+        val url = AppConfig.APP_API_URL.concatUrl("latest")
 
         val proxyUsername = SettingsManager.getSocksUsername()
         val proxyPassword = SettingsManager.getSocksPassword()
@@ -44,30 +40,21 @@ object UpdateCheckerManager {
                 ?: throw IllegalStateException("Failed to get response")
         }
 
-        val latestRelease = if (includePreRelease) {
-            JsonUtil.fromJsonSafe(response, Array<GitHubRelease>::class.java)
-                ?.firstOrNull()
-                ?: throw IllegalStateException("No pre-release found")
-        } else {
-            JsonUtil.fromJsonSafe(response, GitHubRelease::class.java)
-        }
+        val latestRelease = JsonUtil.fromJsonSafe(response, GitHubRelease::class.java)
         if (latestRelease == null) {
             return@withContext CheckUpdateResult(hasUpdate = false)
         }
 
-        val latestVersion = latestRelease.tagName.removePrefix("v")
-        LogUtil.i(
-            AppConfig.TAG,
-            "Found new version: $latestVersion (current: ${BuildConfig.VERSION_NAME})"
-        )
+        // Hupp releases are tagged "build-N"; the running build number is baked in by CI.
+        val latestBuild = latestRelease.tagName.filter { it.isDigit() }.toIntOrNull() ?: 0
+        LogUtil.i(AppConfig.TAG, "Latest build: $latestBuild (current: ${BuildConfig.HUPP_BUILD})")
 
-        return@withContext if (compareVersions(latestVersion, BuildConfig.VERSION_NAME) > 0) {
-            val downloadUrl = getDownloadUrl(latestRelease, Build.SUPPORTED_ABIS[0])
+        return@withContext if (latestBuild > BuildConfig.HUPP_BUILD) {
             CheckUpdateResult(
                 hasUpdate = true,
-                latestVersion = latestVersion,
+                latestVersion = latestRelease.tagName,
                 releaseNotes = latestRelease.body,
-                downloadUrl = downloadUrl,
+                downloadUrl = getDownloadUrl(latestRelease, Build.SUPPORTED_ABIS[0]),
                 isPreRelease = latestRelease.prerelease
             )
         } else {
@@ -75,31 +62,11 @@ object UpdateCheckerManager {
         }
     }
 
-    private fun compareVersions(version1: String, version2: String): Int {
-        val v1 = version1.split(".")
-        val v2 = version2.split(".")
-
-        for (i in 0 until maxOf(v1.size, v2.size)) {
-            val num1 = if (i < v1.size) v1[i].toInt() else 0
-            val num2 = if (i < v2.size) v2[i].toInt() else 0
-            if (num1 != num2) return num1 - num2
-        }
-        return 0
-    }
-
     private fun getDownloadUrl(release: GitHubRelease, abi: String): String {
-        val fDroid = "fdroid"
-
-        val assetsByAbi = release.assets.filter {
-            (it.name.contains(abi, true))
-        }
-
-        val asset = if (BuildConfig.APPLICATION_ID.contains(fDroid, ignoreCase = true)) {
-            assetsByAbi.firstOrNull { it.name.contains(fDroid) }
-        } else {
-            assetsByAbi.firstOrNull { !it.name.contains(fDroid) }
-        }
-
+        // Small arm64 build for modern phones, universal build for everything else.
+        val wanted = if (abi.contains("arm64", ignoreCase = true)) "Hupp-android-arm64.apk" else "Hupp-android.apk"
+        val asset = release.assets.firstOrNull { it.name == wanted }
+            ?: release.assets.firstOrNull { it.name.endsWith(".apk") }
         return asset?.browserDownloadUrl
             ?: throw IllegalStateException("No compatible APK found")
     }

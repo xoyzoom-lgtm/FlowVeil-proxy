@@ -71,7 +71,7 @@ jobs:
         run: |
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
           chmod 755 gradlew
-          ./gradlew assemblePlaystoreRelease \
+          ./gradlew assemblePlaystoreRelease -PhuppBuild=${{ github.run_number }} \
             -Pandroid.injected.signing.store.file="$RUNNER_TEMP/hupp.jks" \
             -Pandroid.injected.signing.store.password="$SIGN_PASS" \
             -Pandroid.injected.signing.key.alias=hupp \

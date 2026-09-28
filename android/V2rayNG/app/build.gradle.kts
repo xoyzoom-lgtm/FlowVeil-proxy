@@ -13,8 +13,11 @@ android {
         applicationId = "com.v2ray.ang"
         minSdk = 24
         targetSdk = 37
-        versionCode = 749
+        // CI passes -PhuppBuild=<run number> so every build has a higher version and the in-app updater can compare.
+        val huppBuild = (project.findProperty("huppBuild") as? String)?.toIntOrNull() ?: 0
+        versionCode = 749 + huppBuild
         versionName = "2.3.9"
+        buildConfigField("int", "HUPP_BUILD", huppBuild.toString())
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
         splits {

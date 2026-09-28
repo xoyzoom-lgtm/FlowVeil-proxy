@@ -46,6 +46,8 @@ Name: "{userstartup}\Hupp"; Filename: "{app}\Hupp.exe"; Tasks: autostart
 
 [Run]
 Filename: "{app}\Hupp.exe"; Description: "{cm:LaunchProgram,Hupp}"; Flags: nowait postinstall skipifsilent
+; Silent updates started from inside Hupp: relaunch it when done.
+Filename: "{app}\Hupp.exe"; Flags: nowait; Check: WizardSilent
 
 [Code]
 // A running Hupp keeps the old window alive (it is single-instance and hides to tray

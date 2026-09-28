@@ -10,7 +10,6 @@ public partial class MainWindow
 {
     private static Config _config;
     private readonly SingleReplaceableDisposable _layoutBindingsDisposable = new();
-    private CheckUpdateView? _checkUpdateView;
     private BackupAndRestoreView? _backupAndRestoreView;
 
     public MainWindow()
@@ -287,10 +286,7 @@ public partial class MainWindow
 
     private void MenuCheckUpdate_Click(object sender, RoutedEventArgs e)
     {
-        _checkUpdateView ??= new CheckUpdateView();
-        _checkUpdateView.ViewModel = ViewModel?.CheckUpdateViewModel;
-        DialogHost.Show(_checkUpdateView, "RootDialog");
-
+        DialogHost.Show(new HuppUpdateView(), "RootDialog");
         AppEvents.HasUpdateNotified.Publish(false);
     }
 
