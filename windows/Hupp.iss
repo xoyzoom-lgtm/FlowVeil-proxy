@@ -21,6 +21,11 @@ WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=no
+; Reinstalling over an existing copy just updates it in place (same folder, settings kept).
+UsePreviousAppDir=yes
+UsePreviousTasks=yes
+DisableDirPage=auto
+DisableReadyPage=yes
 
 [Languages]
 Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
@@ -53,6 +58,33 @@ begin
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM xray.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM sing-box.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Sleep(800);
+end;
+
+// Folder of a running Hupp.exe (installed or portable), or '' when none is running.
+function RunningHuppDir(): String;
+var
+  Tmp: String;
+  Lines: TArrayOfString;
+  Code: Integer;
+begin
+  Result := '';
+  Tmp := ExpandConstant('{tmp}\hupp-path.txt');
+  Exec('powershell.exe',
+    '-NoProfile -ExecutionPolicy Bypass -Command "$p=(Get-Process Hupp -ErrorAction SilentlyContinue | Select-Object -First 1).Path; ' +
+    'if ($p) { Set-Content -Encoding UTF8 -Path ''' + Tmp + ''' -Value (Split-Path $p) }"',
+    '', SW_HIDE, ewWaitUntilTerminated, Code);
+  if LoadStringsFromFile(Tmp, Lines) and (GetArrayLength(Lines) > 0) then
+    Result := Trim(Lines[0]);
+end;
+
+procedure InitializeWizard();
+var
+  Dir: String;
+begin
+  // Update the copy the user is actually running, even a portable one in another folder.
+  Dir := RunningHuppDir();
+  if (Dir <> '') and FileExists(AddBackslash(Dir) + 'Hupp.exe') then
+    WizardForm.DirEdit.Text := Dir;
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
