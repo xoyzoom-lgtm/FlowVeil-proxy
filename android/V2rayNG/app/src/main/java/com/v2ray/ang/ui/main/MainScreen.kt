@@ -121,7 +121,7 @@ fun MainScreen(
         QRCodeDialog(bitmap = shareQRCodeBitmap, onDismiss = { onAction(MainAction.DismissQRCodeDialog) })
     }
 
-    // Hide the built-in "Default" group while it is empty and real subscriptions exist.
+    // Hide the built-in "Default" group while it has no servers.
     val defaultServersFlow = remember(mainViewModel) {
         mainViewModel.serversForGroup(AppConfig.DEFAULT_SUBSCRIPTION_ID)
     }

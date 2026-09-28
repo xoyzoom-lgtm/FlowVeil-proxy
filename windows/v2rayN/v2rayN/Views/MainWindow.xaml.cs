@@ -151,7 +151,7 @@ public partial class MainWindow
              .DisposeWith(disposables);
         });
 
-        Title = $"{Utils.GetVersion()} - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
+        Title = $"Hupp {BuildName()} - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
         if (_config.UiItem.AutoHideStartup)
         {
             WindowState = WindowState.Minimized;
@@ -298,6 +298,16 @@ public partial class MainWindow
         _backupAndRestoreView ??= new BackupAndRestoreView();
         _backupAndRestoreView.ViewModel = ViewModel?.BackupAndRestoreViewModel;
         DialogHost.Show(_backupAndRestoreView, "RootDialog");
+    }
+
+    /// <summary>CI build tag (e.g. "build-5") so it is obvious which version is running.</summary>
+    private static string BuildName()
+    {
+        var info = System.Reflection.Assembly.GetEntryAssembly()?
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+            .FirstOrDefault()?.InformationalVersion;
+        return info.IsNullOrEmpty() ? $"V{Utils.GetVersionInfo()}" : info.Split('+')[0];
     }
 
     public ViewModels.HuppHomeViewModel? HomeViewModel => homeView.HomeViewModel;

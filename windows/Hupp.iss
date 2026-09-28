@@ -20,7 +20,7 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-CloseApplications=yes
+CloseApplications=no
 
 [Languages]
 Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
@@ -43,6 +43,24 @@ Name: "{userstartup}\Hupp"; Filename: "{app}\Hupp.exe"; Tasks: autostart
 Filename: "{app}\Hupp.exe"; Description: "{cm:LaunchProgram,Hupp}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+// A running Hupp keeps the old window alive (it is single-instance and hides to tray
+// instead of closing), so stop it and its core before files are replaced.
+procedure KillHupp();
+var
+  Code: Integer;
+begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM Hupp.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM xray.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM sing-box.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Sleep(800);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  KillHupp();
+  Result := '';
+end;
+
 // If the Xray core was not bundled at build time, fetch it during installation.
 procedure CurStepChanged(CurStep: TSetupStep);
 var

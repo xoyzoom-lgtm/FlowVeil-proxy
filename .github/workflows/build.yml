@@ -100,7 +100,7 @@ jobs:
 
       - name: Build Hupp
         run: |
-          dotnet publish v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -o Hupp
+          dotnet publish v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -p:InformationalVersion=build-${{ github.run_number }} -o Hupp
           Rename-Item Hupp/v2rayN.exe Hupp.exe
 
       - name: Add Xray core
