@@ -130,6 +130,7 @@ jobs:
 
   release:
     needs: [android, windows]
+    if: ${{ !cancelled() && (needs.android.result == 'success' || needs.windows.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8
