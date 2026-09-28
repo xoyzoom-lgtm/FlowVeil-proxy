@@ -102,6 +102,7 @@
                             x:Name="navAdvanced"
                             GroupName="nav"
                             Style="{StaticResource HuppRailButton}"
+                            Visibility="Collapsed"
                             ToolTip="Расширенный режим (как v2rayN)">
                             <StackPanel>
                                 <materialDesign:PackIcon

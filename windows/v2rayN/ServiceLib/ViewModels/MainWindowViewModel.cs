@@ -494,17 +494,54 @@ public partial class MainWindowViewModel : MyReactiveObject
             }
             stringData = result;
         }
+        var subsBefore = (await AppManager.Instance.SubItems()).Select(t => t.Id).ToHashSet();
         var ret = await ConfigHandler.AddBatchServers(_config, stringData, _config.SubIndexId, false);
         if (ret > 0)
         {
             await RefreshSubscriptions();
-            await RefreshServersDispatcherAsync();
-            NoticeManager.Instance.Enqueue(string.Format(ResUI.SuccessfullyImportedServerViaClipboard, ret));
+            var newSubs = (await AppManager.Instance.SubItems()).Where(t => !subsBefore.Contains(t.Id)).ToList();
+            if (newSubs.Count > 0)
+            {
+                // A subscription link: download its servers right away instead of leaving it empty.
+                NoticeManager.Instance.Enqueue("Подписка добавлена, загружаю серверы…");
+                await DownloadNewSubscriptionsAsync(newSubs);
+            }
+            else
+            {
+                await RefreshServersDispatcherAsync();
+                NoticeManager.Instance.Enqueue($"Добавлено серверов: {ret}");
+            }
         }
         else
         {
-            NoticeManager.Instance.Enqueue(ResUI.OperationFailed);
+            NoticeManager.Instance.Enqueue("Не удалось распознать ссылку. Скопируйте ссылку на подписку или сервер целиком.");
         }
+    }
+
+    private async Task DownloadNewSubscriptionsAsync(List<SubItem> subs)
+    {
+        foreach (var sub in subs)
+        {
+            await UpdateSubscriptionProcess(sub.Id, false);
+        }
+
+        var target = subs.Last();
+        var servers = await AppManager.Instance.ProfileItems(target.Id) ?? [];
+        if (servers.Count == 0)
+        {
+            NoticeManager.Instance.Enqueue("Не удалось загрузить серверы. Проверьте ссылку и интернет, затем нажмите «Обновить».");
+            return;
+        }
+
+        RxSchedulers.MainThreadScheduler.Schedule(() =>
+        {
+            ProfilesViewModel.SelectedSub = ProfilesViewModel.SubItems.FirstOrDefault(t => t.Id == target.Id) ?? ProfilesViewModel.SelectedSub;
+        });
+        if (await AppManager.Instance.GetProfileItem(_config.IndexId) == null)
+        {
+            await ProfilesViewModel.SetDefaultServer(servers.First().IndexId);
+        }
+        NoticeManager.Instance.Enqueue($"Готово! Загружено серверов: {servers.Count}");
     }
 
     public async Task AddServerViaScanAsync()

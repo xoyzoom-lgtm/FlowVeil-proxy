@@ -109,11 +109,19 @@ public static class ConfigHandler
             config.UiItem.CurrentTheme = HappThemes.DefaultName;
         }
 
-        if (config.UiItem.CurrentLanguage.IsNullOrEmpty())
+        // Hupp is Russian-first: default to Russian once, the user can switch later.
+        var langMarker = Utils.GetConfigPath("hupp_lang_v1");
+        if (config.UiItem.CurrentLanguage.IsNullOrEmpty() || !File.Exists(langMarker))
         {
-            config.UiItem.CurrentLanguage = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Equals("zh", StringComparison.CurrentCultureIgnoreCase)
-                ? Global.Languages.First()
-                : Global.Languages[2];
+            config.UiItem.CurrentLanguage = "ru";
+            try
+            {
+                File.WriteAllText(langMarker, "ru");
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(_tag, ex);
+            }
         }
 
         config.ConstItem ??= new ConstItem();
@@ -2177,7 +2185,7 @@ public static class ConfigHandler
         }
 
         var queryVars = Utils.ParseQueryString(uri.Query);
-        subItem.Remarks = queryVars["remarks"] ?? "import_sub";
+        subItem.Remarks = queryVars["remarks"] ?? uri.Host;
 
         return await AddSubItem(config, subItem);
     }

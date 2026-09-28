@@ -148,6 +148,18 @@ public sealed class HuppHomeViewModel : HuppObservable
     private string _serverDescription = string.Empty;
     public string ServerDescription { get => _serverDescription; private set => Set(ref _serverDescription, value); }
 
+    private string _hintText = string.Empty;
+    public string HintText { get => _hintText; private set => Set(ref _hintText, value); }
+
+    private bool _hasServer;
+
+    private void UpdateHint()
+    {
+        HintText = !_hasServer
+            ? "Сначала добавьте подписку — кнопка «Добавить» слева"
+            : IsConnected ? string.Empty : "Нажмите на кнопку, чтобы включить VPN";
+    }
+
     private string _pingText = string.Empty;
     public string PingText { get => _pingText; private set => Set(ref _pingText, value); }
 
@@ -251,13 +263,13 @@ public sealed class HuppHomeViewModel : HuppObservable
             return;
         }
         IsBusy = true;
-        PingText = "Проверка…";
+        PingText = "Проверяю…";
         try
         {
             var result = await Status.TestServerAvailability();
             PingText = result == null
                 ? "Нет сервера"
-                : result.Time > 0 ? $"{result.Time} мс" : "Нет соединения";
+                : result.Time > 0 ? $"Работает · {result.Time} мс" : "Нет соединения";
         }
         catch (Exception ex)
         {
@@ -319,6 +331,7 @@ public sealed class HuppHomeViewModel : HuppObservable
             Raise(nameof(Mode));
             Raise(nameof(ModeTitle));
         }
+        UpdateHint();
         if (connected)
         {
             _timer.Start();
@@ -358,11 +371,13 @@ public sealed class HuppHomeViewModel : HuppObservable
                 }
             }
 
+            _hasServer = model != null;
+            UpdateHint();
             if (model == null)
             {
                 ServerCode = string.Empty;
                 ServerName = "Сервер не выбран";
-                ServerDescription = string.Empty;
+                ServerDescription = "Выберите сервер в списке";
                 return;
             }
 

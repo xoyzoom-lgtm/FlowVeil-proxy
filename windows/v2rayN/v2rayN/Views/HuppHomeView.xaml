@@ -17,8 +17,8 @@
 
         <Style x:Key="HuppCard" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
-            <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Padding" Value="18,14" />
             <Setter Property="BorderThickness" Value="1.5" />
             <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
@@ -105,9 +105,19 @@
                     </Button>
                     <Button
                         x:Name="btnAdd"
-                        Style="{StaticResource RoundIconButton}"
-                        ToolTip="Добавить из буфера обмена (Ctrl+V)">
-                        <materialDesign:PackIcon Kind="Plus" />
+                        Height="36"
+                        Margin="6,0,0,0"
+                        Padding="14,0"
+                        materialDesign:ButtonAssist.CornerRadius="18"
+                        Style="{StaticResource MaterialDesignFlatDarkBgButton}"
+                        ToolTip="Скопируйте ссылку на подписку и нажмите — она добавится сама (Ctrl+V)">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon VerticalAlignment="Center" Kind="Plus" />
+                            <TextBlock
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="Добавить" />
+                        </StackPanel>
                     </Button>
                 </StackPanel>
                 <TextBlock
@@ -241,18 +251,34 @@
                     Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
                     Text="Пока нет серверов" />
                 <TextBlock
-                    MaxWidth="320"
+                    MaxWidth="360"
                     HorizontalAlignment="Center"
+                    FontSize="14"
                     Style="{StaticResource SubText}"
-                    Text="Скопируйте ссылку на подписку или сервер и нажмите кнопку ниже"
+                    Text="1. Скопируйте ссылку на подписку от вашего VPN (начинается с https://)&#10;2. Нажмите «Вставить ссылку» — серверы загрузятся сами"
                     TextAlignment="Center"
                     TextWrapping="Wrap" />
                 <Button
                     x:Name="btnEmptyPaste"
-                    Margin="0,16,0,0"
+                    Height="48"
+                    Margin="0,20,0,0"
+                    Padding="28,0"
                     HorizontalAlignment="Center"
-                    materialDesign:ButtonAssist.CornerRadius="20"
-                    Content="Вставить из буфера" />
+                    materialDesign:ButtonAssist.CornerRadius="24"
+                    FontSize="15"
+                    Style="{StaticResource MaterialDesignFlatDarkBgButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            VerticalAlignment="Center"
+                            Kind="ContentPaste" />
+                        <TextBlock
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Text="Вставить ссылку" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
             <!--  Server list  -->
@@ -284,7 +310,8 @@
                         <Border MouseLeftButtonUp="Server_MouseLeftButtonUp">
                             <Border.Style>
                                 <Style BasedOn="{StaticResource HuppCard}" TargetType="Border">
-                                    <Setter Property="Padding" Value="12,10" />
+                                    <Setter Property="Padding" Value="14,12" />
+                                    <Setter Property="CornerRadius" Value="18" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsActive}" Value="True">
                                             <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
@@ -365,7 +392,7 @@
             Margin="10,16,20,16"
             Padding="20"
             Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
-            CornerRadius="24">
+            CornerRadius="28">
             <DockPanel LastChildFill="False">
                 <StackPanel DockPanel.Dock="Top">
                     <Button
@@ -423,10 +450,17 @@
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"
-                        FontFamily="Consolas"
+                        FontFamily="Segoe UI Variable Display, Segoe UI"
                         FontSize="16"
                         Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
                         Text="{Binding TimerText}" />
+                    <TextBlock
+                        Margin="0,6,0,0"
+                        HorizontalAlignment="Center"
+                        Style="{StaticResource SubText}"
+                        Text="{Binding HintText}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"
@@ -460,9 +494,9 @@
 
                 <StackPanel DockPanel.Dock="Bottom">
                     <Border
-                        Padding="12,10"
+                        Padding="14,12"
                         Background="{DynamicResource MaterialDesign.Brush.Background}"
-                        CornerRadius="16">
+                        CornerRadius="20">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -496,9 +530,9 @@
                             Text="{Binding PingText}" />
                         <Button
                             x:Name="btnTestPing"
-                            Height="40"
-                            materialDesign:ButtonAssist.CornerRadius="20"
-                            Content="Тест пинга"
+                            Height="44"
+                            materialDesign:ButtonAssist.CornerRadius="22"
+                            Content="Проверить соединение"
                             Style="{StaticResource MaterialDesignOutlinedButton}" />
                     </DockPanel>
                 </StackPanel>

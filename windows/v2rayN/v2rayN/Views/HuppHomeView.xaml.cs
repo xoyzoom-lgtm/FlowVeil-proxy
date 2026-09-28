@@ -19,7 +19,7 @@ public partial class HuppHomeView : UserControl
         btnPower.Click += async (_, _) => await Run(() => _vm?.ToggleAsync());
         btnTestPing.Click += async (_, _) => await Run(() => _vm?.TestCurrentAsync());
         btnPingAll.Click += async (_, _) => await Run(() => _vm?.PingAllAsync());
-        btnUpdateSubs.Click += async (_, _) => await Run(() => _main?.UpdateSubscriptionProcess("", false));
+        btnUpdateSubs.Click += async (_, _) => await UpdateSubsAsync("");
         btnAdd.Click += async (_, _) => await PasteAsync();
         btnEmptyPaste.Click += async (_, _) => await PasteAsync();
         btnMode.Click += (_, _) => OpenModeMenu();
@@ -61,12 +61,26 @@ public partial class HuppHomeView : UserControl
         }
     }
 
+    private async Task UpdateSubsAsync(string subId)
+    {
+        if (_main == null || _vm == null)
+        {
+            return;
+        }
+        NoticeManager.Instance.Enqueue("Обновляю подписки…");
+        await Run(() => _main.UpdateSubscriptionProcess(subId, false));
+        var servers = await AppManager.Instance.ProfileItems(subId);
+        NoticeManager.Instance.Enqueue(servers is { Count: > 0 }
+            ? $"Готово! Серверов: {servers.Count}"
+            : "Не удалось загрузить серверы. Проверьте ссылку и интернет.");
+    }
+
     private async Task PasteAsync()
     {
         var data = WindowsUtils.GetClipboardData();
         if (data.IsNullOrEmpty() || _main == null)
         {
-            NoticeManager.Instance.Enqueue("Буфер обмена пуст");
+            NoticeManager.Instance.Enqueue("Сначала скопируйте ссылку на подписку (Ctrl+C), потом нажмите «Добавить»");
             return;
         }
         await Run(() => _main.AddServerViaClipboardAsync(data));
@@ -123,7 +137,7 @@ public partial class HuppHomeView : UserControl
         var card = CardOf(sender);
         if (card != null)
         {
-            await Run(() => _main?.UpdateSubscriptionProcess(card.Sub.Id, false));
+            await UpdateSubsAsync(card.Sub.Id);
         }
     }
 

@@ -21,6 +21,12 @@ public class DownloadService
     private static readonly string _tag = "DownloadService";
 
     /// <summary>
+    /// Panels pick the response format by User-Agent and only know upstream client names,
+    /// so identify as the v2rayN core this app is built on (Android sends "v2rayNG/...").
+    /// </summary>
+    public static string SubscriptionUserAgent => $"v2rayN/{Utils.GetVersionInfo()}";
+
+    /// <summary>
     /// Downloads data with the specified proxy and reports progress messages.
     /// </summary>
     public async Task<int> DownloadDataAsync(string url, IWebProxy webProxy, Func<bool, string, Task> updateFunc, CancellationToken cancellationToken = default)
@@ -279,7 +285,7 @@ public class DownloadService
 
             if (userAgent.IsNullOrEmpty())
             {
-                userAgent = Utils.GetVersion(false);
+                userAgent = SubscriptionUserAgent;
             }
             client.DefaultRequestHeaders.UserAgent.TryParseAdd(userAgent);
             if (AcceptHeader.IsNotEmpty())
@@ -334,7 +340,7 @@ public class DownloadService
         {
             if (userAgent.IsNullOrEmpty())
             {
-                userAgent = Utils.GetVersion(false);
+                userAgent = SubscriptionUserAgent;
             }
             var result = await DownloaderHelper.Instance.DownloadStringAsync(webProxy, url, userAgent, RequestHeaders, AcceptHeader, cancellationToken);
             return result;

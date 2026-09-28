@@ -34,6 +34,7 @@ public partial class MainWindow
 
         navHome.Checked += (_, _) => ShowPage(advanced: false);
         navAdvanced.Checked += (_, _) => ShowPage(advanced: true);
+        navHome.Checked += (_, _) => navAdvanced.Visibility = Visibility.Collapsed;
         btnSettings.Click += BtnSettings_Click;
 
         this.WhenActivated(disposables =>
@@ -353,27 +354,39 @@ public partial class MainWindow
         addMenu.Items.Add(Item("HTTP", vm.AddHttpServerCmd));
         addMenu.Items.Add(Item("Свой конфиг (JSON)", vm.AddCustomServerCmd));
 
+        var expert = Item("Для опытных");
+        expert.Items.Add(addMenu);
+        expert.Items.Add(Item("Подписки и группы", vm.SubSettingCmd));
+        expert.Items.Add(Item("Обновить подписки через прокси", vm.SubUpdateViaProxyCmd));
+        expert.Items.Add(new Separator());
+        expert.Items.Add(Item("Параметры ядра и портов", vm.OptionSettingCmd));
+        expert.Items.Add(Item("Маршрутизация", vm.RoutingSettingCmd));
+        expert.Items.Add(Item("DNS", vm.DNSSettingCmd));
+        expert.Items.Add(Item("Горячие клавиши", vm.GlobalHotkeySettingCmd));
+        expert.Items.Add(Item("Шаблон конфигурации", vm.FullConfigTemplateCmd));
+        expert.Items.Add(new Separator());
+        expert.Items.Add(Item("Расширенный режим (таблица серверов, журнал)", click: (_, _) =>
+        {
+            navAdvanced.Visibility = Visibility.Visible;
+            navAdvanced.IsChecked = true;
+        }));
+        expert.Items.Add(Item("Перезапустить ядро (F5)", vm.ReloadCmd));
+        expert.Items.Add(Item("Запустить от администратора (для TUN)", vm.RebootAsAdminCmd));
+        expert.Items.Add(Item("Открыть папку программы", vm.OpenTheFileLocationCmd));
+
         var menu = new ContextMenu
         {
             PlacementTarget = btnSettings,
             Placement = System.Windows.Controls.Primitives.PlacementMode.Right,
         };
-        menu.Items.Add(Item("Подписки и группы", vm.SubSettingCmd));
+        // Everyday actions first; everything technical lives under "Для опытных".
+        menu.Items.Add(Item("Вставить подписку или сервер (Ctrl+V)", vm.AddServerViaClipboardCmd));
         menu.Items.Add(Item("Обновить подписки", vm.SubUpdateCmd));
-        menu.Items.Add(Item("Обновить подписки через прокси", vm.SubUpdateViaProxyCmd));
-        menu.Items.Add(addMenu);
+        menu.Items.Add(Item("Мои подписки", vm.SubSettingCmd));
         menu.Items.Add(new Separator());
-        menu.Items.Add(Item("Основные настройки", vm.OptionSettingCmd));
-        menu.Items.Add(Item("Маршрутизация", vm.RoutingSettingCmd));
-        menu.Items.Add(Item("DNS", vm.DNSSettingCmd));
-        menu.Items.Add(Item("Горячие клавиши", vm.GlobalHotkeySettingCmd));
-        menu.Items.Add(Item("Шаблон конфигурации", vm.FullConfigTemplateCmd));
-        menu.Items.Add(new Separator());
-        menu.Items.Add(Item("Перезапустить от администратора (для TUN)", vm.RebootAsAdminCmd));
-        menu.Items.Add(Item("Перезапустить ядро (F5)", vm.ReloadCmd));
         menu.Items.Add(Item("Резервная копия", click: MenuBackupAndRestore_Click));
         menu.Items.Add(Item("Проверить обновления", click: MenuCheckUpdate_Click));
-        menu.Items.Add(Item("Открыть папку программы", vm.OpenTheFileLocationCmd));
+        menu.Items.Add(expert);
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("Свернуть в трей", click: MenuClose_Click));
         menu.IsOpen = true;
