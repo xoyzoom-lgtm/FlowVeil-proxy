@@ -678,12 +678,9 @@
     <string name="whats_new_title">Что нового</string>
     <string name="whats_new_ok">Понятно</string>
     <string-array name="whats_new_items">
-        <item>Автообновление подписок: выберите, как часто — в Настройки → Подключение</item>
-        <item>Если сервер перестал отвечать, FlowVeil за полминуты сам переключится на рабочий и пришлёт уведомление</item>
-        <item>Кнопка «Лучший»: находит самый быстрый сервер (без серверов в России)</item>
-        <item>Тест скорости в меню ⋮ меряет как настоящие спидтесты: скачивание, отдача, пинг</item>
-        <item>Меньше лишних кнопок: технические настройки теперь в «Режиме разработчика»</item>
-        <item>Избранные серверы (★), напоминания об окончании подписки, «Российские сайты напрямую»</item>
+        <item>Авто-обход белых списков: на ограниченной мобильной сети FlowVeil сам найдёт сервер, который проходит, а на Wi-Fi вернётся обратно. Включается в Настройки → Подключение</item>
+        <item>Поддержка серверов TUIC, Hysteria 2 из подписок сохраняет диапазон портов</item>
+        <item>Точнее проверка JSON-серверов, обычные серверы проверяются первыми</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>
@@ -699,6 +696,24 @@
     <string name="server_lab_tuic_udp_relay">Режим UDP-ретрансляции</string>
     <string name="tuic_engine_missing">Для TUIC нужен движок sing-box, а в этой сборке его нет для вашего устройства. Возьмите сервер VLESS, Hysteria 2 или другой либо поставьте полную сборку FlowVeil.</string>
     <string name="tuic_engine_failed">Движок TUIC не запустился. Проверьте адрес сервера, UUID и пароль.</string>
+    <string name="title_whitelist_bypass">Авто-обход белых списков</string>
+    <string name="summary_whitelist_bypass">Только на мобильной сети. Если оператор пускает лишь на сайты из белого списка и сервер перестал работать, FlowVeil найдёт сервер, который проходит, и переключится на него</string>
+    <string name="title_whitelist_bypass_mode">Серверы обхода</string>
+    <string name="whitelist_bypass_mode_auto">Автоматически (все серверы)</string>
+    <string name="whitelist_bypass_mode_manual">Только выбранные мной</string>
+    <string name="title_whitelist_bypass_servers">Выбрать серверы обхода</string>
+    <string name="summary_whitelist_bypass_servers">Выбрано: %1$d. Используется самый быстрый рабочий</string>
+    <string name="title_whitelist_bypass_auto_return">Возвращаться на обычный сервер</string>
+    <string name="summary_whitelist_bypass_auto_return">При Wi-Fi или когда обычный сервер снова работает</string>
+    <string name="whitelist_bypass_search_hint">Поиск серверов</string>
+    <string name="whitelist_bypass_favorites">Избранные</string>
+    <string name="whitelist_bypass_no_servers">Серверов пока нет. Сначала добавьте подписку</string>
+    <string name="whitelist_bypass_last_check">Последняя проверка: %1$s</string>
+    <string name="whitelist_bypass_notify_title">Мобильная сеть ограничена</string>
+    <string name="whitelist_bypass_notify_switched">Переключился на %1$s для обхода ограничений</string>
+    <string name="whitelist_bypass_notify_returned">Ограничений больше нет, вернулся на %1$s</string>
+    <string name="whitelist_bypass_notify_not_found">Сейчас ни один сервер не проходит ограничения. Попробую ещё раз позже</string>
+    <string name="whitelist_bypass_notify_empty_manual">Серверы обхода не выбраны. Выберите их в Настройки → Подключение</string>
     <string name="failover_notification_title">Переключились на рабочий сервер</string>
     <string name="failover_notification_text">%1$s перестал отвечать, теперь используется %2$s</string>
     <string-array name="sub_update_interval_entries">

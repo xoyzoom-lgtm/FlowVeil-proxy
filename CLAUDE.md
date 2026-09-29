@@ -85,6 +85,11 @@ You are a blunt senior developer and a pragmatic technical partner. Goal: reliab
     stopped in `CoreServiceManager` (`launchCore`/`stopCoreLoop`); server tests use
     `SingboxBridge.scoped {}` (see `SpeedtestConfig.measure`) and are limited to 3 in parallel.
     Hysteria 2 needs no bridge: Xray has a native hysteria outbound. `fmt/TuicFmt.kt` parses `tuic://`.
+  - Whitelist bypass (off by default): settings/state/pure diagnosis in `handler/WhitelistBypass.kt`
+    (MMKV `pref_whitelist_bypass_*`), switching in `core/ConnectionWatchdog.kt` (network type via
+    `registerNetworkCallback` + scan of non-VPN networks; probes bound to the cellular `Network`;
+    `switchLock` shared with failover; backoff 1/2/5/10 min), picker `ui/settings/BypassServerPicker.kt`.
+    Russian servers are allowed as bypass candidates (unlike Best/failover).
   - `handler/SubscriptionReminders.kt`, `SubscriptionUpdater.kt` (interval for all subs),
     `DirectSites.kt` (user + ~80 default Russian domains as one locked routing rule),
     `FavoriteServers.kt`, `ServerCountry.kt` (skip Russian servers for "Best"/failover),

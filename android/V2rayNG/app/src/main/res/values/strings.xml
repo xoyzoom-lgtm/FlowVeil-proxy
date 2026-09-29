@@ -674,12 +674,9 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
-        <item>Automatic subscription updates: choose how often in Settings → Connection</item>
-        <item>If a server stops responding, FlowVeil switches to a working one within half a minute and notifies you</item>
-        <item>“Best” button finds the fastest server (servers in Russia are skipped)</item>
-        <item>Speed test in the ⋮ menu measures like real speed tests: download, upload, ping</item>
-        <item>Fewer confusing buttons: technical settings moved to “Developer mode”</item>
-        <item>Favorite servers (★), subscription reminders, “Russian sites directly”</item>
+        <item>Auto bypass of mobile whitelists: on restricted mobile data FlowVeil finds a server that gets through and switches back on Wi-Fi. Turn it on in Settings → Connection</item>
+        <item>TUIC servers are supported, Hysteria 2 keeps port ranges from subscriptions</item>
+        <item>Server check is more accurate for JSON servers; ordinary servers are checked first</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
@@ -695,6 +692,24 @@
     <string name="server_lab_tuic_udp_relay">UDP relay mode</string>
     <string name="tuic_engine_missing">TUIC needs the sing-box engine, which this build does not include for your device. Use a VLESS, Hysteria 2 or other server, or install the full FlowVeil build.</string>
     <string name="tuic_engine_failed">The TUIC engine could not start. Check the server address, UUID and password.</string>
+    <string name="title_whitelist_bypass">Auto bypass of mobile whitelists</string>
+    <string name="summary_whitelist_bypass">Mobile data only. If the operator lets only whitelisted sites through and the server stops working, FlowVeil finds a server that gets through and switches to it</string>
+    <string name="title_whitelist_bypass_mode">Bypass servers</string>
+    <string name="whitelist_bypass_mode_auto">Automatic (all servers)</string>
+    <string name="whitelist_bypass_mode_manual">Only the ones I choose</string>
+    <string name="title_whitelist_bypass_servers">Choose bypass servers</string>
+    <string name="summary_whitelist_bypass_servers">Selected: %1$d. The fastest working one is used</string>
+    <string name="title_whitelist_bypass_auto_return">Return to the usual server</string>
+    <string name="summary_whitelist_bypass_auto_return">On Wi-Fi or when the usual server works again</string>
+    <string name="whitelist_bypass_search_hint">Search servers</string>
+    <string name="whitelist_bypass_favorites">Favorites</string>
+    <string name="whitelist_bypass_no_servers">No servers yet. Add a subscription first</string>
+    <string name="whitelist_bypass_last_check">Last check: %1$s</string>
+    <string name="whitelist_bypass_notify_title">Mobile network is restricted</string>
+    <string name="whitelist_bypass_notify_switched">Switched to %1$s to get around the restrictions</string>
+    <string name="whitelist_bypass_notify_returned">Restrictions are gone, back to %1$s</string>
+    <string name="whitelist_bypass_notify_not_found">No server gets through the restrictions right now. Will try again later</string>
+    <string name="whitelist_bypass_notify_empty_manual">No bypass servers chosen. Pick them in Settings → Connection</string>
     <string name="failover_notification_title">Switched to a working server</string>
     <string name="failover_notification_text">%1$s stopped responding, now using %2$s</string>
     <string-array name="sub_update_interval_entries">

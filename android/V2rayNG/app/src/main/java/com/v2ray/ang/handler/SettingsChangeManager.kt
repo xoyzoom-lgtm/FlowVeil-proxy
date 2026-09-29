@@ -29,6 +29,10 @@ object SettingsChangeManager {
         AppConfig.PREF_SHOW_BEST_BUTTON,
         AppConfig.PREF_DEV_MODE,
         AppConfig.PREF_SUB_UPDATE_INTERVAL,
+        WhitelistBypass.PREF_ENABLED,
+        WhitelistBypass.PREF_MODE,
+        WhitelistBypass.PREF_SERVERS,
+        WhitelistBypass.PREF_AUTO_RETURN,
     )
 
     /**

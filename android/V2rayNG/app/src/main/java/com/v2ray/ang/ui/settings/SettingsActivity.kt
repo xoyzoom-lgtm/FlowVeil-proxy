@@ -72,6 +72,7 @@ import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.handler.DirectSites
+import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.ui.compose.InputDialog
 import com.v2ray.ang.ui.compose.InputField
 import com.v2ray.ang.enums.RoutingType
@@ -214,6 +215,11 @@ fun SettingsScreen(
     var speedEnabled by rememberMmkvBool(AppConfig.PREF_SPEED_ENABLED, false)
     var sendHwid by rememberMmkvBool(AppConfig.PREF_SEND_HWID, true)
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
+    var whitelistBypass by rememberMmkvBool(WhitelistBypass.PREF_ENABLED, false)
+    var whitelistBypassMode by rememberMmkvString(WhitelistBypass.PREF_MODE, WhitelistBypass.MODE_AUTO)
+    var whitelistBypassReturn by rememberMmkvBool(WhitelistBypass.PREF_AUTO_RETURN, true)
+    var whitelistBypassCount by remember { mutableStateOf(WhitelistBypass.servers().size) }
+    var showBypassPicker by remember { mutableStateOf(false) }
     var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
     var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
     var directSitesCount by remember { mutableStateOf(DirectSites.count()) }
@@ -377,6 +383,56 @@ fun SettingsScreen(
                     checked = autoFailover,
                     onCheckedChange = { autoFailover = it }
                 )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_whitelist_bypass),
+                    summary = stringResource(R.string.summary_whitelist_bypass),
+                    checked = whitelistBypass,
+                    onCheckedChange = { whitelistBypass = it }
+                )
+                if (whitelistBypass) {
+                    SettingsListItem(
+                        title = stringResource(R.string.title_whitelist_bypass_mode),
+                        entries = listOf(
+                            stringResource(R.string.whitelist_bypass_mode_auto),
+                            stringResource(R.string.whitelist_bypass_mode_manual),
+                        ),
+                        values = listOf(WhitelistBypass.MODE_AUTO, WhitelistBypass.MODE_MANUAL),
+                        selectedValue = whitelistBypassMode,
+                        onSelected = { whitelistBypassMode = it }
+                    )
+                    if (whitelistBypassMode == WhitelistBypass.MODE_MANUAL) {
+                        SettingsMenuItem(
+                            title = stringResource(R.string.title_whitelist_bypass_servers),
+                            subtitle = stringResource(R.string.summary_whitelist_bypass_servers, whitelistBypassCount),
+                            onClick = { showBypassPicker = true }
+                        )
+                    }
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.title_whitelist_bypass_auto_return),
+                        summary = stringResource(R.string.summary_whitelist_bypass_auto_return),
+                        checked = whitelistBypassReturn,
+                        onCheckedChange = { whitelistBypassReturn = it }
+                    )
+                    if (devMode) {
+                        val diag = remember { WhitelistBypass.lastDiagnosis }
+                        if (diag.isNotBlank()) {
+                            SettingsMenuItem(
+                                title = stringResource(R.string.whitelist_bypass_last_check, diag.substringBefore(':')),
+                                subtitle = diag,
+                                onClick = {}
+                            )
+                        }
+                    }
+                }
+                if (showBypassPicker) {
+                    BypassServerPickerDialog(
+                        onDismiss = { showBypassPicker = false },
+                        onSaved = { count ->
+                            whitelistBypassCount = count
+                            showBypassPicker = false
+                        }
+                    )
+                }
                 SettingsListItem(
                     title = stringResource(R.string.title_pref_sub_update_interval),
                     entries = subUpdateEntries,
