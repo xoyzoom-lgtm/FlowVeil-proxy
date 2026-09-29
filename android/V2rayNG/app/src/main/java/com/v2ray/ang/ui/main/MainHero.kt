@@ -174,7 +174,7 @@ internal fun PowerButton(
     }
 
     Box(
-        modifier = modifier.size(buttonSize * 1.4f),
+        modifier = modifier.size(buttonSize * 1.25f),
         contentAlignment = Alignment.Center
     ) {
         if (isRunning) {
@@ -205,11 +205,11 @@ internal fun PowerButton(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            PowerGlyph(color = contentColor, modifier = Modifier.size(buttonSize * 0.24f))
-            Spacer(Modifier.height(10.dp))
+            PowerGlyph(color = contentColor, modifier = Modifier.size(buttonSize * 0.26f))
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = stringResource(if (isRunning) R.string.main_power_connected else R.string.main_power_connect),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 1.5.sp,
                 color = contentColor.copy(alpha = 0.85f)
@@ -218,7 +218,7 @@ internal fun PowerButton(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = formatElapsed(now - connectedSince),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontFamily = FontFamily.Monospace,
                     color = contentColor
                 )
@@ -390,13 +390,13 @@ internal fun ServerBadge(remarks: String, flag: String?, modifier: Modifier = Mo
     val accent = mainAccentColor()
     Box(
         modifier = modifier
-            .size(36.dp)
+            .size(32.dp)
             .clip(CircleShape)
             .background(if (flag != null) Color.Transparent else accent.copy(alpha = 0.16f)),
         contentAlignment = Alignment.Center
     ) {
         if (flag != null) {
-            Text(text = flag, fontSize = 26.sp)
+            Text(text = flag, fontSize = 22.sp)
         } else {
             Text(
                 text = remarks.trim().take(1).uppercase(),
@@ -433,28 +433,28 @@ internal fun ConnectionHero(
             val (flag, name) = splitFlag(selectedRow.remarks)
             Text(
                 text = if (flag != null && flag != name) "$flag  $name" else name,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 32.dp)
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
         }
         Text(
             text = statusText ?: stringResource(R.string.main_check_connection),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            maxLines = 3,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .padding(horizontal = 24.dp)
                 .clip(RoundedCornerShape(50))
                 .background(serverCardColor(selected = false))
                 .clickable(onClick = onTest)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 14.dp, vertical = 5.dp)
         )
     }
 }

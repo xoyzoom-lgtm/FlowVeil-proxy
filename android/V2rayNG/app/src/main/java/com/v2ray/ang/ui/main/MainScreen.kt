@@ -194,8 +194,8 @@ fun MainScreen(
         if (includeHero && !showSearch) {
             item(key = KEY_HERO) {
                 Column {
-                    hero(160.dp)
-                    Spacer(Modifier.height(32.dp))
+                    hero(118.dp)
+                    Spacer(Modifier.height(12.dp))
                 }
             }
         }
@@ -230,17 +230,17 @@ fun MainScreen(
                                 }
                             }
                         )
-                        Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(8.dp))
                     }
                 }
             }
             item(key = "title") {
                 Text(
                     text = stringResource(R.string.main_servers_title),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 4.dp)
                 )
             }
             if (visibleGroups.size > 1) {

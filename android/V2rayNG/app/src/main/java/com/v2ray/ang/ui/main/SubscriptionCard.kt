@@ -102,7 +102,7 @@ internal fun SubscriptionCard(
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(serverCardColor(selected = false))
-            .padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 12.dp)
+            .padding(start = 14.dp, end = 4.dp, top = 2.dp, bottom = 10.dp)
     ) {
         // Title with small actions
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -211,10 +211,10 @@ internal fun SubscriptionCard(
 
         // Provider announcement, always shown in full
         if (!subscription.announce.isNullOrBlank()) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = subscription.announce!!,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = subtle,
                 modifier = Modifier.fillMaxWidth().padding(end = 10.dp)
             )
@@ -235,12 +235,12 @@ private fun InfoFrame(
     Column(
         modifier = modifier
             .border(1.dp, color.copy(alpha = 0.40f), RoundedCornerShape(14.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 10.dp, vertical = 5.dp)
     ) {
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = subtle, maxLines = 1)
         Text(
             text = value,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             color = color,
             maxLines = 1,

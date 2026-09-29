@@ -52,13 +52,13 @@ internal fun ServerListItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 5.dp)
-            .clip(RoundedCornerShape(18.dp))
+            .padding(horizontal = 16.dp, vertical = 3.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(serverCardColor(isSelected))
             .border(
                 width = 1.5.dp,
                 color = if (isSelected) accent else Color.Transparent,
-                shape = RoundedCornerShape(18.dp)
+                shape = RoundedCornerShape(16.dp)
             )
             .semantics {
                 selected = isSelected
@@ -67,7 +67,7 @@ internal fun ServerListItem(
                 }
             }
             .clickable { actions.select(row.guid) }
-            .padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
+            .padding(start = 12.dp, top = 6.dp, bottom = 6.dp, end = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val (flag, displayName) = remember(row.remarks) { splitFlag(row.remarks) }
