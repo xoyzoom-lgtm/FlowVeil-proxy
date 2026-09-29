@@ -39,6 +39,101 @@ public static class HuppProfileText
         return (string.Empty, remarks.Trim());
     }
 
+    /// <summary>
+    /// Text that WPF can draw: drops flag pairs (shown as boxed letters), emoji joiners,
+    /// variation selectors, skin tones, tags and other invisible or unrenderable code points.
+    /// </summary>
+    public static string CleanForDisplay(string? text)
+    {
+        if (text.IsNullOrEmpty())
+        {
+            return string.Empty;
+        }
+        var sb = new StringBuilder(text!.Length);
+        foreach (var rune in text!.EnumerateRunes())
+        {
+            var v = rune.Value;
+            var drop = IsRegional(rune)
+                || v is 0x200D or 0xFE0E or 0xFE0F or 0x20E3 or 0xFFFD
+                || v is >= 0x1F3FB and <= 0x1F3FF
+                || v is >= 0xE0000 and <= 0xE007F
+                || (Rune.GetUnicodeCategory(rune) == UnicodeCategory.Control && v is not (10 or 9))
+                || Rune.GetUnicodeCategory(rune) is UnicodeCategory.PrivateUse or UnicodeCategory.Surrogate or UnicodeCategory.OtherNotAssigned;
+            sb.Append(drop ? " " : rune.ToString());
+        }
+        // Collapse the gaps left behind, line by line.
+        var lines = sb.ToString().Replace("\r", string.Empty).Split('\n')
+            .Select(l => System.Text.RegularExpressions.Regex.Replace(l, "[ \t]{2,}", " ").Trim());
+        return System.Text.RegularExpressions.Regex.Replace(string.Join("\n", lines), "\n{3,}", "\n\n").Trim();
+    }
+
+    /// <summary>
+    /// Short protocol chips for a server: "VLESS", "REALITY" / "HY2", "TLS". The technical "JSON"
+    /// marker of custom profiles is shown only in developer mode.
+    /// </summary>
+    public static IReadOnlyList<string> Chips(ProfileItemModel? item, bool devMode)
+    {
+        if (item == null)
+        {
+            return [];
+        }
+        switch (item.ConfigType)
+        {
+            case EConfigType.PolicyGroup:
+                return ["GROUP"];
+            case EConfigType.ProxyChain:
+                return ["CHAIN"];
+            case EConfigType.Custom:
+                {
+                    var parts = Describe(item).Split(" / ", StringSplitOptions.RemoveEmptyEntries).ToList();
+                    return ShortChips(parts, devMode);
+                }
+        }
+        var list = new List<string> { item.ConfigType.ToString().ToUpperInvariant() };
+        if (item.Network.IsNotEmpty())
+        {
+            list.Add(item.Network.ToUpperInvariant());
+        }
+        if (item.StreamSecurity.IsNotEmpty())
+        {
+            list.Add(item.StreamSecurity.ToUpperInvariant());
+        }
+        if (item.ConfigType == EConfigType.Outbound)
+        {
+            list.Add("JSON");
+        }
+        return ShortChips(list, devMode);
+    }
+
+    private static IReadOnlyList<string> ShortChips(List<string> parts, bool devMode)
+    {
+        var result = new List<string>();
+        foreach (var raw in parts)
+        {
+            var p = raw switch
+            {
+                "HYSTERIA2" or "HYSTERIA" => "HY2",
+                "SHADOWSOCKS" => "SS",
+                "WIREGUARD" => "WG",
+                _ => raw,
+            };
+            // Plain TCP/RAW and QUIC-based "hysteria" transports say nothing to the user.
+            if (p is "TCP" or "RAW" or "NONE" or "UDP" || (p == "HY2" && result.Contains("HY2")))
+            {
+                continue;
+            }
+            if (p == "JSON" && !devMode)
+            {
+                continue;
+            }
+            if (!result.Contains(p))
+            {
+                result.Add(p);
+            }
+        }
+        return result.Take(devMode ? 4 : 3).ToList();
+    }
+
     private static bool IsRegional(Rune rune) => rune.Value is >= RegionalIndicatorA and <= RegionalIndicatorZ;
 
     public static string Describe(ProfileItemModel? item)

@@ -95,6 +95,14 @@ public partial class StatusBarViewModel : MyReactiveObject
     [Reactive]
     public partial string SpeedDirectDisplay { get; set; }
 
+    /// <summary>Live proxy download speed ("35 Мбит/с"), empty when not measured.</summary>
+    [Reactive]
+    public partial string SpeedDownText { get; set; }
+
+    /// <summary>Live proxy upload speed, empty when not measured.</summary>
+    [Reactive]
+    public partial string SpeedUpText { get; set; }
+
     [Reactive]
     public partial bool EnableTun { get; set; }
 
@@ -541,11 +549,15 @@ public partial class StatusBarViewModel : MyReactiveObject
             if (AppManager.Instance.IsRunningCore(ECoreType.sing_box))
             {
                 SpeedProxyDisplay = SpeedLine(EInboundProtocol.mixed.ToString(), update.ProxyUp, update.ProxyDown);
+                SpeedDownText = BitRate(update.ProxyDown);
+                SpeedUpText = BitRate(update.ProxyUp);
                 SpeedDirectDisplay = string.Empty;
             }
             else
             {
                 SpeedProxyDisplay = SpeedLine(Global.ProxyTag, update.ProxyUp, update.ProxyDown);
+                SpeedDownText = BitRate(update.ProxyDown);
+                SpeedUpText = BitRate(update.ProxyUp);
                 SpeedDirectDisplay = SpeedLine(Global.DirectTag, update.DirectUp, update.DirectDown);
             }
         }

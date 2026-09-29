@@ -467,29 +467,10 @@ public partial class MainWindow
         menu.IsOpen = true;
     }
 
-    private static string DevModeFile => Utils.GetConfigPath("dev_mode");
-
     /// <summary>Developer mode: technical settings stay hidden for everyday users until turned on.</summary>
-    private static bool IsDevMode() => File.Exists(DevModeFile);
+    private static bool IsDevMode() => DevMode.IsOn;
 
-    private static void SetDevMode(bool on)
-    {
-        try
-        {
-            if (on)
-            {
-                File.WriteAllText(DevModeFile, "1");
-            }
-            else if (File.Exists(DevModeFile))
-            {
-                File.Delete(DevModeFile);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.SaveLog(nameof(SetDevMode), ex);
-        }
-    }
+    private static void SetDevMode(bool on) => DevMode.Set(on);
 
     private void OpenAddServerMenu(MainWindowViewModel vm)
     {

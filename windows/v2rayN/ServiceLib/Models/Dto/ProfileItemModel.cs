@@ -23,6 +23,10 @@ public partial class ProfileItemModel : ReactiveObject
     [Reactive]
     public partial string DelayVal { get; set; }
 
+    /// <summary>Starred by the user in the FlowVeil list (stored by the UI, not in the database).</summary>
+    [Reactive]
+    public partial bool IsFavorite { get; set; }
+
     [Reactive]
     public partial string SpeedVal { get; set; }
 

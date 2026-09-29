@@ -94,7 +94,7 @@ public partial class HuppHomeView : UserControl
         await Run(() => _main.AddServerViaClipboardAsync(data));
     }
 
-    /// <summary>Grouped mode list like Happ: Прокси / TUN (sing-box, gVisor, Xray) / Другое.</summary>
+    /// <summary>TUN engine picker (sing-box, gVisor, Xray); the mode itself is the segmented control.</summary>
     private void OpenModeMenu()
     {
         if (_vm == null)
@@ -107,18 +107,9 @@ public partial class HuppHomeView : UserControl
             Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom,
             MinWidth = btnMode.ActualWidth,
         };
-        string? group = null;
-        foreach (var (id, itemGroup, title) in HuppHomeViewModel.Modes)
+        menu.Style = (Style)FindResource("FV.ContextMenu");
+        foreach (var (id, _, title) in HuppHomeViewModel.Modes.Where(m => HuppHomeViewModel.IsTunMode(m.Id)))
         {
-            if (itemGroup != group)
-            {
-                if (group != null)
-                {
-                    menu.Items.Add(new Separator());
-                }
-                group = itemGroup;
-                menu.Items.Add(new MenuItem { Header = itemGroup, IsEnabled = false, FontWeight = FontWeights.Bold });
-            }
             var item = new MenuItem { Header = title, IsChecked = _vm.Mode == id };
             var mode = id;
             item.Click += (_, _) => _vm.Mode = mode;
@@ -210,7 +201,7 @@ public partial class HuppHomeView : UserControl
             return item;
         }
 
-        var menu = new ContextMenu { PlacementTarget = sender as UIElement };
+        var menu = new ContextMenu { PlacementTarget = sender as UIElement, Style = (Style)FindResource("FV.ContextMenu") };
         menu.Items.Add(Item("Обновить подписку", MaterialDesignThemes.Wpf.PackIconKind.Refresh, () => UpdateSubsAsync(card.Sub.Id)));
         menu.Items.Add(Item("Проверить серверы", MaterialDesignThemes.Wpf.PackIconKind.Speedometer, async () =>
         {
@@ -294,7 +285,32 @@ public partial class HuppHomeView : UserControl
 
     private async void Server_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        // Star and "more" buttons live inside the row: they must not select the server.
+        if (e.OriginalSource is DependencyObject source && FindAncestor<Button>(source) != null)
+        {
+            return;
+        }
         await Run(() => _vm?.SelectServerAsync(ServerOf(sender)));
+    }
+
+    private void ServerFavorite_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        _vm?.ToggleFavorite(ServerOf(sender));
+    }
+
+    /// <summary>The row's own context menu, opened from the "more" button.</summary>
+    private void ServerMore_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        var row = FindAncestor<Border>(sender as DependencyObject, b => b.ContextMenu != null);
+        if (row?.ContextMenu is { } menu)
+        {
+            menu.PlacementTarget = sender as UIElement;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            menu.DataContext = row.DataContext;
+            menu.IsOpen = true;
+        }
     }
 
     private async void ServerConnect_Click(object sender, RoutedEventArgs e)

@@ -37,6 +37,16 @@ public sealed class HuppSubCard : HuppObservable
     public double Progress { get; init; }
     public bool HasProgress { get; init; }
 
+    /// <summary>Traffic value line, e.g. "12.3 GB / 100 GB" or "12.3 GB · безлимит".</summary>
+    public string TrafficValue { get; init; } = string.Empty;
+    public bool HasTraffic => TrafficValue.Length > 0;
+    public bool HasExpire => ExpireText.Length > 0;
+    public bool HasMetrics => HasTraffic || HasExpire;
+    /// <summary>"ok", "warn" (3 days or less) or "bad" (expired).</summary>
+    public string ExpireState { get; init; } = "ok";
+    /// <summary>Long announcements start folded to two lines.</summary>
+    public bool AnnounceIsLong { get; init; }
+
     private bool _isSelected;
     public bool IsSelected { get => _isSelected; set => Set(ref _isSelected, value); }
 }
@@ -81,6 +91,10 @@ public sealed class HuppHomeViewModel : HuppObservable
         Profiles = profiles;
         Status = status;
         _mode = LoadMode();
+        if (IsTunMode(_mode))
+        {
+            _lastTunMode = _mode;
+        }
 
         Profiles.SubItems.CollectionChanged += (_, _) => RebuildCards();
         Profiles.ProfileItems.CollectionChanged += OnProfilesChanged;
@@ -99,7 +113,7 @@ public sealed class HuppHomeViewModel : HuppObservable
 
         RebuildCards();
         UpdateConnection();
-        UpdateSelectedServer();
+        OnProfilesChanged(null, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }
 
     #region Bindable state
@@ -124,12 +138,26 @@ public sealed class HuppHomeViewModel : HuppObservable
                 return;
             }
             SaveMode(value);
-            Raise(nameof(ModeTitle));
+            if (IsTunMode(value))
+            {
+                _lastTunMode = value;
+            }
+            RaiseModeProperties();
             if (IsConnected)
             {
                 _ = ConnectAsync();
             }
         }
+    }
+
+    private void RaiseModeProperties()
+    {
+        Raise(nameof(ModeTitle));
+        Raise(nameof(IsModeProxy));
+        Raise(nameof(IsModeTun));
+        Raise(nameof(IsModeLocal));
+        Raise(nameof(ModeHint));
+        Raise(nameof(TunEngineTitle));
     }
 
     public string ModeTitle
@@ -171,6 +199,54 @@ public sealed class HuppHomeViewModel : HuppObservable
     private bool _isBusy;
     public bool IsBusy { get => _isBusy; private set => Set(ref _isBusy, value); }
 
+    /// <summary>Power button state: "Off", "Connecting", "On" or "Error".</summary>
+    private string _powerState = "Off";
+    public string PowerState { get => _powerState; private set => Set(ref _powerState, value); }
+
+    private ProfileItemModel? _activeServer;
+    /// <summary>The selected server row (its DelayVal drives the ping pill on the connect pane).</summary>
+    public ProfileItemModel? ActiveServer { get => _activeServer; private set => Set(ref _activeServer, value); }
+
+    private string _bestCode = string.Empty;
+    public string BestCode { get => _bestCode; private set => Set(ref _bestCode, value); }
+
+    private string _bestLine = string.Empty;
+    /// <summary>"Казахстан | Игровой · 50 мс" under the Best button; empty until a search ran.</summary>
+    public string BestLine { get => _bestLine; private set => Set(ref _bestLine, value); }
+
+    public string SpeedDownText => Status.SpeedDownText ?? string.Empty;
+    public string SpeedUpText => Status.SpeedUpText ?? string.Empty;
+    public bool HasSpeed => IsConnected && SpeedDownText.Length > 0;
+
+    public bool IsModeProxy
+    {
+        get => _mode == ModeProxy;
+        set { if (value) { Mode = ModeProxy; } }
+    }
+
+    public bool IsModeTun
+    {
+        get => IsTunMode(_mode);
+        set { if (value && !IsTunMode(_mode)) { Mode = _lastTunMode; } }
+    }
+
+    public bool IsModeLocal
+    {
+        get => _mode == ModeLocal;
+        set { if (value) { Mode = ModeLocal; } }
+    }
+
+    private string _lastTunMode = ModeTunSingbox;
+
+    public string ModeHint => _mode switch
+    {
+        ModeLocal => "Только локальный порт: программы подключаются к нему сами",
+        _ when IsTunMode(_mode) => "Весь трафик компьютера, включая игры и мессенджеры",
+        _ => "Браузеры и большинство программ через системный прокси",
+    };
+
+    public string TunEngineTitle => Modes.FirstOrDefault(m => m.Id == (IsTunMode(_mode) ? _mode : _lastTunMode)).Title ?? "sing-box";
+
     #endregion Bindable state
 
     #region Actions
@@ -189,6 +265,8 @@ public sealed class HuppHomeViewModel : HuppObservable
 
     public async Task ConnectAsync()
     {
+        PowerState = "Connecting";
+        StatusText = "Подключение…";
         if (IsTunMode(_mode))
         {
             // TUN engine: sing-box handles the TUN device ("legacy protect"), or Xray does it itself.
@@ -224,10 +302,56 @@ public sealed class HuppHomeViewModel : HuppObservable
             Status.SystemProxySelected = (int)ESysProxyType.ForcedChange;
         }
         UpdateConnection();
+        await VerifyConnectionAsync();
+    }
+
+    private int _verifyRun;
+
+    /// <summary>
+    /// After switching on, one real request through the server decides the button colour:
+    /// "On" when it answers, "Error" (red ring, text) when it does not. The connection itself
+    /// stays up either way, the user decides.
+    /// </summary>
+    private async Task VerifyConnectionAsync()
+    {
+        var run = ++_verifyRun;
+        // The core restarts on a mode change; give it a moment before the first request.
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            await Task.Delay(attempt == 0 ? 800 : 1500);
+            if (run != _verifyRun || !IsConnected)
+            {
+                return;
+            }
+            AvailabilityCheckResult? result = null;
+            try
+            {
+                result = await Status.TestServerAvailability();
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(nameof(HuppHomeViewModel), ex);
+            }
+            if (run != _verifyRun || !IsConnected)
+            {
+                return;
+            }
+            if (result is { Time: > 0 })
+            {
+                PowerState = "On";
+                StatusText = "Подключено";
+                PingText = $"Работает · {result.Time} мс";
+                return;
+            }
+        }
+        PowerState = "Error";
+        StatusText = "Сервер не отвечает";
+        PingText = "Нет соединения — выберите другой сервер";
     }
 
     public async Task DisconnectAsync()
     {
+        _verifyRun++;
         _localConnected = false;
         Status.EnableTun = false;
         Status.SystemProxySelected = (int)ESysProxyType.ForcedClear;
@@ -262,6 +386,7 @@ public sealed class HuppHomeViewModel : HuppObservable
         }
         IsBusy = true;
         PingText = "Ищу лучший сервер…";
+        BestLine = string.Empty;
         try
         {
             var finished = new TaskCompletionSource();
@@ -283,12 +408,15 @@ public sealed class HuppHomeViewModel : HuppObservable
                 PingText = "Рабочий сервер не найден";
                 return;
             }
+            var (bestCode, bestName) = HuppProfileText.SplitFlag(best.Remarks);
+            BestCode = bestCode;
+            BestLine = $"{HuppProfileText.CleanForDisplay(bestName)} · {best.Delay} мс";
+            PingText = string.Empty;
             await SelectServerAsync(best);
             if (!IsConnected)
             {
                 await ConnectAsync();
             }
-            PingText = $"Лучший: {best.Remarks} · {best.Delay} мс";
         }
         catch (Exception ex)
         {
@@ -367,6 +495,13 @@ public sealed class HuppHomeViewModel : HuppObservable
                 SpeedText = Status.SpeedProxyDisplay ?? string.Empty;
                 break;
 
+            case nameof(StatusBarViewModel.SpeedDownText):
+            case nameof(StatusBarViewModel.SpeedUpText):
+                Raise(nameof(SpeedDownText));
+                Raise(nameof(SpeedUpText));
+                Raise(nameof(HasSpeed));
+                break;
+
             case nameof(StatusBarViewModel.RunningServerDisplay):
                 UpdateSelectedServer();
                 break;
@@ -375,7 +510,22 @@ public sealed class HuppHomeViewModel : HuppObservable
 
     private void OnProfilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        // Bulk refreshes arrive as Reset without NewItems: mark the whole list then.
+        var changed = e.NewItems?.OfType<ProfileItemModel>() ?? Profiles.ProfileItems;
+        foreach (var item in changed)
+        {
+            item.IsFavorite = FavoriteServers.IsFavorite(item.IndexId);
+        }
         UpdateSelectedServer();
+    }
+
+    public void ToggleFavorite(ProfileItemModel? item)
+    {
+        if (item?.IndexId.IsNullOrEmpty() != false)
+        {
+            return;
+        }
+        item.IsFavorite = FavoriteServers.Toggle(item.IndexId);
     }
 
     private void UpdateConnection()
@@ -390,13 +540,24 @@ public sealed class HuppHomeViewModel : HuppObservable
             _connectedSince = null;
         }
         IsConnected = connected;
-        StatusText = connected ? "Подключено" : "Отключено";
+        Raise(nameof(HasSpeed));
+        if (!connected)
+        {
+            PowerState = "Off";
+            StatusText = "Отключено";
+        }
+        else if (PowerState == "Off")
+        {
+            // Switched on elsewhere (tray, hotkey): no verification running, trust the flags.
+            PowerState = "On";
+            StatusText = "Подключено";
+        }
         if (connected && Status.EnableTun && !IsTunMode(_mode))
         {
             // TUN switched on elsewhere (classic view, hotkey): show it without reconnecting.
             _mode = _config.TunModeItem.EnableLegacyProtect ? ModeTunSingbox : ModeTunXray;
             Raise(nameof(Mode));
-            Raise(nameof(ModeTitle));
+            RaiseModeProperties();
         }
         UpdateHint();
         if (connected)
@@ -421,6 +582,7 @@ public sealed class HuppHomeViewModel : HuppObservable
         try
         {
             var model = Profiles.ProfileItems.FirstOrDefault(t => t.IndexId == _config.IndexId);
+            ActiveServer = model;
             if (model == null)
             {
                 var item = await ConfigHandler.GetDefaultServer(_config);
@@ -450,7 +612,7 @@ public sealed class HuppHomeViewModel : HuppObservable
 
             var (code, name) = HuppProfileText.SplitFlag(model.Remarks);
             ServerCode = code;
-            ServerName = name;
+            ServerName = HuppProfileText.CleanForDisplay(name);
             ServerDescription = HuppProfileText.Describe(model);
         }
         catch (Exception ex)
@@ -481,7 +643,7 @@ public sealed class HuppHomeViewModel : HuppObservable
     private static HuppSubCard MakeCard(SubItem sub)
     {
         var info = SubscriptionInfoStore.Get(sub.Id);
-        var title = info?.Title.IsNotEmpty() == true ? info.Title! : sub.Remarks;
+        var title = HuppProfileText.CleanForDisplay(info?.Title.IsNotEmpty() == true ? info.Title! : sub.Remarks);
         if (info == null)
         {
             return new HuppSubCard { Sub = sub, Title = title };
@@ -506,13 +668,21 @@ public sealed class HuppHomeViewModel : HuppObservable
 
         var expire = string.Empty;
         var expireDetail = string.Empty;
+        var expireState = "ok";
         if (info.ExpireSeconds is > 0 and < 253_402_300_799L)
         {
             var date = DateTimeOffset.FromUnixTimeSeconds(info.ExpireSeconds).LocalDateTime;
             expire = $"до {date:d MMM}";
             var days = (date - DateTime.Now).TotalDays;
-            expireDetail = $"осталось {(days <= 0 ? 0 : days > 36500 ? 36500 : (int)days)} дн.";
+            var whole = days <= 0 ? 0 : days > 36500 ? 36500 : (int)days;
+            expireDetail = days <= 0 ? "истекла" : $"осталось {whole} дн.";
+            expireState = days <= 0 ? "bad" : days <= 3 ? "warn" : "ok";
         }
+        var limited = info.Total > 0 && info.Total < 1L << 50;
+        var trafficValue = limited
+            ? $"{Utils.HumanFy(info.Used / 1024)} / {Utils.HumanFy(info.Total / 1024)}"
+            : info.Used > 0 || info.Expire > 0 ? $"{Utils.HumanFy(info.Used / 1024)} · безлимит" : string.Empty;
+        var announce = HuppProfileText.CleanForDisplay(info.Announce);
 
         return new HuppSubCard
         {
@@ -523,7 +693,10 @@ public sealed class HuppHomeViewModel : HuppObservable
             ExpireDetail = expireDetail,
             LeftText = left,
             ExpireText = expire,
-            Announce = info.Announce ?? string.Empty,
+            Announce = announce,
+            AnnounceIsLong = announce.Length > 110 || announce.Count(c => c == '\n') >= 2,
+            TrafficValue = trafficValue,
+            ExpireState = expireState,
             SupportUrl = info.SupportUrl ?? string.Empty,
             Progress = progress,
             HasProgress = info.Total > 0 && info.Total < 1L << 50,

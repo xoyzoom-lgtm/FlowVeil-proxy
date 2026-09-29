@@ -134,3 +134,70 @@ public sealed class DelayBrushConverter : IValueConverter
         return brush;
     }
 }
+
+/// <summary>
+/// Ping state for the pill: "none" (not tested), "testing", "ok" (&lt;100 ms), "warn" (100–250),
+/// "bad" (&gt;250) or "fail". Thresholds are the same everywhere in FlowVeil's desktop UI.
+/// </summary>
+public sealed class PingStateConverter : IValueConverter
+{
+    public static string StateOf(string? delayVal)
+    {
+        if (delayVal.IsNullOrEmpty())
+        {
+            return "none";
+        }
+        if (int.TryParse(delayVal, out var delay))
+        {
+            return delay switch
+            {
+                <= 0 => "fail",
+                < 100 => "ok",
+                <= 250 => "warn",
+                _ => "bad",
+            };
+        }
+        // Anything else is a progress text ("Testing...") written while the test runs.
+        return delayVal == ResUI.Speedtesting || delayVal!.EndsWith("...", StringComparison.Ordinal) ? "testing" : "fail";
+    }
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => StateOf(value as string);
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => null;
+}
+
+/// <summary>Text inside the ping pill: "84 мс", "нет", "—" (not tested), empty while testing.</summary>
+public sealed class PingTextConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var text = value as string;
+        return PingStateConverter.StateOf(text) switch
+        {
+            "none" => "—",
+            "testing" => string.Empty,
+            "fail" => "нет",
+            _ => $"{text} мс",
+        };
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => null;
+}
+
+/// <summary>Protocol chips for a <see cref="ProfileItemModel"/> ("VLESS", "REALITY").</summary>
+public sealed class ProfileChipsConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        HuppProfileText.Chips(value as ProfileItemModel, DevMode.IsOn);
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => null;
+}
+
+/// <summary>Text cleaned of code points WPF draws as boxes (flag pairs, joiners, selectors).</summary>
+public sealed class DisplayTextConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        HuppProfileText.CleanForDisplay(value as string);
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => null;
+}
