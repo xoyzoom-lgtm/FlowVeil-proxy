@@ -129,7 +129,7 @@ internal fun SubscriptionCard(
                     iconRes = R.drawable.ic_telegram_24dp,
                     contentDescription = stringResource(R.string.sub_action_support),
                     onClick = { onOpenSupport(subscription.supportUrl!!) },
-                    size = 42.dp,
+                    size = 36.dp,
                     tint = accent,
                     background = accent.copy(alpha = 0.14f),
                     modifier = Modifier.padding(start = 6.dp)
@@ -139,7 +139,7 @@ internal fun SubscriptionCard(
                 iconRes = R.drawable.ic_speed_24dp,
                 contentDescription = stringResource(R.string.sub_action_check),
                 onClick = onTestAll,
-                size = 42.dp,
+                size = 36.dp,
                 tint = accent,
                 enabled = !isTesting,
                 background = accent.copy(alpha = 0.14f),
@@ -149,7 +149,7 @@ internal fun SubscriptionCard(
                 iconRes = R.drawable.ic_refresh_24dp,
                 contentDescription = stringResource(R.string.sub_action_update),
                 onClick = onRefresh,
-                size = 42.dp,
+                size = 36.dp,
                 tint = accent,
                 background = accent.copy(alpha = 0.14f),
                 modifier = Modifier.padding(start = 6.dp)
@@ -159,7 +159,7 @@ internal fun SubscriptionCard(
                     iconRes = R.drawable.ic_more_vert_24dp,
                     contentDescription = stringResource(R.string.main_sub_menu),
                     onClick = { showMenu = true },
-                    size = 42.dp,
+                    size = 36.dp,
                     tint = subtle,
                     background = subtle.copy(alpha = 0.12f),
                     modifier = Modifier.padding(start = 6.dp, end = 6.dp)
