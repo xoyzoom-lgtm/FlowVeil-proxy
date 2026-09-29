@@ -508,6 +508,27 @@ public partial class StatusBarViewModel : MyReactiveObject
         await Task.CompletedTask;
     }
 
+    /// <summary>Live speed like on the phone: "proxy: ↑ 1.2 Мбит/с | ↓ 35 Мбит/с" (input is KB/s).</summary>
+    private static string SpeedLine(string tag, long upKb, long downKb)
+    {
+        return $"{tag}: ↑ {BitRate(upKb)} | ↓ {BitRate(downKb)}";
+    }
+
+    private static string BitRate(long kbPerSecond)
+    {
+        var kbit = Math.Max(0d, kbPerSecond) * 1024d * 8d / 1000d;
+        if (kbit < 1000d)
+        {
+            return $"{kbit:0} Кбит/с";
+        }
+        var mbit = kbit / 1000d;
+        if (mbit < 1000d)
+        {
+            return mbit < 10d ? $"{mbit:0.0} Мбит/с" : $"{mbit:0} Мбит/с";
+        }
+        return $"{mbit / 1000d:0.00} Гбит/с";
+    }
+
     public async Task UpdateStatistics(ServerSpeedItem update)
     {
         if (!_config.GuiItem.DisplayRealTimeSpeed)
@@ -519,13 +540,13 @@ public partial class StatusBarViewModel : MyReactiveObject
         {
             if (AppManager.Instance.IsRunningCore(ECoreType.sing_box))
             {
-                SpeedProxyDisplay = string.Format(ResUI.SpeedDisplayText, EInboundProtocol.mixed, Utils.HumanFy(update.ProxyUp), Utils.HumanFy(update.ProxyDown));
+                SpeedProxyDisplay = SpeedLine(EInboundProtocol.mixed.ToString(), update.ProxyUp, update.ProxyDown);
                 SpeedDirectDisplay = string.Empty;
             }
             else
             {
-                SpeedProxyDisplay = string.Format(ResUI.SpeedDisplayText, Global.ProxyTag, Utils.HumanFy(update.ProxyUp), Utils.HumanFy(update.ProxyDown));
-                SpeedDirectDisplay = string.Format(ResUI.SpeedDisplayText, Global.DirectTag, Utils.HumanFy(update.DirectUp), Utils.HumanFy(update.DirectDown));
+                SpeedProxyDisplay = SpeedLine(Global.ProxyTag, update.ProxyUp, update.ProxyDown);
+                SpeedDirectDisplay = SpeedLine(Global.DirectTag, update.DirectUp, update.DirectDown);
             }
         }
         catch
