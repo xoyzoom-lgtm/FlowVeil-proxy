@@ -621,4 +621,10 @@
     <string name="sub_frame_left">Осталось %1$s из %2$s</string>
     <string name="sub_frame_unlimited">∞ Безлимит · %1$s</string>
     <string name="sub_frame_until">До %1$s · %2$d дн.</string>
+    <string name="sub_frame_traffic">Трафик</string>
+    <string name="sub_frame_subscription">Подписка</string>
+    <string name="sub_frame_used_of">%1$s из %2$s</string>
+    <string name="sub_frame_unlimited_short">безлимит</string>
+    <string name="sub_frame_until_short">до %1$s</string>
+    <string name="sub_frame_days_left">осталось %1$d дн.</string>
 </resources>

@@ -617,4 +617,10 @@
     <string name="sub_frame_left">Left %1$s of %2$s</string>
     <string name="sub_frame_unlimited">∞ Unlimited · %1$s used</string>
     <string name="sub_frame_until">Until %1$s · %2$d d.</string>
+    <string name="sub_frame_traffic">Traffic</string>
+    <string name="sub_frame_subscription">Subscription</string>
+    <string name="sub_frame_used_of">%1$s of %2$s</string>
+    <string name="sub_frame_unlimited_short">unlimited</string>
+    <string name="sub_frame_until_short">until %1$s</string>
+    <string name="sub_frame_days_left">%1$d d. left</string>
 </resources>

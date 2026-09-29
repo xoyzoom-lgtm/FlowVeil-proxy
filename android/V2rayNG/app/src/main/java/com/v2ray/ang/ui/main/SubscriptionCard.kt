@@ -92,7 +92,6 @@ internal fun SubscriptionCard(
         null
     }
     var showMenu by remember { mutableStateOf(false) }
-    var announceExpanded by remember { mutableStateOf(false) }
     val left = if (used != null && total != null) (total - used).coerceAtLeast(0L) else null
     val daysLeft = expireAt?.let { ((it - System.currentTimeMillis()) / DAY_MILLIS).coerceAtLeast(0L) }
     val subtle = MaterialTheme.colorScheme.onSurfaceVariant
@@ -169,19 +168,25 @@ internal fun SubscriptionCard(
             }
         }
 
-        // Two small framed facts: traffic and validity
+        // Two framed facts, each a label + big value + small detail, nothing truncated
         if (used != null || expireAt != null) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(6.dp))
             Row(
                 Modifier.fillMaxWidth().padding(end = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (used != null) {
                     InfoFrame(
-                        text = if (left != null) {
-                            stringResource(R.string.sub_frame_left, formatBytes(left), formatBytes(total!!))
+                        label = stringResource(R.string.sub_frame_traffic),
+                        value = if (total != null) {
+                            stringResource(R.string.sub_frame_used_of, formatBytes(used), formatBytes(total))
                         } else {
-                            stringResource(R.string.sub_frame_unlimited, formatBytes(used))
+                            stringResource(R.string.sub_frame_used_of, formatBytes(used), "∞")
+                        },
+                        detail = if (left != null) {
+                            stringResource(R.string.main_sub_left, formatBytes(left))
+                        } else {
+                            stringResource(R.string.sub_frame_unlimited_short)
                         },
                         color = accent,
                         progress = progress?.let { 1f - it },
@@ -189,32 +194,29 @@ internal fun SubscriptionCard(
                     )
                 }
                 if (expireAt != null) {
+                    val expiring = daysLeft != null && daysLeft <= 3
                     InfoFrame(
-                        text = stringResource(
-                            R.string.sub_frame_until,
-                            java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault()).format(Date(expireAt)),
-                            (daysLeft ?: 0L).toInt()
+                        label = stringResource(R.string.sub_frame_subscription),
+                        value = stringResource(
+                            R.string.sub_frame_until_short,
+                            java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault()).format(Date(expireAt))
                         ),
-                        color = if (daysLeft != null && daysLeft <= 3) PingBad else subtle,
+                        detail = stringResource(R.string.sub_frame_days_left, (daysLeft ?: 0L).toInt()),
+                        color = if (expiring) PingBad else MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
         }
 
-        // Provider announcement: one line, tap to read all
+        // Provider announcement, always shown in full
         if (!subscription.announce.isNullOrBlank()) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(10.dp))
             Text(
                 text = subscription.announce!!,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = subtle,
-                maxLines = if (announceExpanded) Int.MAX_VALUE else 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 10.dp)
-                    .clickable { announceExpanded = !announceExpanded }
+                modifier = Modifier.fillMaxWidth().padding(end = 10.dp)
             )
         }
     }
@@ -222,20 +224,24 @@ internal fun SubscriptionCard(
 
 @Composable
 private fun InfoFrame(
-    text: String,
+    label: String,
+    value: String,
+    detail: String,
     color: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
     progress: Float? = null,
 ) {
+    val subtle = MaterialTheme.colorScheme.onSurfaceVariant
     Column(
         modifier = modifier
-            .border(1.dp, color.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .border(1.dp, color.copy(alpha = 0.40f), RoundedCornerShape(14.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = subtle, maxLines = 1)
         Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
+            text = value,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
             color = color,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -248,6 +254,8 @@ private fun InfoFrame(
                 color = color,
                 trackColor = color.copy(alpha = 0.15f)
             )
+            Spacer(Modifier.height(2.dp))
         }
+        Text(text = detail, style = MaterialTheme.typography.labelSmall, color = subtle, maxLines = 1)
     }
 }

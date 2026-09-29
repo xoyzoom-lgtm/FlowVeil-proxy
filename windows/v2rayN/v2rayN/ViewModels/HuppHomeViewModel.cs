@@ -29,6 +29,8 @@ public sealed class HuppSubCard : HuppObservable
     public string Title { get; init; } = string.Empty;
     public string TrafficText { get; init; } = string.Empty;
     public string LeftText { get; init; } = string.Empty;
+    public string TrafficDetail { get; init; } = string.Empty;
+    public string ExpireDetail { get; init; } = string.Empty;
     public string ExpireText { get; init; } = string.Empty;
     public string Announce { get; init; } = string.Empty;
     public string SupportUrl { get; init; } = string.Empty;
@@ -421,24 +423,28 @@ public sealed class HuppHomeViewModel : HuppObservable
         }
 
         var traffic = string.Empty;
+        var trafficDetail = string.Empty;
         var progress = 0d;
         if (info.Total > 0)
         {
-            traffic = $"Осталось {Utils.HumanFy(Math.Max(0, info.Total - info.Used))} из {Utils.HumanFy(info.Total)}";
+            traffic = $"{Utils.HumanFy(info.Used)} из {Utils.HumanFy(info.Total)}";
+            trafficDetail = $"осталось {Utils.HumanFy(Math.Max(0, info.Total - info.Used))}";
             progress = Math.Clamp((info.Total - info.Used) * 100d / info.Total, 0, 100);
         }
         else if (info.Used > 0 || info.Expire > 0)
         {
-            traffic = $"∞ Безлимит · {Utils.HumanFy(info.Used)}";
+            traffic = $"{Utils.HumanFy(info.Used)} из ∞";
+            trafficDetail = "безлимит";
         }
         var left = string.Empty;
 
         var expire = string.Empty;
+        var expireDetail = string.Empty;
         if (info.Expire > 0)
         {
             var date = DateTimeOffset.FromUnixTimeSeconds(info.Expire).LocalDateTime;
-            var days = Math.Max(0, (int)(date - DateTime.Now).TotalDays);
-            expire = $"До {date:d MMM} · {days} дн.";
+            expire = $"до {date:d MMM}";
+            expireDetail = $"осталось {Math.Max(0, (int)(date - DateTime.Now).TotalDays)} дн.";
         }
 
         return new HuppSubCard
@@ -446,6 +452,8 @@ public sealed class HuppHomeViewModel : HuppObservable
             Sub = sub,
             Title = title,
             TrafficText = traffic,
+            TrafficDetail = trafficDetail,
+            ExpireDetail = expireDetail,
             LeftText = left,
             ExpireText = expire,
             Announce = info.Announce ?? string.Empty,
