@@ -172,12 +172,16 @@ public class Global
         @"https://speed.cloudflare.com/__down?bytes=99999999",
     ];
 
+    /// <summary>gstatic answers with a light 204 and no body: the default ping target.</summary>
+    public const string SpeedPingFallbackUrl = @"https://cp.cloudflare.com/generate_204";
+
     public static readonly List<string> SpeedPingTestUrls =
     [
+        @"https://www.gstatic.com/generate_204",
         @"https://www.google.com/generate_204",
         @"https://www.youtube.com/generate_204",
         @"https://www.googlevideo.com/generate_204",
-        @"https://www.gstatic.com/generate_204",
+        SpeedPingFallbackUrl,
         @"https://www.apple.com/library/test/success.html",
         @"http://www.msftconnecttest.com/connecttest.txt"
     ];

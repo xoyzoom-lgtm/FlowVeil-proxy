@@ -2,7 +2,11 @@ name: Build FlowVeil
 
 on:
   push:
-    branches: [main]
+    # Only main publishes a release. ui-* branches build Windows, bypass-* branches build both apps,
+    # just to check the code. A push that changes nothing but the website builds nothing.
+    branches: [main, 'ui-*', 'bypass-*']
+    paths-ignore:
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -10,11 +14,12 @@ permissions:
 
 # One build at a time, so releases are published in order.
 concurrency:
-  group: build
+  group: build-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   android:
+    if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/bypass-') }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -226,7 +231,7 @@ jobs:
 
   release:
     needs: [android, windows]
-    if: ${{ !cancelled() && needs.android.result == 'success' && needs.windows.result == 'success' }}
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.android.result == 'success' && needs.windows.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

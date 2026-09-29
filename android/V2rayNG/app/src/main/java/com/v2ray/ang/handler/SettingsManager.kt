@@ -27,6 +27,7 @@ import com.v2ray.ang.handler.MmkvManager.encodeSubscription
 import com.v2ray.ang.handler.MmkvManager.removeSubscription
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
+import com.v2ray.ang.net.PingUrls
 import com.v2ray.ang.util.Utils
 import java.io.File
 import java.io.FileOutputStream
@@ -39,6 +40,7 @@ object SettingsManager {
 
     fun initApp(context: Context) {
         ensureDefaultSettings()
+        migratePingUrlOnce()
         applyRecommendedDefaultsOnce()
         applyHuppDefaultsV2Once()
         applyFlowVeilDefaultsV3Once()
@@ -519,6 +521,19 @@ object SettingsManager {
             }
         }
         MmkvManager.encodeSettings(AppConfig.PREF_FLOWVEIL_DEFAULTS_V3_APPLIED, true)
+    }
+
+    /**
+     * The ping now goes to gstatic by default. Only an untouched old default (google.com) is
+     * replaced, once; a URL the user typed himself is never changed.
+     */
+    private fun migratePingUrlOnce() {
+        val flag = "ping_url_gstatic_migrated"
+        if (MmkvManager.decodeSettingsBool(flag, false)) return
+        PingUrls.migrate(MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL))?.let {
+            MmkvManager.encodeSettings(AppConfig.PREF_DELAY_TEST_URL, it)
+        }
+        MmkvManager.encodeSettings(flag, true)
     }
 
     private fun ensureDefaultValue(key: String, default: String) {

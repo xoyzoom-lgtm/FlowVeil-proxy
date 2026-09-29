@@ -68,8 +68,24 @@ public static class ConnectionHandler
     /// </summary>
     public static async Task<int> GetRealPingTime(IWebProxy? webProxy, CancellationToken cancellationToken = default)
     {
-        var url = AppManager.Instance.Config.SpeedTestItem.SpeedPingTestUrl;
+        var primary = AppManager.Instance.Config.SpeedTestItem.SpeedPingTestUrl;
+        var responseTime = await PingUrl(webProxy, primary, cancellationToken).ConfigureAwait(false);
+        // gstatic gave no answer: try the second target before calling the server dead.
+        if (responseTime <= 0 && !string.Equals(primary, Global.SpeedPingFallbackUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            responseTime = await PingUrl(webProxy, Global.SpeedPingFallbackUrl, cancellationToken).ConfigureAwait(false);
+        }
+        return responseTime;
+    }
+
+    /// <summary>
+    /// The best of two requests, in ms, or -1. A generate_204 address must answer exactly 204:
+    /// a 200 or a followed redirect is a login page or a rewrite, not the internet.
+    /// </summary>
+    private static async Task<int> PingUrl(IWebProxy? webProxy, string url, CancellationToken cancellationToken)
+    {
         var responseTime = -1;
+        var expect204 = url.EndsWith("generate_204", StringComparison.OrdinalIgnoreCase);
         try
         {
             using var timeoutCts = new CancellationTokenSource();
@@ -87,9 +103,13 @@ public static class ConnectionHandler
             for (var i = 0; i < 2; i++)
             {
                 var timer = Stopwatch.StartNew();
-                await client.GetAsync(url, linkedToken).ConfigureAwait(false);
+                using var response = await client.GetAsync(url, linkedToken).ConfigureAwait(false);
                 timer.Stop();
-                oneTime.Add((int)timer.Elapsed.TotalMilliseconds);
+                if (expect204 && response.StatusCode != System.Net.HttpStatusCode.NoContent)
+                {
+                    return -1;
+                }
+                oneTime.Add((int)Math.Min(timer.Elapsed.TotalMilliseconds, int.MaxValue));
                 await Task.Delay(100, linkedToken);
             }
             responseTime = oneTime.Where(x => x > 0).OrderBy(x => x).FirstOrDefault();

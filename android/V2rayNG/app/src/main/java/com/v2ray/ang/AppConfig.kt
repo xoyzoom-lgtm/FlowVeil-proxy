@@ -110,6 +110,15 @@ object AppConfig {
     const val CACHE_CONNECTED_SINCE = "cache_connected_since"
     const val CACHE_DEVICE_HWID = "cache_device_hwid"
 
+    // Network status shared by the core process (writer) and the UI (reader); see NetInfoCache.
+    const val CACHE_NET_TYPE = "cache_net_type"
+    const val CACHE_NET_OTHERS = "cache_net_others"
+    const val CACHE_REAL_IP = "cache_real_ip"
+    const val CACHE_REAL_IP6 = "cache_real_ip6"
+    const val CACHE_EXIT_IP = "cache_exit_ip"
+    const val CACHE_BYPASS_STATE = "cache_bypass_state"
+    const val CACHE_BYPASS_RETURN_TO = "cache_bypass_return_to"
+
     /** Protocol identifiers. */
     const val PROTOCOL_FREEDOM = "freedom"
 
@@ -154,8 +163,9 @@ object AppConfig {
     const val APP_PRIVACY_POLICY = "$APP_URL/blob/main/PRIVACY.md"
     const val APP_PROMOTION_URL = "aHR0cHM6Ly85LjIzNDQ1Ni54eXovYWJjLmh0bWw="
     const val TG_CHANNEL_URL = AUTHOR_TG_URL
+    // One light, predictable ping target; the second one is used only when the first gets no answer.
     const val DELAY_TEST_URL = "https://www.gstatic.com/generate_204"
-    const val DELAY_TEST_URL2 = "https://www.google.com/generate_204"
+    const val DELAY_TEST_URL2 = "https://cp.cloudflare.com/generate_204"
     const val OBSERVATORY_LEAST_PING_INTERVAL = "3m"
     const val OBSERVATORY_LEAST_LOAD_INTERVAL = "5m"
     const val OBSERVATORY_LEAST_LOAD_METHOD = "HEAD"
@@ -213,6 +223,8 @@ object AppConfig {
     const val MSG_MEASURE_DELAY_CANCEL = 62
     const val MSG_MEASURE_CONFIG_START = 7
     const val MSG_MEASURE_CONFIG_CANCEL = 71
+    /** UI asks the core process to re-check the network now (real IP, exit IP, bypass state). */
+    const val MSG_NET_CHECK_NOW = 8
     const val MSG_MEASURE_CONFIG_SUCCESS = 72
     const val MSG_MEASURE_CONFIG_NOTIFY = 73
     const val MSG_MEASURE_CONFIG_FINISH = 74

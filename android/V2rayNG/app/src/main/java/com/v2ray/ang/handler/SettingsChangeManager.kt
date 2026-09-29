@@ -33,6 +33,9 @@ object SettingsChangeManager {
         WhitelistBypass.PREF_MODE,
         WhitelistBypass.PREF_SERVERS,
         WhitelistBypass.PREF_AUTO_RETURN,
+        WhitelistBypass.PREF_BAD_MINUTES,
+        WhitelistBypass.PREF_PING_LIMIT,
+        WhitelistBypass.PREF_STABLE_SECONDS,
     )
 
     /**

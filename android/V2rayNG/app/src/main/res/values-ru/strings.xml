@@ -678,9 +678,10 @@
     <string name="whats_new_title">Что нового</string>
     <string name="whats_new_ok">Понятно</string>
     <string-array name="whats_new_items">
-        <item>Авто-обход белых списков: на ограниченной мобильной сети FlowVeil сам найдёт сервер, который проходит, а на Wi-Fi вернётся обратно. Включается в Настройки → Подключение</item>
-        <item>Поддержка серверов TUIC, Hysteria 2 из подписок сохраняет диапазон портов</item>
-        <item>Точнее проверка JSON-серверов, обычные серверы проверяются первыми</item>
+        <item>Новая карточка «Сеть» в настройках: реальная сеть и IP, IP через прокси и состояние автопереключения</item>
+        <item>Автопереключение теперь по-настоящему проверяет новый сервер (gstatic, небольшая загрузка, внешний IP и повторно через несколько секунд) и пропускает те, что только числятся подключёнными</item>
+        <item>На Wi-Fi FlowVeil возвращается на прежний сервер или выбирает хороший (не российский), если прежний испортился</item>
+        <item>Пинг по умолчанию идёт через gstatic, есть запасной адрес</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>
@@ -703,8 +704,8 @@
     <string name="whitelist_bypass_mode_manual">Только выбранные мной</string>
     <string name="title_whitelist_bypass_servers">Выбрать серверы обхода</string>
     <string name="summary_whitelist_bypass_servers">Выбрано: %1$d. Используется самый быстрый рабочий</string>
-    <string name="title_whitelist_bypass_auto_return">Возвращаться на обычный сервер</string>
-    <string name="summary_whitelist_bypass_auto_return">При Wi-Fi или когда обычный сервер снова работает</string>
+    <string name="title_whitelist_bypass_auto_return">Возвращаться на прежний сервер при Wi-Fi</string>
+    <string name="summary_whitelist_bypass_auto_return">Когда телефон снова на Wi-Fi или Ethernet и старый сервер работает нормально. Иначе выберется подходящий (не российский)</string>
     <string name="whitelist_bypass_search_hint">Поиск серверов</string>
     <string name="whitelist_bypass_favorites">Избранные</string>
     <string name="whitelist_bypass_no_servers">Серверов пока нет. Сначала добавьте подписку</string>
@@ -714,6 +715,41 @@
     <string name="whitelist_bypass_notify_returned">Ограничений больше нет, вернулся на %1$s</string>
     <string name="whitelist_bypass_notify_not_found">Сейчас ни один сервер не проходит ограничения. Попробую ещё раз позже</string>
     <string name="whitelist_bypass_notify_empty_manual">Серверы обхода не выбраны. Выберите их в Настройки → Подключение</string>
+    <string name="net_card_title">Сеть</string>
+    <string name="net_card_not_connected">Подключитесь, чтобы увидеть сеть под прокси</string>
+    <string name="net_type_cellular">Мобильная сеть</string>
+    <string name="net_type_wifi">Wi-Fi</string>
+    <string name="net_type_ethernet">Ethernet</string>
+    <string name="net_type_none">Нет сети</string>
+    <string name="net_also">Ещё доступно: %1$s</string>
+    <string name="net_real_ip">Реальный IP: %1$s</string>
+    <string name="net_exit_ip">IP через прокси: %1$s</string>
+    <string name="net_ip_hidden">•••.•••.•••.•••</string>
+    <string name="net_ip_unknown">пока не известен</string>
+    <string name="net_ip_tap_show">Нажмите, чтобы показать</string>
+    <string name="net_ip_tap_hide">Нажмите, чтобы скрыть</string>
+    <string name="net_ip_same_warning">Адрес через прокси совпадает с реальным: прокси не пропускает этот трафик</string>
+    <string name="net_check_now">Проверить сейчас</string>
+    <string name="net_bypass_idle">Обход: не нужен</string>
+    <string name="net_bypass_searching">Обход: ищу рабочий сервер…</string>
+    <string name="net_bypass_checking">Обход: проверка…</string>
+    <string name="net_bypass_ok">Обход: работает ✓</string>
+    <string name="net_conn_ok">Соединение работает ✓</string>
+    <string name="net_bypass_no_network">Обход: нет сети</string>
+    <string name="net_bypass_fail">Обход: не работает ✗ (%1$s)</string>
+    <string name="net_return_to">Вернёмся на: %1$s</string>
+    <string name="net_return_to_best">Вернёмся на: лучший сервер</string>
+    <string name="fail_proxy_down">прокси не отвечает</string>
+    <string name="fail_no_gstatic">нет ответа от gstatic</string>
+    <string name="fail_tampered">ответ подменён по дороге</string>
+    <string name="fail_no_data">соединение есть, но данные не идут</string>
+    <string name="fail_ip_same">адрес не изменился</string>
+    <string name="fail_unstable">сервер отвалился сразу после подключения</string>
+    <string name="bypass_notify_wifi_returned">Wi-Fi: вернулся на %1$s</string>
+    <string name="bypass_notify_origin_bad">Прежний сервер плохо работает, выбран %1$s</string>
+    <string name="title_bypass_bad_minutes">Сбойный сервер пропускать (минут)</string>
+    <string name="title_bypass_ping_limit">«Очень плохой» пинг (мс)</string>
+    <string name="title_bypass_stable_seconds">Wi-Fi должен держаться (секунд)</string>
     <string name="failover_notification_title">Переключились на рабочий сервер</string>
     <string name="failover_notification_text">%1$s перестал отвечать, теперь используется %2$s</string>
     <string-array name="sub_update_interval_entries">

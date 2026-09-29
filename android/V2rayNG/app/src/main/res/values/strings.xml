@@ -674,9 +674,10 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
-        <item>Auto bypass of mobile whitelists: on restricted mobile data FlowVeil finds a server that gets through and switches back on Wi-Fi. Turn it on in Settings → Connection</item>
-        <item>TUIC servers are supported, Hysteria 2 keeps port ranges from subscriptions</item>
-        <item>Server check is more accurate for JSON servers; ordinary servers are checked first</item>
+        <item>New “Network” card in Settings: your real network and IP, the IP through the proxy, and the state of the automatic switching</item>
+        <item>Automatic switching now really checks a new server (gstatic, a small download, the exit IP and again a few seconds later) and skips ones that only look connected</item>
+        <item>Back on Wi-Fi, FlowVeil returns to your previous server, or picks a good one (never in Russia) if it went bad</item>
+        <item>Ping now goes to gstatic by default, with a fallback address</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
@@ -699,8 +700,8 @@
     <string name="whitelist_bypass_mode_manual">Only the ones I choose</string>
     <string name="title_whitelist_bypass_servers">Choose bypass servers</string>
     <string name="summary_whitelist_bypass_servers">Selected: %1$d. The fastest working one is used</string>
-    <string name="title_whitelist_bypass_auto_return">Return to the usual server</string>
-    <string name="summary_whitelist_bypass_auto_return">On Wi-Fi or when the usual server works again</string>
+    <string name="title_whitelist_bypass_auto_return">Return to the previous server on Wi-Fi</string>
+    <string name="summary_whitelist_bypass_auto_return">When the phone is back on Wi-Fi or Ethernet and the old server works well. Otherwise a suitable server is picked (never a Russian one)</string>
     <string name="whitelist_bypass_search_hint">Search servers</string>
     <string name="whitelist_bypass_favorites">Favorites</string>
     <string name="whitelist_bypass_no_servers">No servers yet. Add a subscription first</string>
@@ -710,6 +711,41 @@
     <string name="whitelist_bypass_notify_returned">Restrictions are gone, back to %1$s</string>
     <string name="whitelist_bypass_notify_not_found">No server gets through the restrictions right now. Will try again later</string>
     <string name="whitelist_bypass_notify_empty_manual">No bypass servers chosen. Pick them in Settings → Connection</string>
+    <string name="net_card_title">Network</string>
+    <string name="net_card_not_connected">Connect to see the network under the proxy</string>
+    <string name="net_type_cellular">Mobile network</string>
+    <string name="net_type_wifi">Wi-Fi</string>
+    <string name="net_type_ethernet">Ethernet</string>
+    <string name="net_type_none">No network</string>
+    <string name="net_also">Also available: %1$s</string>
+    <string name="net_real_ip">Real IP: %1$s</string>
+    <string name="net_exit_ip">IP through the proxy: %1$s</string>
+    <string name="net_ip_hidden">•••.•••.•••.•••</string>
+    <string name="net_ip_unknown">not known yet</string>
+    <string name="net_ip_tap_show">Tap to show</string>
+    <string name="net_ip_tap_hide">Tap to hide</string>
+    <string name="net_ip_same_warning">The address through the proxy equals the real one: the proxy does not carry this traffic</string>
+    <string name="net_check_now">Check now</string>
+    <string name="net_bypass_idle">Bypass: not needed</string>
+    <string name="net_bypass_searching">Bypass: looking for a working server…</string>
+    <string name="net_bypass_checking">Bypass: checking…</string>
+    <string name="net_bypass_ok">Bypass: working ✓</string>
+    <string name="net_conn_ok">Connection works ✓</string>
+    <string name="net_bypass_no_network">Bypass: no network</string>
+    <string name="net_bypass_fail">Bypass: not working ✗ (%1$s)</string>
+    <string name="net_return_to">We will go back to: %1$s</string>
+    <string name="net_return_to_best">We will go back to: the best server</string>
+    <string name="fail_proxy_down">the proxy does not respond</string>
+    <string name="fail_no_gstatic">no answer from gstatic</string>
+    <string name="fail_tampered">the answer was replaced on the way</string>
+    <string name="fail_no_data">connected, but no data comes through</string>
+    <string name="fail_ip_same">the address did not change</string>
+    <string name="fail_unstable">the server dropped right after connecting</string>
+    <string name="bypass_notify_wifi_returned">Wi-Fi: back on %1$s</string>
+    <string name="bypass_notify_origin_bad">The previous server is not working well, switched to %1$s</string>
+    <string name="title_bypass_bad_minutes">Failed server is skipped for (minutes)</string>
+    <string name="title_bypass_ping_limit">Very slow ping (ms)</string>
+    <string name="title_bypass_stable_seconds">Wi-Fi must be stable for (seconds)</string>
     <string name="failover_notification_title">Switched to a working server</string>
     <string name="failover_notification_text">%1$s stopped responding, now using %2$s</string>
     <string-array name="sub_update_interval_entries">

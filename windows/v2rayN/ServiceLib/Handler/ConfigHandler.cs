@@ -152,6 +152,7 @@ public static class ConfigHandler
         {
             config.SpeedTestItem.SpeedPingTestUrl = Global.SpeedPingTestUrls.First();
         }
+        MigratePingUrlToGstatic(config);
         config.SpeedTestItem.MixedConcurrencyCount = Math.Max(config.SpeedTestItem.MixedConcurrencyCount, Global.SpeedTestConcurrencyCountMin);
         if (config.SpeedTestItem.UdpTestTarget.IsNullOrEmpty())
         {
@@ -771,6 +772,32 @@ public static class ConfigHandler
         await AddServerCommon(config, profileItem, toFile);
 
         return 0;
+    }
+
+    /// <summary>
+    /// The ping used to go to google.com. Once, an untouched old default becomes gstatic; a URL the
+    /// user typed is never changed (and a google URL picked again later stays, the flag is set).
+    /// </summary>
+    private static void MigratePingUrlToGstatic(Config config)
+    {
+        try
+        {
+            var flag = Utils.GetConfigPath("ping_url_gstatic_migrated");
+            if (File.Exists(flag))
+            {
+                return;
+            }
+            var url = config.SpeedTestItem.SpeedPingTestUrl;
+            if (url is "https://www.google.com/generate_204" or "http://www.google.com/generate_204")
+            {
+                config.SpeedTestItem.SpeedPingTestUrl = Global.SpeedPingTestUrls.First();
+            }
+            File.WriteAllText(flag, "1");
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(nameof(MigratePingUrlToGstatic), ex);
+        }
     }
 
     /// <summary>

@@ -27,8 +27,11 @@ object SpeedtestConfig {
         // gave wrong results, so the full config runs, one at a time (see [limiterType]).
         val content = result.content
         val urls = listOf(SettingsManager.getDelayTestUrl(), SettingsManager.getDelayTestUrl(second = true)).distinct()
+        // gstatic first (a light, predictable answer: 204 with no body), cloudflare only when gstatic
+        // gets no answer. One sample: a list check of hundreds of servers must stay quick, and
+        // "works / does not work" never throws, it is always a number or -1.
         for (url in urls) {
-            val delay = CoreNativeManager.measureOutboundDelay(content, url)
+            val delay = runCatching { CoreNativeManager.measureOutboundDelay(content, url) }.getOrDefault(-1L)
             if (delay > 0) return delay
         }
         return -1L

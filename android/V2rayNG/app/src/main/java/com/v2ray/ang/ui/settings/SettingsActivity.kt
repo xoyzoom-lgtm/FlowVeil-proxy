@@ -73,6 +73,7 @@ import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.handler.DirectSites
 import com.v2ray.ang.handler.WhitelistBypass
+import com.v2ray.ang.net.ReturnLogic
 import com.v2ray.ang.ui.compose.InputDialog
 import com.v2ray.ang.ui.compose.InputField
 import com.v2ray.ang.enums.RoutingType
@@ -220,6 +221,9 @@ fun SettingsScreen(
     var whitelistBypassReturn by rememberMmkvBool(WhitelistBypass.PREF_AUTO_RETURN, true)
     var whitelistBypassCount by remember { mutableStateOf(WhitelistBypass.servers().size) }
     var showBypassPicker by remember { mutableStateOf(false) }
+    var bypassBadMinutes by rememberMmkvString(WhitelistBypass.PREF_BAD_MINUTES, WhitelistBypass.DEFAULT_BAD_MINUTES.toString())
+    var bypassPingLimit by rememberMmkvString(WhitelistBypass.PREF_PING_LIMIT, ReturnLogic.DEFAULT_PING_LIMIT_MS.toString())
+    var bypassStableSeconds by rememberMmkvString(WhitelistBypass.PREF_STABLE_SECONDS, ReturnLogic.DEFAULT_STABLE_SECONDS.toString())
     var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
     var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
     var directSitesCount by remember { mutableStateOf(DirectSites.count()) }
@@ -320,6 +324,8 @@ fun SettingsScreen(
                 }
             }
 
+            NetStatusCard(devMode = devMode)
+
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_connection))
             SettingsGroupCard {
                 SettingsSwitchItem(
@@ -414,14 +420,27 @@ fun SettingsScreen(
                         onCheckedChange = { whitelistBypassReturn = it }
                     )
                     if (devMode) {
-                        val diag = remember { WhitelistBypass.lastDiagnosis }
-                        if (diag.isNotBlank()) {
-                            SettingsMenuItem(
-                                title = stringResource(R.string.whitelist_bypass_last_check, diag.substringBefore(':')),
-                                subtitle = diag,
-                                onClick = {}
-                            )
-                        }
+                        SettingsListItem(
+                            title = stringResource(R.string.title_bypass_bad_minutes),
+                            entries = listOf("5", "10", "20", "60"),
+                            values = listOf("5", "10", "20", "60"),
+                            selectedValue = bypassBadMinutes,
+                            onSelected = { bypassBadMinutes = it }
+                        )
+                        SettingsListItem(
+                            title = stringResource(R.string.title_bypass_ping_limit),
+                            entries = listOf("250", "400", "600", "1000"),
+                            values = listOf("250", "400", "600", "1000"),
+                            selectedValue = bypassPingLimit,
+                            onSelected = { bypassPingLimit = it }
+                        )
+                        SettingsListItem(
+                            title = stringResource(R.string.title_bypass_stable_seconds),
+                            entries = listOf("5", "8", "15", "30"),
+                            values = listOf("5", "8", "15", "30"),
+                            selectedValue = bypassStableSeconds,
+                            onSelected = { bypassStableSeconds = it }
+                        )
                     }
                 }
                 if (showBypassPicker) {

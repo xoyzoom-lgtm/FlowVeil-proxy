@@ -505,8 +505,12 @@ object CoreServiceManager {
 
                 AppConfig.MSG_STATE_STOP -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Stop service")
+                    // The user turned the connection off: a bypass episode ends with it.
+                    BypassController.onUserStop()
                     serviceControl.stopService()
                 }
+
+                AppConfig.MSG_NET_CHECK_NOW -> ConnectionWatchdog.requestCheckNow()
 
                 AppConfig.MSG_STATE_RESTART -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Restart service")

@@ -10,6 +10,7 @@ import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.ProxySpeedTest
 import com.v2ray.ang.handler.ServerCountry
+import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.LocateTarget
@@ -1068,6 +1069,8 @@ class MainViewModel(
             if (best == null) {
                 toastError(R.string.connect_best_none_working)
             } else {
+                // Remembered so that a later automatic switch knows the user was on "Best".
+                WhitelistBypass.markBest(best)
                 _uiState.update { it.copy(connectBestGuid = best) }
             }
         }
