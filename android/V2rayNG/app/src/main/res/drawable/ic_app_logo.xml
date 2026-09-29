@@ -1,40 +1,4 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
-    android:width="48dp"
-    android:height="48dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path android:pathData="M24,0L84,0A24,24 0,0 1,108 24L108,84A24,24 0,0 1,84 108L24,108A24,24 0,0 1,0 84L0,24A24,24 0,0 1,24 0z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="108"
-                android:endY="108"
-                android:startX="0"
-                android:startY="0"
-                android:type="linear">
-                <item android:color="#FF14B8A6" android:offset="0" />
-                <item android:color="#FF6366F1" android:offset="0.55" />
-                <item android:color="#FFA855F7" android:offset="1" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <group
-        android:pivotX="54"
-        android:pivotY="57"
-        android:scaleX="1.3"
-        android:scaleY="1.3">
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M30,37 C38,31 46,40 54,36 C62,32 70,41 78,35 C76,52 66,67 54,79 C42,67 32,52 30,37 Z" />
-        <path
-            android:pathData="M37,48 C43,44 48,52 54,48 C60,44 65,52 71,48"
-            android:strokeColor="#FF5B5BD6"
-            android:strokeWidth="3.2"
-            android:strokeLineCap="round" />
-        <path
-            android:pathData="M42,58 C46,55 50,61 54,58 C58,55 62,61 66,58"
-            android:strokeColor="#FF5B5BD6"
-            android:strokeWidth="3.2"
-            android:strokeLineCap="round" />
-    </group>
-</vector>
+<?xml version="1.0" encoding="utf-8"?>
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/ic_app_logo_full"
+    android:filter="true" />
