@@ -13,6 +13,7 @@
                     PrimaryColor="Blue"
                     SecondaryColor="Lime" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml" />
+                <ResourceDictionary Source="/Themes/FlowVeilStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <system:Double x:Key="MenuItemHeight">32</system:Double>
             <system:Double x:Key="StdFontSize">12</system:Double>
@@ -128,32 +129,13 @@
                 <Setter Property="FontFamily" Value="{x:Static conv:MaterialDesignFonts.MyFont}" />
             </Style>
 
-            <!--  FlowVeil tray menu: rounded card with a soft shadow, roomy rows  -->
+            <!--  FlowVeil tray menu: same language as every FlowVeil menu, just roomier  -->
             <Style
                 x:Key="TrayContextMenu"
-                BasedOn="{StaticResource DefContextMenu}"
+                BasedOn="{StaticResource FV.ContextMenu}"
                 TargetType="{x:Type ContextMenu}">
-                <Setter Property="HasDropShadow" Value="False" />
                 <Setter Property="MinWidth" Value="280" />
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type ContextMenu}">
-                            <Border
-                                Margin="10"
-                                Padding="6"
-                                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
-                                CornerRadius="14">
-                                <Border.Effect>
-                                    <DropShadowEffect
-                                        BlurRadius="18"
-                                        Opacity="0.35"
-                                        ShadowDepth="3" />
-                                </Border.Effect>
-                                <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
-                            </Border>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
+                <Setter Property="FontFamily" Value="{x:Static conv:MaterialDesignFonts.MyFont}" />
             </Style>
 
             <Style

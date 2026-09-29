@@ -153,6 +153,7 @@ public partial class ThemeSettingViewModel : MyReactiveObject
         _paletteHelper.SetTheme(theme);
 
         ApplyHappBrushes(happ);
+        ApplyFlowVeilPalette(happ, baseTheme, theme);
         WindowsUtils.SetDarkBorder(Application.Current.MainWindow, CurrentTheme);
     }
 
@@ -180,6 +181,26 @@ public partial class ThemeSettingViewModel : MyReactiveObject
         resources["MaterialDesignBody"] = text;
         resources["MaterialDesign.Brush.ForegroundLight"] = subText;
         resources["MaterialDesignBodyLight"] = subText;
+    }
+
+    /// <summary>Recomputes the FlowVeil design tokens (FV.Brush.*) for the active theme.</summary>
+    private static void ApplyFlowVeilPalette(HappTheme? happ, BaseTheme baseTheme, Theme theme)
+    {
+        var resources = Application.Current.Resources;
+        if (happ != null)
+        {
+            FlowVeilPalette.Apply(resources, ToColor(happ.Background), ToColor(happ.Card), ToColor(happ.Text), ToColor(happ.SubText),
+                ToColor(happ.Accent), ToColor(happ.OnAccent), !happ.IsLight);
+            return;
+        }
+        var dark = baseTheme switch
+        {
+            BaseTheme.Dark => true,
+            BaseTheme.Light => false,
+            _ => WindowsUtils.IsDarkTheme(),
+        };
+        var accent = theme.PrimaryMid.Color;
+        FlowVeilPalette.ApplyBuiltIn(resources, dark, accent, theme.PrimaryMid.ForegroundColor ?? System.Windows.Media.Colors.White);
     }
 
     private static System.Windows.Media.Color ToColor(string hex)

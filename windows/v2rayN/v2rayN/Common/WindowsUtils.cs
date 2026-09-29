@@ -73,7 +73,7 @@ internal static partial class WindowsUtils
         DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE, ref attribute, attributeSize);
     }
 
-    private static bool IsDarkTheme()
+    public static bool IsDarkTheme()
     {
         using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
         var obj = key?.GetValue("AppsUseLightTheme");

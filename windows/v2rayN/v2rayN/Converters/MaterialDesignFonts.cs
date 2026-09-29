@@ -20,6 +20,7 @@ public class MaterialDesignFonts
         catch
         {
         }
-        MyFont ??= new FontFamily("Microsoft YaHei");
+        // Segoe UI renders Cyrillic properly; Segoe UI Emoji keeps provider emoji from turning into boxes.
+        MyFont ??= new FontFamily("Segoe UI Variable Text, Segoe UI, Segoe UI Emoji, Segoe UI Symbol, Microsoft YaHei");
     }
 }
