@@ -180,6 +180,8 @@ dependencies {
     implementation(libs.mmkv.static)
     implementation(libs.gson)
     implementation(libs.okhttp)
+    // Clash/Mihomo YAML subscriptions (SubscriptionFormats)
+    implementation("org.snakeyaml:snakeyaml-engine:2.9")
 
     // Reactive and Utility Libraries
     implementation(libs.kotlinx.coroutines.android)

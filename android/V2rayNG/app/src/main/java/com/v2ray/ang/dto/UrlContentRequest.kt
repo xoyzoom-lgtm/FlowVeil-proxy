@@ -9,5 +9,7 @@ data class UrlContentRequest(
     val userAgent: String? = null,
     val requestHeaders: String? = null,
     /** Applied before [requestHeaders], so user-configured headers can override them. */
-    val defaultHeaders: Map<String, String> = emptyMap()
+    val defaultHeaders: Map<String, String> = emptyMap(),
+    /** Resolve the host over DNS-over-HTTPS instead of the system resolver. */
+    val secureDns: Boolean = false
 )

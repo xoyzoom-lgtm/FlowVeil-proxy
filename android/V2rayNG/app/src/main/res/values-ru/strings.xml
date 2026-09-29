@@ -632,4 +632,5 @@
     <string name="update_allow_install">Разрешите FlowVeil устанавливать обновления и вернитесь назад</string>
     <string name="about_author">Автор</string>
     <string name="about_based_on">Основано на v2rayNG (GPL-3.0)</string>
+    <string name="toast_sub_failed_reason">Не удалось загрузить серверы: %1$s</string>
 </resources>

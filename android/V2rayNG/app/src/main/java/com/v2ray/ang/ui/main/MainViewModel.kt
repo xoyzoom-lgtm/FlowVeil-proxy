@@ -523,7 +523,7 @@ class MainViewModel(
                             setupGroupTab(forceRefresh = true)
                         }
 
-                        countSub > 0 -> syncNewSubscriptions()
+                        countSub > 0 -> syncNewSubscriptions(download = false)
                         else -> toastError(R.string.toast_failure)
                     }
                 } catch (cancelled: CancellationException) {
@@ -540,7 +540,7 @@ class MainViewModel(
      * Downloads subscriptions that have a URL but no servers yet (e.g. one that was just added),
      * so a new link shows its servers immediately instead of after a restart.
      */
-    private suspend fun syncNewSubscriptions() {
+    private suspend fun syncNewSubscriptions(download: Boolean = true) {
         val fresh = dataSource.getSubscriptions().filter {
             it.guid != AppConfig.DEFAULT_SUBSCRIPTION_ID &&
                 it.subscription.enabled &&
@@ -548,6 +548,7 @@ class MainViewModel(
                 dataSource.getServerGuidList(it.guid).isEmpty()
         }
         for (sub in fresh) {
+            if (!download) break
             try {
                 dataSource.updateConfigViaSub(sub)
             } catch (cancelled: CancellationException) {
@@ -565,7 +566,12 @@ class MainViewModel(
                 dataSource.getServerGuidList(target.guid).firstOrNull()?.let { updateSelectedGuid(it) }
             }
         } else if (fresh.isNotEmpty()) {
-            toastError(R.string.toast_failure)
+            val reason = com.v2ray.ang.handler.SubscriptionErrors.latest(fresh.map { it.guid })
+            if (reason != null) {
+                toastError(dataSource.getString(R.string.toast_sub_failed_reason, reason))
+            } else {
+                toastError(R.string.toast_failure)
+            }
         }
         refreshSelectedGuid()
     }
@@ -613,8 +619,16 @@ class MainViewModel(
                                 )
                             )
 
-                        else ->
-                            toast(dataSource.getString(R.string.title_update_subscription_result, result.configCount, result.successCount, result.failureCount, result.skipCount))
+                        else -> {
+                            val reason = com.v2ray.ang.handler.SubscriptionErrors.latest(
+                                if (subId.isEmpty()) dataSource.getSubscriptions().map { it.guid } else listOf(subId)
+                            )
+                            if (reason != null && result.successCount == 0) {
+                                toastError(dataSource.getString(R.string.toast_sub_failed_reason, reason))
+                            } else {
+                                toast(dataSource.getString(R.string.title_update_subscription_result, result.configCount, result.successCount, result.failureCount, result.skipCount))
+                            }
+                        }
                     }
                     if (result.configCount > 0) {
                         setupGroupTab(forceRefresh = true)

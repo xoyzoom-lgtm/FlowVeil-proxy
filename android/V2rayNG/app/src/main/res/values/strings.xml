@@ -628,4 +628,5 @@
     <string name="update_allow_install">Allow FlowVeil to install updates, then come back</string>
     <string name="about_author">Author</string>
     <string name="about_based_on">Based on v2rayNG (GPL-3.0)</string>
+    <string name="toast_sub_failed_reason">Could not load servers: %1$s</string>
 </resources>

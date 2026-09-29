@@ -191,12 +191,16 @@ object AngConfigManager {
                 count = parseCustomConfigServer(server, subid, append)
             }
 
+            val subsBefore = MmkvManager.decodeSubscriptions().map { it.guid }.toSet()
             var countSub = parseBatchSubscription(server)
             if (countSub <= 0) {
                 countSub = parseBatchSubscription(Utils.decode(server))
             }
             if (countSub > 0) {
-                updateConfigViaSubAll()
+                // Download only the subscriptions just added, not every subscription again.
+                MmkvManager.decodeSubscriptions()
+                    .filter { it.guid !in subsBefore }
+                    .forEach { updateConfigViaSub(it) }
             }
 
             count to countSub
@@ -224,7 +228,8 @@ object AngConfigManager {
                 .flatMap { line -> SUB_URL_REGEX.findAll(line).map { it.value.trimEnd('.', ',', ')', '"', '\'') }.toList() }
                 .distinct()
                 .forEach { str ->
-                    if (Utils.isValidSubUrl(str)) {
+                    // http:// links are accepted too: many panels on an IP:port only offer those.
+                    if (Utils.isValidSubUrl(str) || (Utils.isValidUrl(str) && str.startsWith("http", ignoreCase = true))) {
                         count += importUrlAsSubscription(str)
                     }
                 }
@@ -255,6 +260,8 @@ object AngConfigManager {
             val v2raynLines = mutableListOf<String>()
 
             servers.lines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
                 .distinct()
                 .reversed()
                 .forEach {
@@ -329,9 +336,9 @@ object AngConfigManager {
         if (server == null) {
             return 0
         }
-        if (server.contains("inbounds")
-            && server.contains("outbounds")
-            && server.contains("routing")
+        val trimmedServer = server.trim()
+        if (server.contains("outbounds")
+            && (server.contains("inbounds") || server.contains("routing") || trimmedServer.startsWith("["))
         ) {
             try {
                 val serverList: Array<Any> =
@@ -479,12 +486,13 @@ object AngConfigManager {
 
             val url = HttpUtil.toIdnUrl(it.subscription.url)
             if (!Utils.isValidUrl(url)) {
+                SubscriptionErrors.record(it.guid, "это не ссылка на подписку")
                 return SubscriptionUpdateResult(failureCount = 1)
             }
-            if (!it.subscription.allowInsecureUrl) {
-                if (!Utils.isValidSubUrl(url)) {
-                    return SubscriptionUpdateResult(failureCount = 1)
-                }
+            // Plain http:// subscriptions (common for panels on an IP:port) are accepted like on the
+            // desktop client; they used to be dropped silently, leaving an empty group.
+            if (!it.subscription.allowInsecureUrl && !Utils.isValidSubUrl(url)) {
+                LogUtil.w(AppConfig.TAG, "Subscription uses plain http: $url")
             }
             LogUtil.i(AppConfig.TAG, url)
             val userAgent = it.subscription.userAgent
@@ -493,50 +501,64 @@ object AngConfigManager {
             val proxyPassword = SettingsManager.getSocksPassword()
             val deviceHeaders = DeviceIdentity.subscriptionHeaders()
 
-            var (configText, responseHeaders) = try {
-                val httpPort = SettingsManager.getHttpPort()
+            var lastNetworkError: String? = null
+            fun fetch(agent: String?, viaProxy: Boolean, secureDns: Boolean): Pair<String, Map<String, String>> = try {
                 HttpUtil.getUrlContentWithHeaders(
                     UrlContentRequest(
                         url = url,
-                        userAgent = userAgent,
+                        userAgent = agent,
                         requestHeaders = requestHeaders,
-                        timeout = 15000,
-                        httpPort = httpPort,
-                        proxyUsername = proxyUsername,
-                        proxyPassword = proxyPassword,
-                        defaultHeaders = deviceHeaders
+                        timeout = if (viaProxy) 15000 else 12000,
+                        httpPort = if (viaProxy) SettingsManager.getHttpPort() else 0,
+                        proxyUsername = if (viaProxy) proxyUsername else null,
+                        proxyPassword = if (viaProxy) proxyPassword else null,
+                        defaultHeaders = deviceHeaders,
+                        secureDns = secureDns
                     )
                 )
             } catch (e: Exception) {
-                LogUtil.e(AppConfig.ANG_PACKAGE, "Update subscription: proxy not ready or other error", e)
-                "" to emptyMap<String, String>()
+                LogUtil.e(AppConfig.TAG, "Update subscription (proxy=$viaProxy, secureDns=$secureDns) failed", e)
+                lastNetworkError = e.message ?: e.javaClass.simpleName
+                "" to emptyMap()
             }
+
+            // Through the running VPN first, then directly, then with DNS-over-HTTPS (ISP DNS blocking).
+            var (configText, responseHeaders) = fetch(userAgent, viaProxy = true, secureDns = false)
+            var useSecureDns = false
             if (configText.isEmpty()) {
-                val direct = try {
-                    HttpUtil.getUrlContentWithHeaders(
-                        UrlContentRequest(
-                            url = url,
-                            userAgent = userAgent,
-                            requestHeaders = requestHeaders,
-                            defaultHeaders = deviceHeaders
-                        )
-                    )
-                } catch (e: Exception) {
-                    LogUtil.e(AppConfig.TAG, "Update subscription: Failed to get URL content with user agent", e)
-                    "" to emptyMap<String, String>()
-                }
+                val direct = fetch(userAgent, viaProxy = false, secureDns = false)
                 configText = direct.first
                 responseHeaders = direct.second
             }
             if (configText.isEmpty()) {
+                val secure = fetch(userAgent, viaProxy = false, secureDns = true)
+                configText = secure.first
+                responseHeaders = secure.second
+                useSecureDns = configText.isNotEmpty()
+            }
+            if (configText.isEmpty()) {
+                SubscriptionErrors.record(it.guid, "сервер подписки недоступен: ${lastNetworkError ?: "пустой ответ"}")
                 return SubscriptionUpdateResult(failureCount = 1)
             }
 
-            val count = parseConfigViaSub(configText, it.guid, false)
+            var count = parseConfigViaSub(configText, it.guid, false)
+            if (count <= 0 && userAgent.isNullOrBlank()) {
+                // Some panels answer each client in its own format: ask as the desktop client, then as Clash.
+                for (agent in listOf("v2rayN/7.25.2", "clash-verge/v2.2.3")) {
+                    val retry = fetch(agent, viaProxy = false, secureDns = useSecureDns)
+                    if (retry.first.isEmpty()) continue
+                    count = parseConfigViaSub(retry.first, it.guid, false)
+                    if (count > 0) {
+                        responseHeaders = retry.second
+                        break
+                    }
+                }
+            }
             if (count > 0) {
                 it.subscription.lastUpdated = System.currentTimeMillis()
                 SubscriptionInfoParser.apply(it.subscription, responseHeaders)
                 MmkvManager.encodeSubscription(it.guid, it.subscription)
+                SubscriptionErrors.clear(it.guid)
                 LogUtil.i(AppConfig.TAG, "Subscription updated: ${it.subscription.remarks}, $count configs")
                 return SubscriptionUpdateResult(
                     configCount = count,
@@ -544,6 +566,15 @@ object AngConfigManager {
                 )
             } else {
                 // Got response but no valid configs parsed
+                val looksLikePage = configText.trimStart().startsWith("<")
+                SubscriptionErrors.record(
+                    it.guid,
+                    when {
+                        looksLikePage -> "по ссылке открывается сайт, а не подписка — возьмите у провайдера ссылку для приложения"
+                        configText.trimStart().startsWith("happ://") -> "это зашифрованная ссылка Happ, её может открыть только приложение Happ"
+                        else -> "в ответе нет серверов (формат не поддерживается или превышен лимит устройств)"
+                    }
+                )
                 return SubscriptionUpdateResult(failureCount = 1)
             }
         } catch (e: Exception) {
@@ -598,7 +629,18 @@ object AngConfigManager {
     private fun parseConfigViaSub(server: String?, subid: String, append: Boolean): Int {
         var count = parseBatchConfig(Utils.decode(server), subid, append)
         if (count <= 0) {
+            // Base64 with line breaks, URL-safe alphabet or no padding (common on other panels)
+            count = parseBatchConfig(SubscriptionFormats.decodeBase64Loose(server), subid, append)
+        }
+        if (count <= 0) {
             count = parseBatchConfig(server, subid, append)
+        }
+        if (count <= 0 && server != null) {
+            // Clash/Mihomo YAML or sing-box JSON profiles -> ordinary share links
+            val links = SubscriptionFormats.toShareLinks(server)
+            if (links.isNotEmpty()) {
+                count = parseBatchConfig(links.joinToString("\n"), subid, append)
+            }
         }
         if (count <= 0) {
             count = parseCustomConfigServer(server, subid, append)
@@ -621,7 +663,7 @@ object AngConfigManager {
         }
         val uri = URI(Utils.fixIllegalUrl(url))
         val subItem = SubscriptionItem()
-        subItem.remarks = uri.fragment ?: "import sub"
+        subItem.remarks = uri.fragment ?: uri.host ?: "import sub"
         subItem.url = url
         MmkvManager.encodeSubscription("", subItem)
         return 1
