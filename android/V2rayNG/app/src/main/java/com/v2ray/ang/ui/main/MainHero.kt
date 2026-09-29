@@ -1,6 +1,5 @@
 package com.v2ray.ang.ui.main
 
-import com.v2ray.ang.extension.toSpeedString
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -447,8 +446,13 @@ internal fun ConnectionHero(
             Spacer(Modifier.height(4.dp))
         }
         if (isRunning && speed != null) {
+            // Traffic right now, in bits like speed tests show it (not the line's maximum speed).
             Text(
-                text = "↓ ${speed.second.toSpeedString()}   ↑ ${speed.first.toSpeedString()}",
+                text = stringResource(
+                    R.string.live_speed,
+                    formatBitRate(speed.second, stringResource(R.string.unit_mbit), stringResource(R.string.unit_kbit)),
+                    formatBitRate(speed.first, stringResource(R.string.unit_mbit), stringResource(R.string.unit_kbit)),
+                ),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -490,6 +494,16 @@ internal fun ConnectionHero(
                 )
             }
         }
+    }
+}
+
+/** Bytes per second as Mbit/s (one decimal) or Kbit/s. */
+internal fun formatBitRate(bytesPerSecond: Long, mbit: String, kbit: String): String {
+    val bits = bytesPerSecond * 8.0
+    return if (bits >= 1_000_000) {
+        String.format(java.util.Locale.getDefault(), "%.1f %s", bits / 1_000_000, mbit)
+    } else {
+        String.format(java.util.Locale.getDefault(), "%.0f %s", bits / 1_000, kbit)
     }
 }
 

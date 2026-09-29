@@ -678,9 +678,12 @@
         <item>Subscriptions refresh every 6 hours; reminders before they run out</item>
         <item>“Russian sites directly” in Settings → Connection</item>
         <item>Favorite servers (★) stay at the top of the list</item>
-        <item>Live speed under the power button and a speed test in the ⋮ menu</item>
+        <item>Current traffic under the power button; “Speed test” in the ⋮ menu measures the maximum speed</item>
         <item>Invite links flowveil://add?url=… add a subscription in one tap</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
+    <string name="live_speed">Now: ↓ %1$s   ↑ %2$s</string>
+    <string name="unit_mbit">Mbit/s</string>
+    <string name="unit_kbit">Kbit/s</string>
 </resources>

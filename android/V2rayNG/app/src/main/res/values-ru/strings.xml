@@ -682,9 +682,12 @@
         <item>Подписки обновляются каждые 6 часов, напоминания перед окончанием</item>
         <item>«Российские сайты напрямую» в Настройки → Подключение</item>
         <item>Избранные серверы (★) всегда наверху списка</item>
-        <item>Скорость под кнопкой и тест скорости в меню ⋮</item>
+        <item>Текущий трафик под кнопкой, а максимальную скорость измеряет «Тест скорости» в меню ⋮</item>
         <item>Ссылки-приглашения flowveil://add?url=… добавляют подписку в одно касание</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>
+    <string name="live_speed">Сейчас: ↓ %1$s   ↑ %2$s</string>
+    <string name="unit_mbit">Мбит/с</string>
+    <string name="unit_kbit">Кбит/с</string>
 </resources>
