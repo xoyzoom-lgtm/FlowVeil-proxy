@@ -4,13 +4,18 @@ import android.app.Application
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.CheckUpdateResult
+import com.v2ray.ang.handler.ApkUpdateInstaller
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.ui.base.BaseViewModel
 import com.v2ray.ang.util.LogUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.io.File
 
 class CheckUpdateViewModel(application: Application) : BaseViewModel(application) {
 
@@ -47,7 +52,60 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
         }
     }
 
+    /** null = not downloading, -1 = size unknown, 0..100 = percent. */
+    private val _downloadProgress = MutableStateFlow<Int?>(null)
+    val downloadProgress: StateFlow<Int?> = _downloadProgress.asStateFlow()
+
+    private var downloadJob: Job? = null
+    private var downloadedApk: File? = null
+    private var awaitingInstallPermission = false
+
+    /** Called on resume: continue installing after the user allowed installs from Hupp. */
+    fun resumeInstallIfPending() {
+        if (awaitingInstallPermission && !ApkUpdateInstaller.needsInstallPermission(getApplication())) {
+            awaitingInstallPermission = false
+            installDownloaded()
+        }
+    }
+
+    /** Downloads the APK inside the app, then opens the system installer. */
+    fun downloadAndInstall() {
+        val url = _updateResult.value?.downloadUrl ?: return
+        if (downloadJob?.isActive == true) return
+        val app = getApplication<Application>()
+        downloadJob = viewModelScope.launch {
+            _downloadProgress.value = 0
+            try {
+                val apk = ApkUpdateInstaller.download(app, url) { _downloadProgress.value = it }
+                downloadedApk = apk
+                _downloadProgress.value = null
+                _showUpdateDialog.value = false
+                installDownloaded()
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Update download failed", e)
+                _downloadProgress.value = null
+                toastError(R.string.update_download_failed)
+            }
+        }
+    }
+
+    /** Starts the installer for an already downloaded APK (also after granting the permission). */
+    fun installDownloaded(): Boolean {
+        val apk = downloadedApk ?: return false
+        val app = getApplication<Application>()
+        if (ApkUpdateInstaller.needsInstallPermission(app)) {
+            toastError(R.string.update_allow_install)
+            awaitingInstallPermission = true
+            ApkUpdateInstaller.openInstallPermissionSettings(app)
+            return true
+        }
+        ApkUpdateInstaller.install(app, apk)
+        return true
+    }
+
     fun dismissUpdateDialog() {
+        downloadJob?.cancel()
+        _downloadProgress.value = null
         _showUpdateDialog.value = false
     }
 }

@@ -623,4 +623,7 @@
     <string name="sub_frame_unlimited_short">unlimited</string>
     <string name="sub_frame_until_short">until %1$s</string>
     <string name="sub_frame_days_left">%1$d d. left</string>
+    <string name="update_downloading">Downloading update… %1$s</string>
+    <string name="update_download_failed">Could not download the update. Check the internet and try again.</string>
+    <string name="update_allow_install">Allow Hupp to install updates, then come back</string>
 </resources>

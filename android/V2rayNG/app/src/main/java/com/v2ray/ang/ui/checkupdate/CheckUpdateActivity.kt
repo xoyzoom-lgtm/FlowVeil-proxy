@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,6 +46,12 @@ class CheckUpdateActivity : BaseComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Back from "allow installs from this app": continue with the downloaded update.
+        viewModel.resumeInstallIfPending()
+    }
+
     @Composable
     override fun ScreenContent() {
         CheckUpdateScreen(viewModel = viewModel, onBackClick = { finish() })
@@ -59,6 +68,7 @@ fun CheckUpdateScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val showUpdateDialog by viewModel.showUpdateDialog.collectAsStateWithLifecycle()
     val updateResult by viewModel.updateResult.collectAsStateWithLifecycle()
+    val downloadProgress by viewModel.downloadProgress.collectAsStateWithLifecycle()
 
     val libVersion = CoreNativeManager.getLibVersion()
     val versionText = "Hupp build ${BuildConfig.HUPP_BUILD} ($libVersion)"
@@ -95,20 +105,33 @@ fun CheckUpdateScreen(
             onDismissRequest = { viewModel.dismissUpdateDialog() },
             title = { Text(stringResource(R.string.update_new_version_found, result.latestVersion ?: "")) },
             text = {
-                val scrollState = rememberScrollState()
-                Text(
-                    text = result.releaseNotes.orEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(scrollState)
-                        .verticalScrollbar(scrollState)
-                )
+                val progress = downloadProgress
+                if (progress != null) {
+                    Column {
+                        Text(stringResource(R.string.update_downloading, if (progress >= 0) "$progress%" else ""))
+                        androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
+                        if (progress >= 0) {
+                            LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
+                        } else {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+                    }
+                } else {
+                    val scrollState = rememberScrollState()
+                    Text(
+                        text = result.releaseNotes.orEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(scrollState)
+                            .verticalScrollbar(scrollState)
+                    )
+                }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    viewModel.dismissUpdateDialog()
-                    result.downloadUrl?.let { Utils.openUri(context, it) }
-                }) {
+                TextButton(
+                    enabled = downloadProgress == null,
+                    onClick = { viewModel.downloadAndInstall() }
+                ) {
                     Text(stringResource(R.string.update_now))
                 }
             },
