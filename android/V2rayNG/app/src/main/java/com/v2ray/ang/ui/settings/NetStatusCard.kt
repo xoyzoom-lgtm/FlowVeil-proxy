@@ -51,10 +51,11 @@ fun NetStatusCard(devMode: Boolean) {
             return@SettingsGroupCard
         }
 
+        // joinToString takes a plain lambda: the names are resolved first (map is inline).
+        val otherNames = info.others.map { netTypeText(it) }
         SettingsMenuItem(
             title = netTypeText(info.type),
-            subtitle = if (info.others.isEmpty()) null
-            else stringResource(R.string.net_also, info.others.joinToString(", ") { netTypeText(it) }),
+            subtitle = if (otherNames.isEmpty()) null else stringResource(R.string.net_also, otherNames.joinToString(", ")),
             onClick = {}
         )
         IpRow(R.string.net_real_ip, info.realIp ?: info.realIp6, reveal) { reveal = !reveal }
