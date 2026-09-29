@@ -612,6 +612,12 @@ public class Global
         "bbr"
     ];
 
+    public static readonly List<string> TuicUdpRelayModes =
+    [
+        "native",
+        "quic"
+    ];
+
     public static readonly List<string> NaiveCongestionControls =
     [
         "bbr",

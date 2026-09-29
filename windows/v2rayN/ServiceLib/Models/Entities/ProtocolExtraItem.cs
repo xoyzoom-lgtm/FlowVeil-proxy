@@ -4,6 +4,7 @@ public record ProtocolExtraItem
 {
     public bool? Uot { get; init; }
     public string? CongestionControl { get; init; }
+    public string? UdpRelayMode { get; init; }
 
     // http outbound
     public string? HttpHeaders { get; init; }

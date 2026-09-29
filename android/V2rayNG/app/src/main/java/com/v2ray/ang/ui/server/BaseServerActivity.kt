@@ -394,7 +394,8 @@ abstract class BaseServerActivity : BaseComponentActivity() {
 
             if (config.configType == EConfigType.TROJAN ||
                 config.configType == EConfigType.SHADOWSOCKS ||
-                config.configType == EConfigType.HYSTERIA2
+                config.configType == EConfigType.HYSTERIA2 ||
+                config.configType == EConfigType.TUIC
             ) {
                 return false
             }

@@ -148,6 +148,7 @@ public class Outbound4Sbox : BaseServer4Sbox
     public string? username { get; set; }
     public string? password { get; set; }
     public string? congestion_control { get; set; }
+    public string? udp_relay_mode { get; set; }
     public bool? quic { get; set; }
     public string? quic_congestion_control { get; set; }
     public string? version { get; set; }

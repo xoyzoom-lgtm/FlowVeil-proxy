@@ -31,6 +31,7 @@ object CoreOutboundBuilder {
             EConfigType.TROJAN -> toOutboundTrojan(profileItem)
             EConfigType.WIREGUARD -> toOutboundWireguard(profileItem)
             EConfigType.HYSTERIA2 -> toOutboundHysteria2(profileItem)
+            EConfigType.TUIC -> toOutboundTuic(profileItem)
             EConfigType.HTTP -> toOutboundHttp(profileItem)
             else -> null
         }
@@ -290,6 +291,16 @@ object CoreOutboundBuilder {
             }
         }
         return outboundBean
+    }
+
+    /**
+     * TUIC is not an Xray protocol: it runs in a local sing-box (see [SingboxBridge]) and Xray
+     * connects to that as an ordinary SOCKS proxy. A failure to start it surfaces as the
+     * config error, so the user sees why the server does not connect.
+     */
+    private fun toOutboundTuic(profileItem: ProfileItem): OutboundBean? {
+        val local = SingboxBridge.ensure(profileItem)
+        return toOutboundSocks(local)
     }
 
     private fun toOutboundHysteria2(profileItem: ProfileItem): OutboundBean? {

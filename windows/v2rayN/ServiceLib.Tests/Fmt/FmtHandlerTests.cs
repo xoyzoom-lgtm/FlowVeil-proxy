@@ -134,9 +134,10 @@ public class FmtHandlerTests
         await resolved.Alpn.Should().BeEqualTo(source.Alpn);
         await resolved.GetProtocolExtra().CongestionControl.Should()
             .BeEqualTo(source.GetProtocolExtra().CongestionControl);
+        await resolved.GetProtocolExtra().UdpRelayMode.Should().BeEqualTo("quic");
         await resolved.GetAllowInsecure().Should().BeTrue();
 
-        await AssertExportContains(source, "allow_insecure=1");
+        await AssertExportContains(source, "allow_insecure=1", "udp_relay_mode=quic");
     }
 
     [Test]
@@ -460,7 +461,7 @@ public class FmtHandlerTests
             AllowInsecure = Global.StringTrue,
         };
 
-        item.SetProtocolExtra(new ProtocolExtraItem { CongestionControl = "bbr", });
+        item.SetProtocolExtra(new ProtocolExtraItem { CongestionControl = "bbr", UdpRelayMode = "quic", });
 
         return item;
     }

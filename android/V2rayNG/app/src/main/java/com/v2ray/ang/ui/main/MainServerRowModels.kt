@@ -49,9 +49,16 @@ internal fun buildServerRowUiModel(
 
 private fun serverProtocolDescription(profile: ProfileItem): String {
     if (profile.configType.isComplexType()) return profile.configType.name
-    val parts = mutableListOf(profile.configType.name)
+    // Short badges people know: HY2 and TUIC ride on QUIC, so there is no separate transport.
+    val parts = mutableListOf(
+        when (profile.configType) {
+            EConfigType.HYSTERIA2 -> "HY2"
+            else -> profile.configType.name
+        }
+    )
+    val quicBased = profile.configType == EConfigType.HYSTERIA2 || profile.configType == EConfigType.TUIC
     profile.network?.let { network ->
-        if (network.isNotBlank() && !network.equals("tcp", ignoreCase = true)) {
+        if (!quicBased && network.isNotBlank() && !network.equals("tcp", ignoreCase = true)) {
             parts.add(network)
         }
     }
@@ -60,6 +67,8 @@ private fun serverProtocolDescription(profile: ProfileItem): String {
             parts.add(
                 if (profile.insecure == true && security.equals("tls", ignoreCase = true)) {
                     "$security insecure"
+                } else if (security.equals("reality", ignoreCase = true)) {
+                    "REALITY"
                 } else {
                     security
                 }

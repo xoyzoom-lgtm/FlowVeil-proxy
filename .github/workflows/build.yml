@@ -53,6 +53,48 @@ jobs:
           curl -fL -o V2rayNG/app/libs/libv2ray.aar \
             https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.9.9/libv2ray.aar
 
+      - name: Add sing-box engine (TUIC)
+        # Optional: without it the app still builds, TUIC servers just explain that the engine is missing.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import io, json, os, re, tarfile, time, urllib.request
+
+          def fetch(url, api=False):
+              headers = {"User-Agent": "flowveil-ci"}
+              if api:
+                  headers["Authorization"] = "Bearer " + os.environ["GH_TOKEN"]
+              for attempt in range(5):
+                  try:
+                      return urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
+                  except Exception:
+                      if attempt == 4:
+                          raise
+                      time.sleep(8 * (attempt + 1))
+
+          # TUIC runs on sing-box 1.12-1.14 (the versions FlowVeil's config format targets).
+          releases = json.loads(fetch("https://api.github.com/repos/SagerNet/sing-box/releases?per_page=40", api=True))
+          rel = next(r for r in releases if not r["prerelease"] and re.fullmatch(r"v1\.1[2-4]\.\d+", r["tag_name"]))
+          print("sing-box", rel["tag_name"])
+          for abi, suffix in (("arm64-v8a", "android-arm64"), ("armeabi-v7a", "android-arm")):
+              asset = next((a for a in rel["assets"] if a["name"].endswith("-" + suffix + ".tar.gz") and "legacy" not in a["name"]), None)
+              if asset is None:
+                  print("::warning::no sing-box build for", abi)
+                  continue
+              data = fetch(asset["browser_download_url"])
+              with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tar:
+                  member = next(m for m in tar.getmembers() if m.isfile() and os.path.basename(m.name) == "sing-box")
+                  out_dir = os.path.join("V2rayNG", "app", "libs", abi)
+                  os.makedirs(out_dir, exist_ok=True)
+                  out = os.path.join(out_dir, "libsingbox.so")
+                  with open(out, "wb") as f:
+                      f.write(tar.extractfile(member).read())
+                  os.chmod(out, 0o755)
+                  print(abi, os.path.getsize(out) // 1024 // 1024, "MB")
+          PY
+
       - name: Signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.HUPP_KEYSTORE_BASE64 }}
@@ -84,6 +126,14 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/out"
           cp app/build/outputs/apk/playstore/release/*universal*.apk "$GITHUB_WORKSPACE/out/FlowVeil-android.apk"
           cp app/build/outputs/apk/playstore/release/*arm64-v8a*.apk "$GITHUB_WORKSPACE/out/FlowVeil-android-arm64.apk"
+
+      - name: Check bundled native engines
+        continue-on-error: true
+        run: |
+          for apk in "$GITHUB_WORKSPACE"/out/*.apk; do
+            echo "== $(basename "$apk")"
+            unzip -l "$apk" | grep -E "libhevsockstun|libhev-socks5-tunnel|libgojni|libsingbox" || true
+          done
 
       - uses: actions/upload-artifact@v7
         with:

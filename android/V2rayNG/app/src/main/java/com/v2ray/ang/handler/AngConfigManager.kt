@@ -16,6 +16,7 @@ import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.fmt.CustomFmt
 import com.v2ray.ang.fmt.Hysteria2Fmt
+import com.v2ray.ang.fmt.TuicFmt
 import com.v2ray.ang.fmt.ShadowsocksFmt
 import com.v2ray.ang.fmt.SocksFmt
 import com.v2ray.ang.fmt.TrojanFmt
@@ -57,6 +58,7 @@ object AngConfigManager {
             EConfigType.WIREGUARD.protocolScheme to WireguardFmt::parse,
             EConfigType.HYSTERIA2.protocolScheme to Hysteria2Fmt::parse,
             AppConfig.HY2 to Hysteria2Fmt::parse,
+            EConfigType.TUIC.protocolScheme to TuicFmt::parse,
         )
     }
 
@@ -141,7 +143,8 @@ object AngConfigManager {
     fun shareFullContent2Clipboard(context: Context, guid: String?): Int {
         try {
             if (guid == null) return -1
-            val result = CoreConfigManager.getV2rayConfig(context, guid)
+            // Building the config may start a temporary sing-box (TUIC); it ends with this call.
+            val result = com.v2ray.ang.core.SingboxBridge.scoped { CoreConfigManager.getV2rayConfig(context, guid) }
             if (result.status) {
                 Utils.setClipboard(context, result.content)
             } else {
@@ -172,6 +175,7 @@ object AngConfigManager {
                 EConfigType.TROJAN -> TrojanFmt.toUri(config)
                 EConfigType.WIREGUARD -> WireguardFmt.toUri(config)
                 EConfigType.HYSTERIA2 -> Hysteria2Fmt.toUri(config)
+                EConfigType.TUIC -> TuicFmt.toUri(config)
                 else -> {}
             }
         } catch (e: Exception) {

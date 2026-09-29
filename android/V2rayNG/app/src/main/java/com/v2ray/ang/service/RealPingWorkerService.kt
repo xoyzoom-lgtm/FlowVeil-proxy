@@ -19,6 +19,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -26,12 +28,18 @@ import java.util.concurrent.atomic.AtomicInteger
 internal object RealPingExecutionLimiter {
     private val customConfigMutex = Mutex()
 
+    /** Every TUIC test starts its own sing-box process: a few at a time keep the phone responsive. */
+    private const val MAX_PARALLEL_TUIC = 3
+    private val tuicPermits = Semaphore(MAX_PARALLEL_TUIC)
+
     suspend fun <T> run(configType: EConfigType, block: () -> T): T {
         // Custom profiles bypass speed-test trimming and start complete Xray configs.
         // Parallel teardown can abort the native probe process, so serialize their
         // JNI measurements globally across batches.
         return if (configType == EConfigType.CUSTOM) {
             customConfigMutex.withLock { block() }
+        } else if (configType == EConfigType.TUIC) {
+            tuicPermits.withPermit { block() }
         } else {
             block()
         }
@@ -121,6 +129,7 @@ class RealPingWorkerService(
         val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
         if (!config.configType.isComplexType()
             && config.configType != EConfigType.HYSTERIA2
+            && config.configType != EConfigType.TUIC
             && config.configType != EConfigType.WIREGUARD
             && config.alpn?.split(',')?.all { it.trim().startsWith("h3") } != true
             && config.server.isNotNullEmpty()

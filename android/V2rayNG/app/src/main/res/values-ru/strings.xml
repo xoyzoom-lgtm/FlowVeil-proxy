@@ -54,6 +54,7 @@
     <string name="menu_item_import_config_manually_trojan">Добавить Trojan</string>
     <string name="menu_item_import_config_manually_wireguard">Добавить WireGuard</string>
     <string name="menu_item_import_config_manually_hysteria2">Добавить Hysteria2</string>
+    <string name="menu_item_import_config_manually_tuic">Добавить TUIC</string>
     <string name="confirm_delete_visible_profiles">Удалить все отображаемые профили?</string>
     <string name="confirm_delete_duplicate_profiles">Удалить все отображаемые дубликаты профилей?</string>
     <string name="confirm_delete_invalid_profiles">Выполните проверку перед удалением! Удалить все отображаемые нерабочие профили?</string>
@@ -694,6 +695,10 @@
     <string name="summary_pref_dev_mode">Показать технические настройки и инструменты: ручное добавление серверов, маршрутизацию, DNS, настройки ядра, логи, массовые действия</string>
     <string name="title_pref_sub_update_interval">Автообновление подписок</string>
     <string name="notification_channel_switch">Переключение сервера</string>
+    <string name="server_lab_tuic_congestion">Управление перегрузкой</string>
+    <string name="server_lab_tuic_udp_relay">Режим UDP-ретрансляции</string>
+    <string name="tuic_engine_missing">Для TUIC нужен движок sing-box, а в этой сборке его нет для вашего устройства. Возьмите сервер VLESS, Hysteria 2 или другой либо поставьте полную сборку FlowVeil.</string>
+    <string name="tuic_engine_failed">Движок TUIC не запустился. Проверьте адрес сервера, UUID и пароль.</string>
     <string name="failover_notification_title">Переключились на рабочий сервер</string>
     <string name="failover_notification_text">%1$s перестал отвечать, теперь используется %2$s</string>
     <string-array name="sub_update_interval_entries">

@@ -54,6 +54,7 @@
     <string name="menu_item_import_config_manually_trojan">Add [Trojan]</string>
     <string name="menu_item_import_config_manually_wireguard">Add [WireGuard]</string>
     <string name="menu_item_import_config_manually_hysteria2">Add [Hysteria2]</string>
+    <string name="menu_item_import_config_manually_tuic">Add [TUIC]</string>
     <string name="confirm_delete_visible_profiles">Are you sure you want to delete all profiles currently shown?</string>
     <string name="confirm_delete_duplicate_profiles">Are you sure you want to delete all duplicate profiles currently shown?</string>
     <string name="confirm_delete_invalid_profiles">Please test the profiles first. Are you sure you want to delete all invalid profiles currently shown?</string>
@@ -690,6 +691,10 @@
     <string name="summary_pref_dev_mode">Show technical settings and tools: manual server editors, routing, DNS, core options, logs, bulk actions</string>
     <string name="title_pref_sub_update_interval">Update subscriptions automatically</string>
     <string name="notification_channel_switch">Server switching</string>
+    <string name="server_lab_tuic_congestion">Congestion control</string>
+    <string name="server_lab_tuic_udp_relay">UDP relay mode</string>
+    <string name="tuic_engine_missing">TUIC needs the sing-box engine, which this build does not include for your device. Use a VLESS, Hysteria 2 or other server, or install the full FlowVeil build.</string>
+    <string name="tuic_engine_failed">The TUIC engine could not start. Check the server address, UUID and password.</string>
     <string name="failover_notification_title">Switched to a working server</string>
     <string name="failover_notification_text">%1$s stopped responding, now using %2$s</string>
     <string-array name="sub_update_interval_entries">

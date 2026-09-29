@@ -58,4 +58,25 @@ class RealPingExecutionLimiterTest {
             jobs.awaitAll()
         }
     }
+
+    @Test
+    fun tuicMeasurementsAreLimitedToAFewAtATime() {
+        runBlocking {
+            val active = AtomicInteger(0)
+            val maxActive = AtomicInteger(0)
+
+            List(10) {
+                async(Dispatchers.Default) {
+                    RealPingExecutionLimiter.run(EConfigType.TUIC) {
+                        val current = active.incrementAndGet()
+                        maxActive.accumulateAndGet(current, ::maxOf)
+                        Thread.sleep(20)
+                        active.decrementAndGet()
+                    }
+                }
+            }.awaitAll()
+
+            assertTrue(maxActive.get() in 1..3)
+        }
+    }
 }

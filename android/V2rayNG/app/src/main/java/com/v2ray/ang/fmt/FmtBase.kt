@@ -41,8 +41,10 @@ open class FmtBase {
      * @return a map of query parameters
      */
     fun getQueryParam(uri: URI): Map<String, String> {
+        // Split at the first '=' only: values such as base64 passwords may contain more of them.
         return uri.rawQuery.split("&")
-            .associate { it.split("=").let { (k, v) -> k to Utils.decodeURIComponent(v) } }
+            .filter { it.indexOf('=') > 0 }
+            .associate { it.substring(0, it.indexOf('=')) to Utils.decodeURIComponent(it.substring(it.indexOf('=') + 1)) }
     }
 
     /**

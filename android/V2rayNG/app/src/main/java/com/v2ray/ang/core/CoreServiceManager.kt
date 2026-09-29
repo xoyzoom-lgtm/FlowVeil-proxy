@@ -104,6 +104,7 @@ object CoreServiceManager {
             doStartCoreLoop(service, vpnInterface)
             return true
         } catch (e: Exception) {
+            SingboxBridge.stopAll()
             val message = e.message?.takeUnless { it.isBlank() } ?: e.javaClass.simpleName
             LogUtil.e(AppConfig.TAG, "StartCore-Manager: $message", e)
             MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, message)
@@ -131,6 +132,8 @@ object CoreServiceManager {
         val config = MmkvManager.decodeServerConfig(guid) ?: error("Failed to decode server config")
 
         LogUtil.i(AppConfig.TAG, "StartCore-Manager: Starting core loop for ${config.remarks}")
+        // Sing-box helpers of the previous server end here; the config below starts the ones it needs.
+        SingboxBridge.stopAll()
         val result = CoreConfigManager.getV2rayConfig(service, guid)
         LogUtil.d(AppConfig.TAG, result.content)
         if (!result.status) {
@@ -209,6 +212,8 @@ object CoreServiceManager {
                 }
             }
         }
+
+        SingboxBridge.stopAll()
 
         // Close existing browser dialer
         CoreNativeManager.reconcileBrowserDialer("")

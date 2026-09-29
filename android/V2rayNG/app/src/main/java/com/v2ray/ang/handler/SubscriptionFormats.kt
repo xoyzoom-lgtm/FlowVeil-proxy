@@ -95,7 +95,16 @@ object SubscriptionFormats {
             "vmess" -> vmess(s("uuid") ?: return null, server, port, name, s("alterId") ?: "0", s("cipher") ?: "auto", transport, security)
             "trojan" -> trojan(s("password") ?: return null, server, port, name, transport, security.copy(type = if (reality != null) "reality" else "tls"))
             "ss", "shadowsocks" -> if (s("plugin") != null) null else shadowsocks(s("cipher") ?: return null, s("password") ?: return null, server, port, name)
-            "hysteria2", "hy2" -> hysteria2(s("password") ?: s("auth") ?: return null, server, port, name, security.sni, security.insecure, s("obfs"), s("obfs-password"))
+            "hysteria2", "hy2" -> hysteria2(
+                s("password") ?: s("auth") ?: return null, server, port, name, security.sni, security.insecure,
+                s("obfs"), s("obfs-password"), mport = s("ports")?.replace(':', '-'),
+            )
+            "tuic" -> tuic(
+                s("uuid") ?: return null, s("password") ?: return null, server, port, name, security.sni, security.insecure,
+                alpn = (m["alpn"] as? List<*>)?.joinToString(",") ?: s("alpn"),
+                congestion = s("congestion-controller") ?: s("congestion_control"),
+                udpRelayMode = s("udp-relay-mode") ?: s("udp_relay_mode"),
+            )
             else -> null
         }
     }
@@ -148,8 +157,20 @@ object SubscriptionFormats {
             "shadowsocks" -> shadowsocks(s(o, "method") ?: return null, s(o, "password") ?: return null, server, port, name)
             "hysteria2" -> {
                 val obfs = o.optJSONObject("obfs")
-                hysteria2(s(o, "password") ?: return null, server, port, name, security.sni, security.insecure, s(obfs, "type"), s(obfs, "password"))
+                val ports = o.optJSONArray("server_ports")?.let { arr ->
+                    (0 until arr.length()).joinToString(",") { arr.optString(it).replace(':', '-') }
+                }
+                hysteria2(
+                    s(o, "password") ?: return null, server, port, name, security.sni, security.insecure,
+                    s(obfs, "type"), s(obfs, "password"), mport = ports?.takeIf { it.isNotBlank() },
+                )
             }
+            "tuic" -> tuic(
+                s(o, "uuid") ?: return null, s(o, "password") ?: return null, server, port, name, security.sni, security.insecure,
+                alpn = tlsObj?.optJSONArray("alpn")?.let { arr -> (0 until arr.length()).joinToString(",") { arr.optString(it) } },
+                congestion = s(o, "congestion_control"),
+                udpRelayMode = s(o, "udp_relay_mode"),
+            )
             else -> null
         }
     }
@@ -198,9 +219,26 @@ object SubscriptionFormats {
         return "ss://$userInfo@${hostPort(server, port)}#${enc(name)}"
     }
 
-    private fun hysteria2(auth: String, server: String, port: String, name: String, sni: String?, insecure: Boolean, obfs: String?, obfsPassword: String?) =
+    private fun hysteria2(
+        auth: String, server: String, port: String, name: String, sni: String?, insecure: Boolean,
+        obfs: String?, obfsPassword: String?, mport: String? = null,
+    ) =
         "hysteria2://${enc(auth)}@${hostPort(server, port)}?" +
-            query("sni" to sni, "insecure" to (if (insecure) "1" else "0"), "obfs" to obfs, "obfs-password" to obfsPassword) +
+            query(
+                "sni" to sni, "insecure" to (if (insecure) "1" else "0"), "obfs" to obfs,
+                "obfs-password" to obfsPassword, "mport" to mport,
+            ) +
+            "#" + enc(name)
+
+    private fun tuic(
+        uuid: String, password: String, server: String, port: String, name: String, sni: String?, insecure: Boolean,
+        alpn: String?, congestion: String?, udpRelayMode: String?,
+    ) =
+        "tuic://${enc(uuid)}:${enc(password)}@${hostPort(server, port)}?" +
+            query(
+                "sni" to sni, "alpn" to alpn, "allow_insecure" to (if (insecure) "1" else null),
+                "congestion_control" to congestion, "udp_relay_mode" to udpRelayMode,
+            ) +
             "#" + enc(name)
 
     private fun vmess(uuid: String, server: String, port: String, name: String, aid: String, cipher: String, t: Transport, sec: Security): String {

@@ -66,6 +66,10 @@ data class ProfileItem(
     var bandwidthDown: String? = null,
     var bandwidthUp: String? = null,
 
+    // TUIC v5 (runs in the bundled sing-box)
+    var congestionControl: String? = null,
+    var udpRelayMode: String? = null,
+
     var policyGroupType: String? = null,
     var policyGroupSubscriptionId: String? = null,
     var policyGroupFilter: String? = null,

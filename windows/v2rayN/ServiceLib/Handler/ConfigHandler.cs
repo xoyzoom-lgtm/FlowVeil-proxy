@@ -876,7 +876,13 @@ public static class ConfigHandler
         {
             congestionControl = Global.TuicCongestionControls.FirstOrDefault()!;
         }
-        profileItem.SetProtocolExtra(profileItem.GetProtocolExtra() with { CongestionControl = congestionControl });
+        // Unknown or missing relay mode: leave it empty, sing-box then uses its default ("native").
+        var udpRelayMode = profileItem.GetProtocolExtra().UdpRelayMode?.Trim().ToLowerInvariant();
+        if (udpRelayMode.IsNullOrEmpty() || !Global.TuicUdpRelayModes.Contains(udpRelayMode))
+        {
+            udpRelayMode = null;
+        }
+        profileItem.SetProtocolExtra(profileItem.GetProtocolExtra() with { CongestionControl = congestionControl, UdpRelayMode = udpRelayMode });
 
         if (profileItem.StreamSecurity.IsNullOrEmpty())
         {

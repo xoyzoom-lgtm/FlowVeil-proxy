@@ -70,6 +70,13 @@ Read this fully before touching anything. It is the memory of the project so far
     outbounds so they can run in parallel.
   - `service/RealPingWorkerService.kt` — list check, max 8 parallel, always reports a result.
   - `handler/ProxySpeedTest.kt` — 6-stream download/upload/ping through local proxy.
+  - `core/SingboxBridge.kt` — TUIC v5 runs in a bundled sing-box (`libsingbox.so`, downloaded in CI
+    per ABI arm64-v8a/armeabi-v7a, step "Add sing-box engine (TUIC)", optional). Per server one
+    process: SOCKS inbound on 127.0.0.1 (random port + login) → TUIC outbound; Xray sees it as an
+    ordinary SOCKS outbound (`CoreOutboundBuilder.toOutboundTuic`). Live-connection bridges are
+    stopped in `CoreServiceManager` (`launchCore`/`stopCoreLoop`); server tests use
+    `SingboxBridge.scoped {}` (see `SpeedtestConfig.measure`) and are limited to 3 in parallel.
+    Hysteria 2 needs no bridge: Xray has a native hysteria outbound. `fmt/TuicFmt.kt` parses `tuic://`.
   - `handler/SubscriptionReminders.kt`, `SubscriptionUpdater.kt` (interval for all subs),
     `DirectSites.kt` (user + ~80 default Russian domains as one locked routing rule),
     `FavoriteServers.kt`, `ServerCountry.kt` (skip Russian servers for "Best"/failover),

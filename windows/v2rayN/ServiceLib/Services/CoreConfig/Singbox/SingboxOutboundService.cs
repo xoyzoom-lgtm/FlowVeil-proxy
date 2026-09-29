@@ -311,6 +311,7 @@ public partial class CoreConfigSingboxService
                         outbound.uuid = _node.Username;
                         outbound.password = _node.Password;
                         outbound.congestion_control = protocolExtra.CongestionControl;
+                        outbound.udp_relay_mode = protocolExtra.UdpRelayMode.NullIfEmpty();
                         break;
                     }
                 case EConfigType.Anytls:

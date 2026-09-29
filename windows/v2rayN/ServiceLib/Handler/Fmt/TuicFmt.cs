@@ -18,7 +18,8 @@ public class TuicFmt : BaseFmt
         }
 
         item.Address = url.IdnHost;
-        item.Port = url.Port;
+        // The scheme has no default port: an omitted one arrives as -1, TUIC servers listen on 443 by default.
+        item.Port = url.Port == -1 ? 443 : url.Port;
         item.Remarks = url.GetComponents(UriComponents.Fragment, UriFormat.Unescaped);
         var rawUserInfo = Utils.UrlDecode(url.UserInfo);
         var userInfoParts = rawUserInfo.Split(new[] { ':' }, 2);
@@ -34,9 +35,20 @@ public class TuicFmt : BaseFmt
         {
             item.AllowInsecure = Global.StringTrue;
         }
+        var congestion = GetQueryValue(query, "congestion_control");
+        if (congestion.IsNullOrEmpty())
+        {
+            congestion = GetQueryValue(query, "congestion-control");
+        }
+        var udpRelayMode = GetQueryValue(query, "udp_relay_mode");
+        if (udpRelayMode.IsNullOrEmpty())
+        {
+            udpRelayMode = GetQueryValue(query, "udp-relay-mode");
+        }
         item.SetProtocolExtra(item.GetProtocolExtra() with
         {
-            CongestionControl = GetQueryValue(query, "congestion_control")
+            CongestionControl = congestion,
+            UdpRelayMode = udpRelayMode
         });
 
         return item;
@@ -64,6 +76,10 @@ public class TuicFmt : BaseFmt
         if (!item.GetProtocolExtra().CongestionControl.IsNullOrEmpty())
         {
             dicQuery.Add("congestion_control", item.GetProtocolExtra().CongestionControl);
+        }
+        if (!item.GetProtocolExtra().UdpRelayMode.IsNullOrEmpty())
+        {
+            dicQuery.Add("udp_relay_mode", item.GetProtocolExtra().UdpRelayMode);
         }
 
         return ToUri(EConfigType.TUIC, item.Address, item.Port, $"{item.Username ?? ""}:{item.Password}", dicQuery, remark);

@@ -113,8 +113,20 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
             switch (actionType)
             {
                 case ESpeedActionType.Tcping:
-                    await RunTcpingAsync(lstSelected, completedIds, ct);
-                    break;
+                    {
+                        // Hysteria 2 and TUIC listen on UDP: a TCP connect would time out on a healthy server.
+                        var quicBased = lstSelected.Where(it => it.ConfigType is EConfigType.Hysteria2 or EConfigType.TUIC).ToList();
+                        var tcpBased = lstSelected.Where(it => !quicBased.Contains(it)).ToList();
+                        if (tcpBased.Count > 0)
+                        {
+                            await RunTcpingAsync(tcpBased, completedIds, ct);
+                        }
+                        if (quicBased.Count > 0)
+                        {
+                            await RunRealPingBatchAsync(quicBased, completedIds, 0, ct);
+                        }
+                        break;
+                    }
 
                 case ESpeedActionType.Realping:
                     await RunRealPingBatchAsync(lstSelected, completedIds, 0, ct);

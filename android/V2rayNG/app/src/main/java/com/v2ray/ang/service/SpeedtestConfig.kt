@@ -6,6 +6,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.v2ray.ang.core.CoreConfigManager
 import com.v2ray.ang.core.CoreNativeManager
+import com.v2ray.ang.core.SingboxBridge
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
@@ -17,7 +18,11 @@ object SpeedtestConfig {
      * Delay in ms through [guid], or -1 when it does not work. Tries the second test URL when
      * the first one fails.
      */
-    fun measure(context: Context, guid: String): Long {
+    fun measure(context: Context, guid: String): Long =
+        // Servers run through a sing-box bridge (TUIC) get a private one that ends with the test.
+        SingboxBridge.scoped { measureInScope(context, guid) }
+
+    private fun measureInScope(context: Context, guid: String): Long {
         val config = MmkvManager.decodeServerConfig(guid) ?: return -1L
         val result = CoreConfigManager.getV2rayConfig4Speedtest(context, guid)
         if (!result.status) return -1L

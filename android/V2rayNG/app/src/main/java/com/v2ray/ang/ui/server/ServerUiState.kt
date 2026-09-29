@@ -37,6 +37,8 @@ class ServerUiState(
     portHoppingInterval: String = "",
     bandwidthDown: String = "",
     bandwidthUp: String = "",
+    congestionControl: String = "",
+    udpRelayMode: String = "",
     network: String = NetworkType.TCP.type,
     headerType: String = "none",
     mode: String = "",
@@ -86,6 +88,8 @@ class ServerUiState(
     var portHoppingInterval by mutableStateOf(portHoppingInterval)
     var bandwidthDown by mutableStateOf(bandwidthDown)
     var bandwidthUp by mutableStateOf(bandwidthUp)
+    var congestionControl by mutableStateOf(congestionControl)
+    var udpRelayMode by mutableStateOf(udpRelayMode)
     var network by mutableStateOf(network)
     var headerType by mutableStateOf(headerType)
     var mode by mutableStateOf(mode)
@@ -126,6 +130,7 @@ class ServerUiState(
         val isSocksOrHttp = configType == EConfigType.SOCKS || configType == EConfigType.HTTP
         val isWireguard = configType == EConfigType.WIREGUARD
         val isHysteria2 = configType == EConfigType.HYSTERIA2
+        val isTuic = configType == EConfigType.TUIC
 
         return initialConfig.copy(
             configType = configType,
@@ -139,7 +144,7 @@ class ServerUiState(
                 else -> null
             },
             flow = if (isVless) flow else null,
-            username = if (isSocksOrHttp) username else null,
+            username = if (isSocksOrHttp || isTuic) username else null,
             secretKey = if (isWireguard) secretKey else null,
             publicKey = when {
                 isWireguard -> publicKey
@@ -156,6 +161,8 @@ class ServerUiState(
             portHoppingInterval = if (isHysteria2) portHoppingInterval else null,
             bandwidthDown = if (isHysteria2) bandwidthDown else null,
             bandwidthUp = if (isHysteria2) bandwidthUp else null,
+            congestionControl = if (isTuic) congestionControl.nullIfBlank() else null,
+            udpRelayMode = if (isTuic) udpRelayMode.nullIfBlank() else null,
             network = network,
             headerType = headerType,
             mode = mode.nullIfBlank(),
@@ -214,6 +221,8 @@ class ServerUiState(
                 portHoppingInterval = initialConfig.portHoppingInterval ?: "",
                 bandwidthDown = initialConfig.bandwidthDown ?: "",
                 bandwidthUp = initialConfig.bandwidthUp ?: "",
+                congestionControl = initialConfig.congestionControl ?: "",
+                udpRelayMode = initialConfig.udpRelayMode ?: "",
                 network = initialConfig.network ?: NetworkType.TCP.type,
                 headerType = initialConfig.headerType ?: "none",
                 mode = initialConfig.mode ?: "",
