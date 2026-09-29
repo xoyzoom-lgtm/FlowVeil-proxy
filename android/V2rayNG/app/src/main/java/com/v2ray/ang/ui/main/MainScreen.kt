@@ -194,7 +194,7 @@ fun MainScreen(
         if (includeHero && !showSearch) {
             item(key = KEY_HERO) {
                 Column {
-                    hero(144.dp)
+                    hero(172.dp)
                     Spacer(Modifier.height(12.dp))
                 }
             }
