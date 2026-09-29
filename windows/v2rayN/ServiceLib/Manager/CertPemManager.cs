@@ -326,9 +326,12 @@ public class CertPemManager
         return collection;
     });
 
+    /// <summary>Root-certificate provider; falls back to the app config (or "system") if Init has not run yet.</summary>
+    private string? RootCertProvider => (_config ?? AppManager.Instance.Config)?.GuiItem?.RootCertProvider;
+
     private X509Certificate2Collection BuildTrustedCertificateCollection()
     {
-        if (_config.GuiItem.RootCertProvider == Global.ChromeRootProvider)
+        if (RootCertProvider == Global.ChromeRootProvider)
         {
             return _chromeRootCerts.Value;
         }
@@ -337,7 +340,8 @@ public class CertPemManager
 
     private bool IsSystemRootCertProvider()
     {
-        return _config.GuiItem.RootCertProvider != Global.ChromeRootProvider && _config.GuiItem.RootCertProvider != Global.MozillaRootProvider;
+        var provider = RootCertProvider;
+        return provider != Global.ChromeRootProvider && provider != Global.MozillaRootProvider;
     }
 
     public X509ChainPolicy? BuildCertificateChainPolicy()

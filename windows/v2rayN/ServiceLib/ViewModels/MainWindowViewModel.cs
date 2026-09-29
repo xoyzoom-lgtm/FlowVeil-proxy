@@ -325,12 +325,15 @@ public partial class MainWindowViewModel : MyReactiveObject
             return;
         }
 
+        // First: every HTTPS download (subscriptions, updates) depends on it, so a failure
+        // in a later step must not leave downloads broken.
+        await CertPemManager.Instance.Init(_config);
+
         //await ConfigHandler.InitBuiltinRouting(_config);
         await ConfigHandler.InitBuiltinDNS(_config);
         await ConfigHandler.InitBuiltinFullConfigTemplate(_config);
         await ProfileExManager.Instance.Init();
         await CoreManager.Instance.Init(_config, UpdateHandler);
-        await CertPemManager.Instance.Init(_config);
         TaskManager.Instance.RegUpdateTask(_config, UpdateTaskHandler);
 
         if (_config.GuiItem.EnableStatistics || _config.GuiItem.DisplayRealTimeSpeed)
