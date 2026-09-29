@@ -594,7 +594,7 @@
     <string name="main_sub_days_left">ещё %1$d дн.</string>
     <string name="main_sub_menu">Меню подписки</string>
     <string name="sub_menu_update">Обновить подписку</string>
-    <string name="sub_menu_real_ping">Проверить пинг всех серверов</string>
+    <string name="sub_menu_real_ping">Проверить серверы (работают ли + пинг)</string>
     <string name="sub_menu_tcping">TCP-пинг всех серверов</string>
     <string name="sub_menu_sort">Отсортировать по пингу</string>
     <string name="sub_menu_edit">Изменить подписку</string>
@@ -606,4 +606,6 @@
     <string name="sub_menu_all">Все подписки</string>
     <string name="confirm_delete_subscription">Удалить эту подписку и её серверы?</string>
     <string name="settings_section_sections">Разделы</string>
+    <string name="check_servers_step1">Шаг 1: проверяю, какие серверы работают…</string>
+    <string name="check_servers_step2">Шаг 2: измеряю пинг…</string>
 </resources>

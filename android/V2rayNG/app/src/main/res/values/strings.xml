@@ -590,7 +590,7 @@
     <string name="main_sub_days_left">%1$d d. left</string>
     <string name="main_sub_menu">Subscription menu</string>
     <string name="sub_menu_update">Update subscription</string>
-    <string name="sub_menu_real_ping">Ping all servers</string>
+    <string name="sub_menu_real_ping">Check servers (alive + ping)</string>
     <string name="sub_menu_tcping">TCP ping all servers</string>
     <string name="sub_menu_sort">Sort by ping</string>
     <string name="sub_menu_edit">Edit subscription</string>
@@ -602,4 +602,6 @@
     <string name="sub_menu_all">All subscriptions</string>
     <string name="confirm_delete_subscription">Delete this subscription and its servers?</string>
     <string name="settings_section_sections">Sections</string>
+    <string name="check_servers_step1">Step 1: checking which servers work…</string>
+    <string name="check_servers_step2">Step 2: measuring ping…</string>
 </resources>

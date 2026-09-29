@@ -278,6 +278,7 @@ class MainViewModel(
             MainAction.RefreshGroups -> setupGroupTab(forceRefresh = true)
             MainAction.TestAllServers -> testAllRealPing(true)
             MainAction.TestRealAllServers -> testAllRealPing()
+            MainAction.CheckServers -> checkServers()
             MainAction.CancelTesting -> cancelAllPing()
             MainAction.RemoveAllServers -> removeAllServerAsync()
             MainAction.RemoveDuplicateServers -> removeDuplicateServerAsync()
@@ -864,6 +865,7 @@ class MainViewModel(
 
     // ---------- Testing ----------
     fun cancelAllPing() {
+        pingAfterAvailability = false
         bulkTestJob?.cancel()
         bulkTestJob = null
         testRequests.cancelBulk()
@@ -881,6 +883,14 @@ class MainViewModel(
                 else if (it.isRunning) MainStatus.Connected else MainStatus.Disconnected
             )
         }
+    }
+
+    private var pingAfterAvailability = false
+
+    private fun checkServers() {
+        toast(R.string.check_servers_step1)
+        testAllRealPing(onlyTcp = true)
+        pingAfterAvailability = true
     }
 
     fun testAllRealPing(onlyTcp: Boolean = false) {
@@ -949,6 +959,13 @@ class MainViewModel(
     private fun onTestsFinished(requestId: String) {
         if (testRequests.completeBulk(requestId) == null) return
         resetTestStatus()
+        if (pingAfterAvailability) {
+            // Step 1 (is the server alive?) is done: now measure the real ping.
+            pingAfterAvailability = false
+            toast(R.string.check_servers_step2)
+            testAllRealPing()
+            return
+        }
         viewModelScope.launch(ioDispatcher) {
             cacheMutex.withLock { groupDataCache.clear() }
             reloadAllGroups(_uiState.value.groups.map { it.id })

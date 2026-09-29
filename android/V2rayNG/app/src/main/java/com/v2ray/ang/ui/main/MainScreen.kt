@@ -195,7 +195,7 @@ fun MainScreen(
             item(key = KEY_HERO) {
                 Column {
                     hero(160.dp)
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(32.dp))
                 }
             }
         }
@@ -209,12 +209,12 @@ fun MainScreen(
                             subscription = selectedSubscription,
                             isTesting = uiState.isTesting,
                             onRefresh = { onAction(MainAction.UpdateSubscriptions) },
-                            onTestAll = { onAction(MainAction.TestRealAllServers) },
+                            onTestAll = { onAction(MainAction.CheckServers) },
                             onOpenSupport = { url -> Utils.openUri(context, url) },
                             onMenuAction = { action ->
                                 when (action) {
                                     SubscriptionMenuAction.Update -> onAction(MainAction.UpdateSubscriptions)
-                                    SubscriptionMenuAction.TestRealPing -> onAction(MainAction.TestRealAllServers)
+                                    SubscriptionMenuAction.TestRealPing -> onAction(MainAction.CheckServers)
                                     SubscriptionMenuAction.TestTcping -> onAction(MainAction.TestAllServers)
                                     SubscriptionMenuAction.SortByPing -> onAction(MainAction.SortByTestResults)
                                     SubscriptionMenuAction.Edit -> onAction(MainAction.EditSubscription(uiState.selectedGroupId))
@@ -230,7 +230,7 @@ fun MainScreen(
                                 }
                             }
                         )
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(20.dp))
                     }
                 }
             }

@@ -58,7 +58,7 @@ fun MainTopBar(
         onSearchQueryChange = onSearchQueryChange,
         onSearchClose = onSearchClose,
         searchPlaceholder = stringResource(R.string.menu_item_search),
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.92f),
         largeTitle = true,
         navigationIcon = {
             if (showSearch) {
