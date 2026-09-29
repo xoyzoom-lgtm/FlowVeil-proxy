@@ -48,6 +48,11 @@ public static class ProcUtils
 
     public static bool RebootAsAdmin(bool blAdmin = true)
     {
+        // FlowVeil: after the first elevated start the scheduled task restarts us elevated silently.
+        if (blAdmin && ElevatedTask.Start())
+        {
+            return true;
+        }
         try
         {
             ProcessStartInfo startInfo = new()

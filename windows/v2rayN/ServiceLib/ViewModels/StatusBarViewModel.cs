@@ -442,6 +442,8 @@ public partial class StatusBarViewModel : MyReactiveObject
             if (Utils.IsWindows())
             {
                 _config.TunModeItem.EnableTun = false;
+                await ConfigHandler.SaveConfig(_config);
+                ElevatedTask.MarkTunPending();
                 await AppManager.Instance.RebootAsAdmin();
                 return;
             }

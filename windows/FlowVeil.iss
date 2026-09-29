@@ -138,6 +138,8 @@ end;
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM FlowVeil.exe /T"; Flags: runhidden; RunOnceId: "KillHupp"
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM xray.exe /T"; Flags: runhidden; RunOnceId: "KillXray"
+; The elevated start task that lets TUN run without a UAC prompt every time.
+Filename: "{sys}\schtasks.exe"; Parameters: "/delete /f /tn ""FlowVeil (TUN)"""; Flags: runhidden; RunOnceId: "DelTunTask"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\bin"

@@ -404,7 +404,7 @@ public partial class MainWindow
         Row(main, PackIconKind.Autorenew, "Автообновление подписок", SubAutoUpdate.Title(SubAutoUpdate.Get()), () => OpenSubUpdateMenu(vm));
 
         var connection = Section("Подключение");
-        Row(connection, PackIconKind.ShieldAccount, "Запустить от администратора", "Нужно для режима TUN (весь трафик)", () => Exec(vm.RebootAsAdminCmd));
+        Row(connection, PackIconKind.ShieldAccount, "Запустить от администратора", "Нужно один раз для режима TUN — дальше без вопросов", () => Exec(vm.RebootAsAdminCmd));
 
         var app = Section("Приложение");
         Row(app, PackIconKind.Update, "Проверить обновления", $"Сейчас: build {HuppUpdater.CurrentBuild()}", () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));

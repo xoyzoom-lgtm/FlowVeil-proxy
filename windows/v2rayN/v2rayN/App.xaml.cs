@@ -47,6 +47,23 @@ public partial class App
             return;
         }
 
+        if (Utils.IsAdministrator())
+        {
+            // Register once so later TUN starts need no UAC prompt; continue in TUN if that was asked.
+            ElevatedTask.EnsureRegistered();
+            if (ElevatedTask.TakeTunPending())
+            {
+                AppManager.Instance.Config.TunModeItem.EnableTun = true;
+                _ = ConfigHandler.SaveConfig(AppManager.Instance.Config);
+            }
+        }
+        else if (!rebootas && AppManager.Instance.Config.TunModeItem.EnableTun && ElevatedTask.Start())
+        {
+            // Last session ended in TUN: reopen elevated through the task instead of failing TUN.
+            Environment.Exit(0);
+            return;
+        }
+
         AppManager.Instance.WindowDialog = new WindowDialog();
 
         AppManager.Instance.InitComponents();
