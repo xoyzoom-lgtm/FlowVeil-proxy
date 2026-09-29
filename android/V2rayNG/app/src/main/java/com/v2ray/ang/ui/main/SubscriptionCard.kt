@@ -235,12 +235,12 @@ private fun InfoFrame(
     Column(
         modifier = modifier
             .border(1.dp, color.copy(alpha = 0.40f), RoundedCornerShape(14.dp))
-            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = subtle, maxLines = 1)
         Text(
             text = value,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
             color = color,
             maxLines = 1,
