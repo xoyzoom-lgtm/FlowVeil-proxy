@@ -209,6 +209,7 @@ fun SettingsScreen(
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
     var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
     var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
+    var showBestButton by rememberMmkvBool(AppConfig.PREF_SHOW_BEST_BUTTON, true)
     val settingsContext = LocalContext.current
     val deviceHwid = remember { DeviceIdentity.hwid() }
     var confirmRemove by rememberMmkvBool(AppConfig.PREF_CONFIRM_REMOVE, false)
@@ -315,6 +316,12 @@ fun SettingsScreen(
                         )
                         SettingsChangeManager.makeRestartService()
                     }
+                )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_show_best_button),
+                    summary = stringResource(R.string.summary_pref_show_best_button),
+                    checked = showBestButton,
+                    onCheckedChange = { showBestButton = it }
                 )
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_auto_failover),

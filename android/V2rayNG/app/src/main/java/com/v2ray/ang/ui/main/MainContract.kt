@@ -28,6 +28,7 @@ data class MainUiState(
     val locateTarget: LocateTarget? = null,
     val confirmRemove: Boolean = false,
     val doubleColumnDisplay: Boolean = false,
+    val showBestButton: Boolean = true,
     /** guid -> server answered the availability check (step 1 of a server check). */
     val availability: Map<String, Boolean> = emptyMap(),
     val availabilityOnly: Boolean = false,

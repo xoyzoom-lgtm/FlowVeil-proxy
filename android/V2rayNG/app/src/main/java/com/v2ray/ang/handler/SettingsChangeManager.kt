@@ -26,6 +26,7 @@ object SettingsChangeManager {
         AppConfig.PREF_SEND_HWID,
         AppConfig.PREF_AUTO_FAILOVER,
         AppConfig.PREF_SUB_REMINDERS,
+        AppConfig.PREF_SHOW_BEST_BUTTON,
     )
 
     /**

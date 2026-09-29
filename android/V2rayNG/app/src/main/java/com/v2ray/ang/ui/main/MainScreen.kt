@@ -183,7 +183,7 @@ fun MainScreen(
             buttonSize = buttonSize,
             speed = uiState.speed,
             isTesting = uiState.isTesting,
-            onBest = if (rows.size > 1) ({ onAction(MainAction.ConnectBest) }) else null,
+            onBest = if (uiState.showBestButton && rows.size > 1) ({ onAction(MainAction.ConnectBest) }) else null,
         )
     }
     val emptyContent: @Composable () -> Unit = {

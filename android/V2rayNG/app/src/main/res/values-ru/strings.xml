@@ -685,4 +685,6 @@
         <item>Скорость под кнопкой и тест скорости в меню ⋮</item>
         <item>Ссылки-приглашения flowveil://add?url=… добавляют подписку в одно касание</item>
     </string-array>
+    <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
+    <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>
 </resources>

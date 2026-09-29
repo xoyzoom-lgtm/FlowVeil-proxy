@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.FavoriteServers
+import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.ProxySpeedTest
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
@@ -83,7 +84,8 @@ class MainViewModel(
             selectedGroupId = dataSource.getSelectedSubscriptionId(),
             selectedGuid = dataSource.getSelectServer(),
             confirmRemove = dataSource.getConfirmRemove(),
-            doubleColumnDisplay = dataSource.getDoubleColumnDisplay()
+            doubleColumnDisplay = dataSource.getDoubleColumnDisplay(),
+            showBestButton = MmkvManager.decodeSettingsBool(AppConfig.PREF_SHOW_BEST_BUTTON, true)
         )
     )
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
@@ -386,7 +388,8 @@ class MainViewModel(
         _uiState.update {
             it.copy(
                 confirmRemove = dataSource.getConfirmRemove(),
-                doubleColumnDisplay = dataSource.getDoubleColumnDisplay()
+                doubleColumnDisplay = dataSource.getDoubleColumnDisplay(),
+                showBestButton = MmkvManager.decodeSettingsBool(AppConfig.PREF_SHOW_BEST_BUTTON, true)
             )
         }
     }

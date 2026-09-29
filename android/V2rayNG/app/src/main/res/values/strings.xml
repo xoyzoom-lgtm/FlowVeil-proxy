@@ -681,4 +681,6 @@
         <item>Live speed under the power button and a speed test in the ⋮ menu</item>
         <item>Invite links flowveil://add?url=… add a subscription in one tap</item>
     </string-array>
+    <string name="title_pref_show_best_button">“Best” button</string>
+    <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
 </resources>
