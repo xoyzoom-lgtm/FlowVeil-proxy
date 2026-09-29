@@ -214,7 +214,7 @@ internal fun SubscriptionCard(
             Spacer(Modifier.height(6.dp))
             Text(
                 text = subscription.announce!!,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = subtle,
                 modifier = Modifier.fillMaxWidth().padding(end = 10.dp)
             )

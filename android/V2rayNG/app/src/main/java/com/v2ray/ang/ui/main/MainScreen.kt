@@ -194,7 +194,7 @@ fun MainScreen(
         if (includeHero && !showSearch) {
             item(key = KEY_HERO) {
                 Column {
-                    hero(118.dp)
+                    hero(144.dp)
                     Spacer(Modifier.height(12.dp))
                 }
             }
@@ -237,10 +237,10 @@ fun MainScreen(
             item(key = "title") {
                 Text(
                     text = stringResource(R.string.main_servers_title),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 4.dp)
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 6.dp)
                 )
             }
             if (visibleGroups.size > 1) {

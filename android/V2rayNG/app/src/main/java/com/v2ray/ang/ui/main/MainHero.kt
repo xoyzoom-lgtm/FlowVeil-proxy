@@ -209,7 +209,7 @@ internal fun PowerButton(
             Spacer(Modifier.height(6.dp))
             Text(
                 text = stringResource(if (isRunning) R.string.main_power_connected else R.string.main_power_connect),
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 1.5.sp,
                 color = contentColor.copy(alpha = 0.85f)
@@ -218,7 +218,7 @@ internal fun PowerButton(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = formatElapsed(now - connectedSince),
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontFamily = FontFamily.Monospace,
                     color = contentColor
                 )
@@ -390,13 +390,13 @@ internal fun ServerBadge(remarks: String, flag: String?, modifier: Modifier = Mo
     val accent = mainAccentColor()
     Box(
         modifier = modifier
-            .size(32.dp)
+            .size(36.dp)
             .clip(CircleShape)
             .background(if (flag != null) Color.Transparent else accent.copy(alpha = 0.16f)),
         contentAlignment = Alignment.Center
     ) {
         if (flag != null) {
-            Text(text = flag, fontSize = 22.sp)
+            Text(text = flag, fontSize = 26.sp)
         } else {
             Text(
                 text = remarks.trim().take(1).uppercase(),
@@ -433,7 +433,7 @@ internal fun ConnectionHero(
             val (flag, name) = splitFlag(selectedRow.remarks)
             Text(
                 text = if (flag != null && flag != name) "$flag  $name" else name,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
@@ -444,7 +444,7 @@ internal fun ConnectionHero(
         }
         Text(
             text = statusText ?: stringResource(R.string.main_check_connection),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             maxLines = 2,
@@ -454,7 +454,7 @@ internal fun ConnectionHero(
                 .clip(RoundedCornerShape(50))
                 .background(serverCardColor(selected = false))
                 .clickable(onClick = onTest)
-                .padding(horizontal = 14.dp, vertical = 5.dp)
+                .padding(horizontal = 16.dp, vertical = 7.dp)
         )
     }
 }
