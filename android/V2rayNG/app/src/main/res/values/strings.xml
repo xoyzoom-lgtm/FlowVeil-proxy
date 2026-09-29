@@ -708,4 +708,8 @@
         <item>720</item>
         <item>1440</item>
     </string-array>
+    <string name="title_direct_sites">My sites directly</string>
+    <string name="title_direct_apps">Apps directly</string>
+    <string name="summary_direct_apps">Choose apps that work without the server (banks, taxi, delivery…)</string>
+    <string name="toast_direct_sites_saved">Sites that open directly: %1$d</string>
 </resources>

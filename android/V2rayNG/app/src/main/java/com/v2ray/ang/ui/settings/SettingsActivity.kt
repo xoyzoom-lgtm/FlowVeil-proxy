@@ -71,6 +71,7 @@ import com.v2ray.ang.ui.compose.verticalScrollbar
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
+import com.v2ray.ang.handler.DirectSites
 import com.v2ray.ang.enums.RoutingType
 import androidx.compose.ui.platform.LocalContext
 import com.v2ray.ang.util.LogUtil
@@ -213,6 +214,7 @@ fun SettingsScreen(
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
     var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
     var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
+    var directSites by remember { mutableStateOf(DirectSites.text().lines().filter { it.isNotBlank() }.joinToString(", ")) }
     var showBestButton by rememberMmkvBool(AppConfig.PREF_SHOW_BEST_BUTTON, true)
     var devMode by rememberMmkvBool(AppConfig.PREF_DEV_MODE, false)
     var subUpdateInterval by rememberMmkvString(AppConfig.PREF_SUB_UPDATE_INTERVAL, AppConfig.SUB_DEFAULT_UPDATE_MINUTES.toString())
@@ -323,6 +325,29 @@ fun SettingsScreen(
                             if (it) RoutingType.WHITE_RUSSIA else RoutingType.WHITE
                         )
                         SettingsChangeManager.makeRestartService()
+                    }
+                )
+                SettingsEditItem(
+                    title = stringResource(R.string.title_direct_sites),
+                    value = directSites,
+                    onValueChanged = {
+                        val count = DirectSites.save(it)
+                        directSites = DirectSites.text().lines().filter { l -> l.isNotBlank() }.joinToString(", ")
+                        SettingsChangeManager.makeRestartService()
+                        settingsContext.toastSuccess(settingsContext.getString(R.string.toast_direct_sites_saved, count))
+                    }
+                )
+                SettingsMenuItem(
+                    title = stringResource(R.string.title_direct_apps),
+                    subtitle = stringResource(R.string.summary_direct_apps),
+                    onClick = {
+                        // Selected apps should bypass the server: switch the per-app screen to
+                        // "bypass" mode the first time, without touching a setup the user made.
+                        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)) {
+                            MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, true)
+                            MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, true)
+                        }
+                        onOpenSection(MainDestination.PerAppProxy)
                     }
                 )
                 SettingsSwitchItem(

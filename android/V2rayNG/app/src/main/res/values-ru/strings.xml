@@ -704,4 +704,8 @@
         <item>Каждые 12 часов</item>
         <item>Раз в день</item>
     </string-array>
+    <string name="title_direct_sites">Свои сайты напрямую</string>
+    <string name="title_direct_apps">Приложения напрямую</string>
+    <string name="summary_direct_apps">Выберите приложения, которые работают без сервера (банки, такси, доставка…)</string>
+    <string name="toast_direct_sites_saved">Сайтов напрямую: %1$d</string>
 </resources>
