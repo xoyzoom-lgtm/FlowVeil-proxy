@@ -143,6 +143,9 @@ private val SettingsSections = listOf(
     MainDestination.About,
 )
 
+/** Technical screens shown only in developer mode. */
+private val DevOnlySections = setOf(MainDestination.Routing, MainDestination.UserAssets, MainDestination.Logcat)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -210,6 +213,7 @@ fun SettingsScreen(
     var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
     var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
     var showBestButton by rememberMmkvBool(AppConfig.PREF_SHOW_BEST_BUTTON, true)
+    var devMode by rememberMmkvBool(AppConfig.PREF_DEV_MODE, false)
     val settingsContext = LocalContext.current
     val deviceHwid = remember { DeviceIdentity.hwid() }
     var confirmRemove by rememberMmkvBool(AppConfig.PREF_CONFIRM_REMOVE, false)
@@ -292,7 +296,7 @@ fun SettingsScreen(
         ) {
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_sections))
             SettingsGroupCard {
-                SettingsSections.forEach { section ->
+                SettingsSections.filter { devMode || it !in DevOnlySections }.forEach { section ->
                     SettingsMenuItem(
                         icon = painterResource(section.iconRes),
                         title = stringResource(section.labelRes),
@@ -425,6 +429,18 @@ fun SettingsScreen(
                 )
             }
 
+            PreferenceGroupHeader(title = stringResource(R.string.settings_section_developer))
+            SettingsGroupCard {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_dev_mode),
+                    summary = stringResource(R.string.summary_pref_dev_mode),
+                    checked = devMode,
+                    onCheckedChange = { devMode = it }
+                )
+            }
+
+            // Core, DNS, routing and other technical options: developer mode only.
+            if (devMode) {
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_core))
             SettingsGroupCard {
                 SettingsEditItem(
@@ -856,6 +872,7 @@ fun SettingsScreen(
                 }
             }
 
+            }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

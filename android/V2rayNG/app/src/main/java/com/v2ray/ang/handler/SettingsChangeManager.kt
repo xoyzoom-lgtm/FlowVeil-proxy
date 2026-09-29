@@ -27,6 +27,7 @@ object SettingsChangeManager {
         AppConfig.PREF_AUTO_FAILOVER,
         AppConfig.PREF_SUB_REMINDERS,
         AppConfig.PREF_SHOW_BEST_BUTTON,
+        AppConfig.PREF_DEV_MODE,
     )
 
     /**

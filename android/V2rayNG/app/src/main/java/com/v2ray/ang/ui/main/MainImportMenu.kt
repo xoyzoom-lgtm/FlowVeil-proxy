@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.DevMode
 import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
@@ -41,22 +42,26 @@ enum class MainMoreMenuAction(@StringRes val labelRes: Int) {
     SpeedTest(R.string.speed_test_title),
 }
 
-// Everyday actions only; manual protocol editors and bulk export stay out of the main menus.
-private val visibleImportActions = listOf(
-    ImportMenuAction.Clipboard,
-    ImportMenuAction.QRCode,
-    ImportMenuAction.LocalFile,
-)
+// Everyday actions for everyone; manual editors and bulk tools only in developer mode.
+private val visibleImportActions: List<ImportMenuAction>
+    get() = if (DevMode.isOn()) ImportMenuAction.entries
+    else listOf(ImportMenuAction.Clipboard, ImportMenuAction.QRCode)
 
-private val visibleMoreActions = listOf(
-    MainMoreMenuAction.UpdateSubscriptions,
-    MainMoreMenuAction.SpeedTest,
-    MainMoreMenuAction.TestAllRealPing,
-    MainMoreMenuAction.SortByTestResults,
-    MainMoreMenuAction.DeleteInvalid,
-    MainMoreMenuAction.DeleteDuplicate,
-    MainMoreMenuAction.RestartService,
-)
+private val visibleMoreActions: List<MainMoreMenuAction>
+    get() = if (DevMode.isOn()) listOf(
+        MainMoreMenuAction.UpdateSubscriptions,
+        MainMoreMenuAction.SpeedTest,
+        MainMoreMenuAction.TestAllRealPing,
+        MainMoreMenuAction.TestAll,
+        MainMoreMenuAction.SortByTestResults,
+        MainMoreMenuAction.DeleteInvalid,
+        MainMoreMenuAction.DeleteDuplicate,
+        MainMoreMenuAction.ExportAll,
+        MainMoreMenuAction.RestartService,
+    ) else listOf(
+        MainMoreMenuAction.UpdateSubscriptions,
+        MainMoreMenuAction.SpeedTest,
+    )
 
 internal enum class ServerMenuAction(
     @StringRes val labelRes: Int,
@@ -75,7 +80,9 @@ internal fun serverMenuActions(
     isComplexProfile: Boolean,
     includeManagementActions: Boolean,
 ): List<ServerMenuAction> = ServerMenuAction.entries.filter { action ->
-    (includeManagementActions || action.isShareAction) && (!isComplexProfile || action.supportsComplexProfiles)
+    (includeManagementActions || action.isShareAction) && (!isComplexProfile || action.supportsComplexProfiles) &&
+        // Everyday users: star or delete; sharing and editing are developer tools.
+        (DevMode.isOn() || action == ServerMenuAction.Favorite || action == ServerMenuAction.Delete)
 }
 
 @Composable

@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.DevMode
 import com.v2ray.ang.dto.entities.SubscriptionItem
 import java.text.DateFormat
 import java.util.Date
@@ -67,6 +68,14 @@ internal enum class SubscriptionMenuAction(val labelRes: Int, val iconRes: Int) 
     Delete(R.string.sub_menu_delete, R.drawable.ic_delete_24dp),
     AllSubscriptions(R.string.sub_menu_all, R.drawable.ic_subscriptions_24dp),
 }
+
+private val devOnlySubActions = setOf(
+    SubscriptionMenuAction.TestTcping,
+    SubscriptionMenuAction.SortByPing,
+    SubscriptionMenuAction.ExportAll,
+    SubscriptionMenuAction.RemoveDuplicate,
+    SubscriptionMenuAction.RemoveInvalid,
+)
 
 private const val DAY_MILLIS = 24L * 60 * 60 * 1000
 
@@ -152,7 +161,9 @@ internal fun SubscriptionCard(
                     onDismissRequest = { showMenu = false },
                     containerColor = MaterialTheme.colorScheme.surface
                 ) {
-                    SubscriptionMenuAction.entries.forEach { action ->
+                    val devMode = remember { DevMode.isOn() }
+                    // Bulk and technical tools only in developer mode.
+                    SubscriptionMenuAction.entries.filter { devMode || it !in devOnlySubActions }.forEach { action ->
                         DropdownMenuItem(
                             text = { Text(stringResource(action.labelRes)) },
                             leadingIcon = {

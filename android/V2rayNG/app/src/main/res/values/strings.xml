@@ -686,4 +686,7 @@
     <string name="live_speed">Now: ↓ %1$s   ↑ %2$s</string>
     <string name="unit_mbit">Mbit/s</string>
     <string name="unit_gbit">Gbit/s</string>
+    <string name="settings_section_developer">For developers</string>
+    <string name="title_pref_dev_mode">Developer mode</string>
+    <string name="summary_pref_dev_mode">Show technical settings and tools: manual server editors, routing, DNS, core options, logs, bulk actions</string>
 </resources>

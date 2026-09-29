@@ -403,8 +403,6 @@ public partial class MainWindow
         Row(main, PackIconKind.QrcodeScan, "Сканировать QR-код с экрана", "Если провайдер дал QR-код", () => Exec(vm.AddServerViaScanCmd));
 
         var connection = Section("Подключение");
-        Row(connection, PackIconKind.Directions, "Маршрутизация", "Какие сайты открывать через сервер, а какие напрямую", () => Exec(vm.RoutingSettingCmd));
-        Row(connection, PackIconKind.Dns, "DNS", "Серверы для поиска адресов сайтов", () => Exec(vm.DNSSettingCmd));
         Row(connection, PackIconKind.ShieldAccount, "Запустить от администратора", "Нужно для режима TUN (весь трафик)", () => Exec(vm.RebootAsAdminCmd));
 
         var app = Section("Приложение");
@@ -418,7 +416,24 @@ public partial class MainWindow
         Row(about, PackIconKind.Github, "Исходный код", "github.com/xoyzoom-lgtm/FlowVeil-proxy", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/FlowVeil-proxy"));
         Row(about, PackIconKind.ScaleBalance, "Лицензия", "Основано на v2rayN (GPL-3.0)", () => ProcUtils.ProcessStart("https://github.com/2dust/v2rayN"));
 
+        var devMode = IsDevMode();
+        var developer = Section("Для разработчиков");
+        Row(developer, PackIconKind.CodeBraces,
+            devMode ? "Режим разработчика: включён" : "Режим разработчика: выключен",
+            devMode ? "Нажмите, чтобы скрыть технические настройки" : "Показать маршрутизацию, DNS, ядро, ручное добавление серверов",
+            () =>
+            {
+                SetDevMode(!devMode);
+                BuildSettingsPage(vm);
+            });
+        if (!devMode)
+        {
+            return;
+        }
+
         var expert = Section("Для опытных");
+        Row(expert, PackIconKind.Directions, "Маршрутизация", "Какие сайты открывать через сервер, а какие напрямую", () => Exec(vm.RoutingSettingCmd));
+        Row(expert, PackIconKind.Dns, "DNS", "Серверы для поиска адресов сайтов", () => Exec(vm.DNSSettingCmd));
         Row(expert, PackIconKind.Tune, "Параметры ядра и портов", "Порты, автозапуск, TUN, звук и прочее", () => Exec(vm.OptionSettingCmd));
         Row(expert, PackIconKind.ServerPlus, "Добавить сервер вручную", "VLESS, VMess, Trojan, Shadowsocks, JSON…", () => OpenAddServerMenu(vm));
         Row(expert, PackIconKind.FormatListBulleted, "Все подписки и группы", "Таблица подписок, фильтры, User-Agent", () => Exec(vm.SubSettingCmd));
@@ -431,6 +446,30 @@ public partial class MainWindow
         Row(expert, PackIconKind.CodeJson, "Шаблон конфигурации", "", () => Exec(vm.FullConfigTemplateCmd));
         Row(expert, PackIconKind.RestartAlert, "Перезапустить ядро", "F5", () => Exec(vm.ReloadCmd));
         Row(expert, PackIconKind.FolderOpen, "Открыть папку программы", "", () => Exec(vm.OpenTheFileLocationCmd));
+    }
+
+    private static string DevModeFile => Utils.GetConfigPath("dev_mode");
+
+    /// <summary>Developer mode: technical settings stay hidden for everyday users until turned on.</summary>
+    private static bool IsDevMode() => File.Exists(DevModeFile);
+
+    private static void SetDevMode(bool on)
+    {
+        try
+        {
+            if (on)
+            {
+                File.WriteAllText(DevModeFile, "1");
+            }
+            else if (File.Exists(DevModeFile))
+            {
+                File.Delete(DevModeFile);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(nameof(SetDevMode), ex);
+        }
     }
 
     private void OpenAddServerMenu(MainWindowViewModel vm)

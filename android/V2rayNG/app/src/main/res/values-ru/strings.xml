@@ -690,4 +690,7 @@
     <string name="live_speed">Сейчас: ↓ %1$s   ↑ %2$s</string>
     <string name="unit_mbit">Мбит/с</string>
     <string name="unit_gbit">Гбит/с</string>
+    <string name="settings_section_developer">Для разработчиков</string>
+    <string name="title_pref_dev_mode">Режим разработчика</string>
+    <string name="summary_pref_dev_mode">Показать технические настройки и инструменты: ручное добавление серверов, маршрутизацию, DNS, настройки ядра, логи, массовые действия</string>
 </resources>

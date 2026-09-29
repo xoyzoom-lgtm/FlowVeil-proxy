@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.DevMode
 import com.v2ray.ang.ui.compose.AppDivider
 import com.v2ray.ang.ui.compose.verticalScrollbar
 
@@ -51,13 +52,16 @@ private val primaryDrawerItems = listOf(
     MainDestination.Settings
 )
 
-// Upstream promo and update-check are left out: the update check would offer the official
-// v2rayNG build, which shares this package name and would replace the app.
-private val drawerItems = primaryDrawerItems + listOf(
+private val allDrawerItems = primaryDrawerItems + listOf(
     MainDestination.BackupRestore,
     MainDestination.Logcat,
     MainDestination.About
 )
+
+// Routing and logs are technical: shown only in developer mode.
+private val drawerItems: List<MainDestination>
+    get() = if (DevMode.isOn()) allDrawerItems
+    else allDrawerItems.filter { it != MainDestination.Routing && it != MainDestination.Logcat }
 
 @Composable
 fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) -> Unit) {
@@ -99,8 +103,8 @@ fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) ->
                     )
                 }
             }
-            drawerItems.forEachIndexed { index, item ->
-                if (index == primaryDrawerItems.size) AppDivider()
+            drawerItems.forEach { item ->
+                if (item == MainDestination.BackupRestore) AppDivider()
                 NavigationDrawerItem(
                     label = { Text(stringResource(item.labelRes)) },
                     selected = false,
