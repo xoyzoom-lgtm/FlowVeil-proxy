@@ -618,4 +618,7 @@
     <string name="sub_action_update">Обновить</string>
     <string name="sub_action_check">Проверить</string>
     <string name="sub_action_support">Поддержка</string>
+    <string name="sub_frame_left">Осталось %1$s из %2$s</string>
+    <string name="sub_frame_unlimited">∞ Безлимит · %1$s</string>
+    <string name="sub_frame_until">До %1$s · %2$d дн.</string>
 </resources>
