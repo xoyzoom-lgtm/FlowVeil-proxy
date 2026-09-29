@@ -71,7 +71,7 @@ Read this fully before touching anything. It is the memory of the project so far
   - `service/RealPingWorkerService.kt` — list check, max 8 parallel, always reports a result.
   - `handler/ProxySpeedTest.kt` — 6-stream download/upload/ping through local proxy.
   - `core/SingboxBridge.kt` — TUIC v5 runs in a bundled sing-box (`libsingbox.so`, downloaded in CI
-    per ABI arm64-v8a/armeabi-v7a, step "Add sing-box engine (TUIC)", optional). Per server one
+    for arm64-v8a only (armv7 dropped to keep the APK small; 32-bit phones get the "engine missing" message), step "Add sing-box engine (TUIC)", optional). Per server one
     process: SOCKS inbound on 127.0.0.1 (random port + login) → TUIC outbound; Xray sees it as an
     ordinary SOCKS outbound (`CoreOutboundBuilder.toOutboundTuic`). Live-connection bridges are
     stopped in `CoreServiceManager` (`launchCore`/`stopCoreLoop`); server tests use

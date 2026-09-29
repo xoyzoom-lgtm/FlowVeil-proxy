@@ -78,7 +78,7 @@ jobs:
           releases = json.loads(fetch("https://api.github.com/repos/SagerNet/sing-box/releases?per_page=40", api=True))
           rel = next(r for r in releases if not r["prerelease"] and re.fullmatch(r"v1\.1[2-4]\.\d+", r["tag_name"]))
           print("sing-box", rel["tag_name"])
-          for abi, suffix in (("arm64-v8a", "android-arm64"), ("armeabi-v7a", "android-arm")):
+          for abi, suffix in (("arm64-v8a", "android-arm64"),):
               asset = next((a for a in rel["assets"] if a["name"].endswith("-" + suffix + ".tar.gz") and "legacy" not in a["name"]), None)
               if asset is None:
                   print("::warning::no sing-box build for", abi)
