@@ -606,8 +606,16 @@
     <string name="sub_menu_all">Все подписки</string>
     <string name="confirm_delete_subscription">Удалить эту подписку и её серверы?</string>
     <string name="settings_section_sections">Разделы</string>
-    <string name="check_servers_step1">Шаг 1: проверяю, какие серверы работают…</string>
-    <string name="check_servers_step2">Шаг 2: измеряю пинг…</string>
+    <string name="check_servers_step1">Проверяю, какие серверы работают…</string>
+    <string name="check_servers_step2">Готово: ✓ работает, ✕ не работает</string>
     <string name="server_status_alive">Работает</string>
     <string name="server_status_dead">Не работает</string>
+    <string name="sub_left_label">Осталось</string>
+    <string name="sub_traffic_label">Трафик</string>
+    <string name="sub_unlimited">Безлимит</string>
+    <string name="sub_used_small">потрачено %1$s</string>
+    <string name="sub_until_label">Действует до</string>
+    <string name="sub_action_update">Обновить</string>
+    <string name="sub_action_check">Проверить</string>
+    <string name="sub_action_support">Поддержка</string>
 </resources>

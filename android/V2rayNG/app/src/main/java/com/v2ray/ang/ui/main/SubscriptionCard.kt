@@ -91,60 +91,37 @@ internal fun SubscriptionCard(
         null
     }
     var showMenu by remember { mutableStateOf(false) }
+    var announceExpanded by remember { mutableStateOf(false) }
+    val left = if (used != null && total != null) (total - used).coerceAtLeast(0L) else null
+    val daysLeft = expireAt?.let { ((it - System.currentTimeMillis()) / DAY_MILLIS).coerceAtLeast(0L) }
+    val subtle = MaterialTheme.colorScheme.onSurfaceVariant
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(serverCardColor(selected = false))
-            .clickable { showMenu = true }
-            .padding(16.dp)
+            .padding(start = 18.dp, end = 8.dp, top = 12.dp, bottom = 16.dp)
     ) {
+        // Title + menu
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-            if (!subscription.supportUrl.isNullOrBlank()) {
-                CircleIconButton(
-                    iconRes = R.drawable.ic_telegram_24dp,
-                    contentDescription = stringResource(R.string.main_sub_support),
-                    onClick = { onOpenSupport(subscription.supportUrl!!) },
-                    size = 34.dp,
-                    tint = accent
-                )
-                Spacer(Modifier.width(4.dp))
-            }
-            CircleIconButton(
-                iconRes = R.drawable.ic_speed_24dp,
-                contentDescription = stringResource(R.string.title_real_ping_all_server),
-                onClick = onTestAll,
-                size = 34.dp,
-                tint = accent,
-                enabled = !isTesting
-            )
-            Spacer(Modifier.width(4.dp))
-            CircleIconButton(
-                iconRes = R.drawable.ic_refresh_24dp,
-                contentDescription = stringResource(R.string.title_sub_update),
-                onClick = onRefresh,
-                size = 34.dp,
-                tint = accent
-            )
-            Spacer(Modifier.width(4.dp))
             Box {
                 CircleIconButton(
                     iconRes = R.drawable.ic_more_vert_24dp,
                     contentDescription = stringResource(R.string.main_sub_menu),
                     onClick = { showMenu = true },
-                    size = 34.dp,
-                    tint = accent
+                    size = 36.dp,
+                    tint = subtle
                 )
                 DropdownMenu(
                     expanded = showMenu,
@@ -167,80 +144,140 @@ internal fun SubscriptionCard(
             }
         }
 
+        // Traffic and expiry: two clear figures instead of a line of small text
         if (used != null || expireAt != null) {
             Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth().padding(end = 10.dp), verticalAlignment = Alignment.Bottom) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(if (left != null) R.string.sub_left_label else R.string.sub_traffic_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = subtle
+                    )
+                    Text(
+                        text = when {
+                            left != null -> formatBytes(left)
+                            used != null -> stringResource(R.string.sub_unlimited)
+                            else -> "—"
+                        },
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = accent
+                    )
+                    if (used != null) {
+                        Text(
+                            text = stringResource(R.string.sub_used_small, formatBytes(used)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = subtle
+                        )
+                    }
+                }
+                if (expireAt != null) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = stringResource(R.string.sub_until_label),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = subtle
+                        )
+                        Text(
+                            text = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(expireAt)),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (daysLeft != null) {
+                            Text(
+                                text = stringResource(R.string.main_sub_days_left, daysLeft.toInt()),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (daysLeft <= 3) PingBad else subtle
+                            )
+                        }
+                    }
+                }
+            }
             if (progress != null) {
+                Spacer(Modifier.height(10.dp))
                 LinearProgressIndicator(
-                    progress = { progress },
+                    progress = { 1f - progress },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(end = 10.dp)
                         .height(6.dp)
                         .clip(CircleShape),
                     color = accent,
                     trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
                 )
-                Spacer(Modifier.height(6.dp))
-            }
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                if (used != null) {
-                    Text(
-                        text = if (total != null) {
-                            stringResource(R.string.main_sub_used, formatBytes(used), formatBytes(total))
-                        } else {
-                            stringResource(R.string.main_sub_used_unlimited, formatBytes(used))
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (expireAt != null) {
-                    Text(
-                        text = stringResource(
-                            R.string.main_sub_expires,
-                            DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(expireAt))
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            val left = if (used != null && total != null) (total - used).coerceAtLeast(0L) else null
-            val daysLeft = expireAt?.let { ((it - System.currentTimeMillis()) / DAY_MILLIS).coerceAtLeast(0L) }
-            if (left != null || daysLeft != null) {
-                Spacer(Modifier.height(2.dp))
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = left?.let { stringResource(R.string.main_sub_left, formatBytes(it)) }.orEmpty(),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = accent
-                    )
-                    if (daysLeft != null) {
-                        Text(
-                            text = stringResource(R.string.main_sub_days_left, daysLeft.toInt()),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
             }
         }
 
+        // Provider announcement: short by default, tap to read all of it
         if (!subscription.announce.isNullOrBlank()) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             Text(
                 text = subscription.announce!!,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
+                color = subtle,
+                maxLines = if (announceExpanded) Int.MAX_VALUE else 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 10.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                    .clickable { announceExpanded = !announceExpanded }
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             )
         }
+
+        // Labelled actions: clear for everyone, no guessing what an icon means
+        Spacer(Modifier.height(14.dp))
+        Row(
+            Modifier.fillMaxWidth().padding(end = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CardAction(R.drawable.ic_refresh_24dp, stringResource(R.string.sub_action_update), accent, onRefresh, Modifier.weight(1f))
+            CardAction(R.drawable.ic_speed_24dp, stringResource(R.string.sub_action_check), accent, onTestAll, Modifier.weight(1f), enabled = !isTesting)
+            if (!subscription.supportUrl.isNullOrBlank()) {
+                CardAction(
+                    R.drawable.ic_telegram_24dp,
+                    stringResource(R.string.sub_action_support),
+                    accent,
+                    { onOpenSupport(subscription.supportUrl!!) },
+                    Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CardAction(
+    iconRes: Int,
+    label: String,
+    tint: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Row(
+        modifier = modifier
+            .height(40.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(tint.copy(alpha = if (enabled) 0.14f else 0.06f))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 10.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(painterResource(iconRes), contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = tint,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

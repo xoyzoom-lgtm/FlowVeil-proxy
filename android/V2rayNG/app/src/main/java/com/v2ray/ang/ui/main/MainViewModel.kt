@@ -889,8 +889,10 @@ class MainViewModel(
     private var pingAfterAvailability = false
 
     private fun checkServers() {
+        // One real connection test through each server (TCP ping cannot check JSON/Hysteria
+        // servers and reported them all as dead). While it runs rows show only a check or a cross.
         toast(R.string.check_servers_step1)
-        testAllRealPing(onlyTcp = true, keepAvailability = true)
+        testAllRealPing(keepAvailability = true)
         _uiState.update { it.copy(availability = emptyMap(), availabilityOnly = true) }
         pingAfterAvailability = true
     }
@@ -965,14 +967,10 @@ class MainViewModel(
         if (testRequests.completeBulk(requestId) == null) return
         resetTestStatus()
         if (pingAfterAvailability) {
-            // Step 1 (is the server alive?) is done: now measure the real ping.
+            // Real test finished: every server already shows works / not working, now reveal the ping.
             pingAfterAvailability = false
-            val groupId = uiState.value.selectedGroupId
-            val alive = mutableServerGroupState(groupId).value.rows.associate { it.guid to (it.testDelayMillis > 0L) }
-            _uiState.update { it.copy(availability = alive, availabilityOnly = false) }
+            _uiState.update { it.copy(availabilityOnly = false) }
             toast(R.string.check_servers_step2)
-            testAllRealPing(keepAvailability = true)
-            return
         }
         viewModelScope.launch(ioDispatcher) {
             cacheMutex.withLock { groupDataCache.clear() }

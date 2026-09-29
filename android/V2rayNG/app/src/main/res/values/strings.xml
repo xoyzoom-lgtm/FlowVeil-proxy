@@ -602,8 +602,16 @@
     <string name="sub_menu_all">All subscriptions</string>
     <string name="confirm_delete_subscription">Delete this subscription and its servers?</string>
     <string name="settings_section_sections">Sections</string>
-    <string name="check_servers_step1">Step 1: checking which servers work…</string>
-    <string name="check_servers_step2">Step 2: measuring ping…</string>
+    <string name="check_servers_step1">Checking which servers work…</string>
+    <string name="check_servers_step2">Done: ✓ works, ✕ not working</string>
     <string name="server_status_alive">Works</string>
     <string name="server_status_dead">Not working</string>
+    <string name="sub_left_label">Left</string>
+    <string name="sub_traffic_label">Traffic</string>
+    <string name="sub_unlimited">Unlimited</string>
+    <string name="sub_used_small">used %1$s</string>
+    <string name="sub_until_label">Valid until</string>
+    <string name="sub_action_update">Update</string>
+    <string name="sub_action_check">Check</string>
+    <string name="sub_action_support">Support</string>
 </resources>

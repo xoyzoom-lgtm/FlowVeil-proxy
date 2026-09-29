@@ -74,7 +74,7 @@ import kotlinx.coroutines.delay
 
 private val PingGood = Color(0xFF22C55E)
 private val PingMedium = Color(0xFFF59E0B)
-private val PingBad = Color(0xFFEF4444)
+internal val PingBad = Color(0xFFEF4444)
 
 @Composable
 internal fun mainAccentColor(): Color =
