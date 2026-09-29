@@ -180,6 +180,22 @@ jobs:
           # GitHub lists releases by tag name, so "build-10" would sink below "build-2".
           # Zero-padded "v" tags sort correctly and always above the old "build-N" ones.
           TAG="v$(printf '%04d' ${{ github.run_number }})"
+          cat > notes.md <<'EOF'
+          **Какой файл скачать**
+
+          | Устройство | Файл |
+          |---|---|
+          | Android (почти все телефоны) | `FlowVeil-android.apk` |
+          | Android, только 64-бит (меньше размер) | `FlowVeil-android-arm64.apk` |
+          | Windows — установщик | `FlowVeil-Setup.exe` |
+          | Windows — без установки | `FlowVeil-windows-portable.zip` |
+
+          Уже установлен FlowVeil? Обновитесь прямо в приложении: «Настройки → Проверить обновления».
+
+          Добавить VPN: скопируйте ссылку на подписку от своего провайдера и нажмите «Вставить из буфера».
+          Вопросы: Telegram [@GxoyzoomG](https://t.me/GxoyzoomG) · [Политика конфиденциальности](https://github.com/${{ github.repository }}/blob/main/PRIVACY.md)
+          EOF
+          sed -i 's/^          //' notes.md
           gh release create "$TAG" out/* --repo "${{ github.repository }}" \
             --target "${{ github.sha }}" --title "FlowVeil build-${{ github.run_number }}" --latest \
-            --notes "Android: FlowVeil-android.apk. Windows: FlowVeil-Setup.exe (установщик) или FlowVeil-windows-portable.zip."
+            --notes-file notes.md
