@@ -665,8 +665,8 @@
     <string name="action_favorite_remove">Убрать из избранного</string>
     <string name="speed_test_title">Тест скорости</string>
     <string name="speed_test_connect_first">Сначала подключитесь, потом запустите тест скорости</string>
-    <string name="speed_test_running">Измеряю скорость…</string>
-    <string name="speed_test_result">Скорость: %1$s</string>
+    <string name="speed_test_running">Измеряю скорость, около 20 секунд…</string>
+    <string name="speed_test_result">↓ %1$s · ↑ %2$s · пинг %3$s мс</string>
     <string name="speed_test_failed">Не удалось измерить скорость</string>
     <string name="sub_error_not_link">это не ссылка на подписку</string>
     <string name="sub_error_unreachable">сервер подписки недоступен: %1$s</string>

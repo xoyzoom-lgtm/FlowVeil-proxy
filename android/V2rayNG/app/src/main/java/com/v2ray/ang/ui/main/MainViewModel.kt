@@ -259,14 +259,19 @@ class MainViewModel(
         if (uiState.value.isTesting) return
         _uiState.update { it.copy(isTesting = true, status = MainStatus.Message(dataSource.getString(R.string.speed_test_running))) }
         viewModelScope.launch {
-            val mbps = withContext(ioDispatcher) { ProxySpeedTest.run() }
-            val text = if (mbps != null) {
+            val result = withContext(ioDispatcher) { ProxySpeedTest.run() }
+            val mbit = dataSource.getString(R.string.unit_mbit)
+            val gbit = dataSource.getString(R.string.unit_gbit)
+            fun rate(mbps: Double?) = mbps?.let { formatBitRate((it * 1_000_000 / 8).toLong(), mbit, gbit) } ?: "—"
+            val text = if (result.downloadMbps == null && result.uploadMbps == null) {
+                dataSource.getString(R.string.speed_test_failed)
+            } else {
                 dataSource.getString(
                     R.string.speed_test_result,
-                    formatBitRate((mbps * 1_000_000 / 8).toLong(), dataSource.getString(R.string.unit_mbit), dataSource.getString(R.string.unit_gbit))
+                    rate(result.downloadMbps),
+                    rate(result.uploadMbps),
+                    result.pingMs?.toString() ?: "—"
                 )
-            } else {
-                dataSource.getString(R.string.speed_test_failed)
             }
             _uiState.update { it.copy(isTesting = false, status = MainStatus.Message(text)) }
         }
