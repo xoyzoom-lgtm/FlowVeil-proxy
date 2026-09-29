@@ -196,6 +196,19 @@ jobs:
           Вопросы: Telegram [@GxoyzoomG](https://t.me/GxoyzoomG) · [Политика конфиденциальности](https://github.com/${{ github.repository }}/blob/main/PRIVACY.md)
           EOF
           sed -i 's/^          //' notes.md
-          gh release create "$TAG" out/* --repo "${{ github.repository }}" \
-            --target "${{ github.sha }}" --title "FlowVeil build-${{ github.run_number }}" --latest \
-            --notes-file notes.md
+          # GitHub sometimes answers 403/5xx for a moment: retry, and finish a half-created release.
+          for attempt in 1 2 3 4; do
+            if gh release create "$TAG" out/* --repo "${{ github.repository }}" \
+                --target "${{ github.sha }}" --title "FlowVeil build-${{ github.run_number }}" --latest \
+                --notes-file notes.md; then
+              exit 0
+            fi
+            if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1 \
+              && gh release upload "$TAG" out/* --clobber --repo "${{ github.repository }}" \
+              && gh release edit "$TAG" --latest --repo "${{ github.repository }}"; then
+              exit 0
+            fi
+            echo "Publish attempt $attempt failed, retrying"
+            sleep $((attempt * 20))
+          done
+          exit 1
