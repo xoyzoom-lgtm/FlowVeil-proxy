@@ -97,7 +97,7 @@ fun AboutScreen(
             SettingsMenuItem(
                 icon = painterResource(R.drawable.ic_source_code_24dp),
                 title = stringResource(R.string.title_source_code),
-                subtitle = "github.com/xoyzoom-lgtm/hupp-proxy",
+                subtitle = "github.com/xoyzoom-lgtm/FlowVeil-proxy",
                 onClick = { Utils.openUri(context, AppConfig.APP_URL) }
             )
             SettingsMenuItem(

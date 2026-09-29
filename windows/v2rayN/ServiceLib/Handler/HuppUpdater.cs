@@ -9,7 +9,7 @@ public sealed record HuppUpdateInfo(int Build, string Tag, string Notes, string?
 /// <summary>Checks the FlowVeil GitHub releases ("build-N" tags) and downloads the installer.</summary>
 public static class HuppUpdater
 {
-    private const string Repo = "xoyzoom-lgtm/hupp-proxy";
+    private const string Repo = "xoyzoom-lgtm/FlowVeil-proxy";
     private const string SetupAsset = "FlowVeil-Setup.exe";
 
     /// <summary>Build number baked in by CI as InformationalVersion "build-N"; 0 for local builds.</summary>

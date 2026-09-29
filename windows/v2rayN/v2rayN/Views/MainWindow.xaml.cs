@@ -413,8 +413,8 @@ public partial class MainWindow
 
         var about = Section("О приложении");
         Row(about, PackIconKind.Send, "Автор", "Telegram @GxoyzoomG", () => ProcUtils.ProcessStart("https://t.me/GxoyzoomG"));
-        Row(about, PackIconKind.ShieldLockOutline, "Политика конфиденциальности", "Какие данные есть у приложения и куда уходят", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/hupp-proxy/blob/main/PRIVACY.md"));
-        Row(about, PackIconKind.Github, "Исходный код", "github.com/xoyzoom-lgtm/hupp-proxy", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/hupp-proxy"));
+        Row(about, PackIconKind.ShieldLockOutline, "Политика конфиденциальности", "Какие данные есть у приложения и куда уходят", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md"));
+        Row(about, PackIconKind.Github, "Исходный код", "github.com/xoyzoom-lgtm/FlowVeil-proxy", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/FlowVeil-proxy"));
         Row(about, PackIconKind.ScaleBalance, "Лицензия", "Основано на v2rayN (GPL-3.0)", () => ProcUtils.ProcessStart("https://github.com/2dust/v2rayN"));
 
         var expert = Section("Для опытных");

@@ -6,7 +6,7 @@ using ServiceLib.Handler;
 using ServiceLib.Manager;
 using ServiceLib.Services;
 
-var baseUrl = args.Length > 0 ? args[0] : "https://raw.githubusercontent.com/xoyzoom-lgtm/hupp-proxy/main/windows/selftest";
+var baseUrl = args.Length > 0 ? args[0] : "https://raw.githubusercontent.com/xoyzoom-lgtm/FlowVeil-proxy/main/windows/selftest";
 var failures = 0;
 
 if (!AppManager.Instance.InitApp() || !AppManager.Instance.InitComponents())

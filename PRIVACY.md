@@ -50,7 +50,7 @@ FlowVeil не собирает данные ни о ком, в том числе
 
 ## 6. Исходный код
 
-FlowVeil основан на открытых проектах v2rayNG и v2rayN (лицензия GPL-3.0). Исходный код FlowVeil открыт: <https://github.com/xoyzoom-lgtm/hupp-proxy> — любой может проверить, что приложение делает.
+FlowVeil основан на открытых проектах v2rayNG и v2rayN (лицензия GPL-3.0). Исходный код FlowVeil открыт: <https://github.com/xoyzoom-lgtm/FlowVeil-proxy> — любой может проверить, что приложение делает.
 
 ## 7. Изменения и связь
 
