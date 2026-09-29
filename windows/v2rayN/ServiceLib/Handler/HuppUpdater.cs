@@ -6,11 +6,11 @@ namespace ServiceLib.Handler;
 
 public sealed record HuppUpdateInfo(int Build, string Tag, string Notes, string? SetupUrl, bool HasUpdate);
 
-/// <summary>Checks the Hupp GitHub releases ("build-N" tags) and downloads the installer.</summary>
+/// <summary>Checks the FlowVeil GitHub releases ("build-N" tags) and downloads the installer.</summary>
 public static class HuppUpdater
 {
     private const string Repo = "xoyzoom-lgtm/hupp-proxy";
-    private const string SetupAsset = "Hupp-Setup.exe";
+    private const string SetupAsset = "FlowVeil-Setup.exe";
 
     /// <summary>Build number baked in by CI as InformationalVersion "build-N"; 0 for local builds.</summary>
     public static int CurrentBuild()
@@ -140,7 +140,7 @@ public static class HuppUpdater
             handler.UseProxy = true;
         }
         var client = new HttpClient(handler) { Timeout = timeout };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Hupp-updater");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("FlowVeil-updater");
         return client;
     }
 

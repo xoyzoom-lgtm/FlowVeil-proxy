@@ -109,7 +109,7 @@ public static class ConfigHandler
             config.UiItem.CurrentTheme = HappThemes.DefaultName;
         }
 
-        // Hupp is Russian-first: default to Russian once, the user can switch later.
+        // FlowVeil is Russian-first: default to Russian once, the user can switch later.
         var langMarker = Utils.GetConfigPath("hupp_lang_v1");
         if (config.UiItem.CurrentLanguage.IsNullOrEmpty() || !File.Exists(langMarker))
         {

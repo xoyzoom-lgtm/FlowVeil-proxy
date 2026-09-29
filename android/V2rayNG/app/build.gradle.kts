@@ -95,7 +95,7 @@ android {
                 .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
                 .forEach { output ->
                     val abi = output.getFilter("ABI") ?: "universal"
-                    output.outputFileName = "Hupp_${variant.versionName}-fdroid_${abi}.apk"
+                    output.outputFileName = "FlowVeil_${variant.versionName}-fdroid_${abi}.apk"
                     if (versionCodes.containsKey(abi)) {
                         output.versionCodeOverride =
                             (100 * variant.versionCode + versionCodes[abi]!!).plus(5000000)
@@ -115,7 +115,7 @@ android {
                     else
                         "universal"
 
-                    output.outputFileName = "Hupp_${variant.versionName}_${abi}.apk"
+                    output.outputFileName = "FlowVeil_${variant.versionName}_${abi}.apk"
                     if (versionCodes.containsKey(abi)) {
                         output.versionCodeOverride =
                             (1000000 * versionCodes[abi]!!).plus(variant.versionCode)

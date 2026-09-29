@@ -152,7 +152,7 @@ public partial class MainWindow
              .DisposeWith(disposables);
         });
 
-        Title = $"Hupp {BuildName()} - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
+        Title = $"FlowVeil {BuildName()} - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
         if (_config.UiItem.AutoHideStartup)
         {
             WindowState = WindowState.Minimized;
@@ -415,7 +415,7 @@ public partial class MainWindow
         var app = Section("Приложение");
         Row(app, PackIconKind.Update, "Проверить обновления", $"Сейчас: build {HuppUpdater.CurrentBuild()}", () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));
         Row(app, PackIconKind.BackupRestore, "Резервная копия", "Сохранить или восстановить настройки и подписки", () => MenuBackupAndRestore_Click(this, new RoutedEventArgs()));
-        Row(app, PackIconKind.TrayArrowDown, "Свернуть в трей", "Hupp продолжит работать у часов", () => MenuClose_Click(this, new RoutedEventArgs()));
+        Row(app, PackIconKind.TrayArrowDown, "Свернуть в трей", "FlowVeil продолжит работать у часов", () => MenuClose_Click(this, new RoutedEventArgs()));
 
         var about = Section("О приложении");
         Row(about, PackIconKind.Send, "Автор", "Telegram @GxoyzoomG", () => ProcUtils.ProcessStart("https://t.me/GxoyzoomG"));

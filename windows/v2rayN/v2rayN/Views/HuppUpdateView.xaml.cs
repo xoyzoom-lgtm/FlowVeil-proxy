@@ -3,7 +3,7 @@ using MaterialDesignThemes.Wpf;
 
 namespace v2rayN.Views;
 
-/// <summary>In-app updater: checks the Hupp releases, downloads Hupp-Setup.exe and runs it.</summary>
+/// <summary>In-app updater: checks the FlowVeil releases, downloads FlowVeil-Setup.exe and runs it.</summary>
 public partial class HuppUpdateView : UserControl
 {
     private HuppUpdateInfo? _info;
@@ -32,12 +32,12 @@ public partial class HuppUpdateView : UserControl
         }
         else if (_info.HasUpdate)
         {
-            txtStatus.Text = $"Есть новая версия ({_info.Tag}). Нажмите кнопку — Hupp скачает её и обновится сам, настройки сохранятся.";
+            txtStatus.Text = $"Есть новая версия ({_info.Tag}). Нажмите кнопку — FlowVeil скачает её и обновится сам, настройки сохранятся.";
             btnInstall.Visibility = Visibility.Visible;
         }
         else
         {
-            txtStatus.Text = "У вас последняя версия Hupp.";
+            txtStatus.Text = "У вас последняя версия FlowVeil.";
         }
     }
 
@@ -60,10 +60,10 @@ public partial class HuppUpdateView : UserControl
             return;
         }
 
-        txtStatus.Text = "Устанавливаю… Hupp перезапустится сам.";
+        txtStatus.Text = "Устанавливаю… FlowVeil перезапустится сам.";
         try
         {
-            // The installer closes this instance, updates files in place and starts Hupp again.
+            // The installer closes this instance, updates files in place and starts FlowVeil again.
             Process.Start(new ProcessStartInfo(path, "/SILENT /NORESTART") { UseShellExecute = true });
             await AppManager.Instance.AppExitAsync(true);
         }

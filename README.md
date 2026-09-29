@@ -1,4 +1,4 @@
-# Hupp
+# FlowVeil
 
 VPN-клиент для Android и Windows с темами в стиле Happ (17 тем, по умолчанию iOS 27 Glass).
 
@@ -6,9 +6,9 @@ VPN-клиент для Android и Windows с темами в стиле Happ (1
 
 Готовые файлы: **[Releases → последняя версия](../../releases/latest)**
 
-- `Hupp-android.apk` — Android (универсальный), `Hupp-android-arm64.apk` — для современных телефонов
-- `Hupp-Setup.exe` — установщик для Windows 10/11
-- `Hupp-windows-portable.zip` — Windows без установки
+- `FlowVeil-android.apk` — Android (универсальный), `FlowVeil-android-arm64.apk` — для современных телефонов
+- `FlowVeil-Setup.exe` — установщик для Windows 10/11
+- `FlowVeil-windows-portable.zip` — Windows без установки
 
 Файлы собираются автоматически (GitHub Actions) после каждого изменения в `main`.
 
@@ -22,7 +22,7 @@ VPN-клиент для Android и Windows с темами в стиле Happ (1
 ## Исходники
 
 - `android/` — форк [2dust/v2rayNG](https://github.com/2dust/v2rayNG) (GPL-3.0)
-- `windows/` — форк [2dust/v2rayN](https://github.com/2dust/v2rayN) (GPL-3.0); локальная сборка: `windows/BUILD-Hupp.bat`
+- `windows/` — форк [2dust/v2rayN](https://github.com/2dust/v2rayN) (GPL-3.0); локальная сборка: `windows/BUILD-FlowVeil.bat`
 
 ## Стабильная подпись APK (по желанию)
 

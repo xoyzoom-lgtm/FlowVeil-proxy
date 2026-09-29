@@ -1,5 +1,5 @@
-﻿; Inno Setup script for Hupp (built by BUILD-Hupp.bat)
-#define AppName "Hupp"
+﻿; Inno Setup script for FlowVeil (built by BUILD-FlowVeil.bat)
+#define AppName "FlowVeil"
 #define AppVersion "1.0"
 
 [Setup]
@@ -12,9 +12,9 @@ DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=.
-OutputBaseFilename=Hupp-Setup
+OutputBaseFilename=FlowVeil-Setup
 SetupIconFile=v2rayN\v2rayN\Resources\v2rayN.ico
-UninstallDisplayIcon={app}\Hupp.exe
+UninstallDisplayIcon={app}\FlowVeil.exe
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -32,37 +32,47 @@ Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "en"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Создать значок Hupp на рабочем столе"; GroupDescription: "Значки:"
-Name: "autostart"; Description: "Запускать Hupp вместе с Windows"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "Создать значок FlowVeil на рабочем столе"; GroupDescription: "Значки:"
+Name: "autostart"; Description: "Запускать FlowVeil вместе с Windows"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "Hupp\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "FlowVeil\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+; Leftovers from before the Hupp -> FlowVeil rename.
+Type: files; Name: "{app}\Hupp.exe"
+Type: files; Name: "{userdesktop}\Hupp.lnk"
+Type: files; Name: "{userstartup}\Hupp.lnk"
+Type: files; Name: "{group}\Hupp.lnk"
+Type: files; Name: "{group}\Удалить Hupp.lnk"
 
 [Icons]
-Name: "{group}\Hupp"; Filename: "{app}\Hupp.exe"
-Name: "{group}\Удалить Hupp"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\Hupp"; Filename: "{app}\Hupp.exe"; Tasks: desktopicon
-Name: "{userstartup}\Hupp"; Filename: "{app}\Hupp.exe"; Tasks: autostart
+Name: "{group}\FlowVeil"; Filename: "{app}\FlowVeil.exe"
+Name: "{group}\Удалить FlowVeil"; Filename: "{uninstallexe}"
+Name: "{userdesktop}\FlowVeil"; Filename: "{app}\FlowVeil.exe"; Tasks: desktopicon
+Name: "{userstartup}\FlowVeil"; Filename: "{app}\FlowVeil.exe"; Tasks: autostart
 
 [Run]
-Filename: "{app}\Hupp.exe"; Description: "{cm:LaunchProgram,Hupp}"; Flags: nowait postinstall skipifsilent
-; Silent updates started from inside Hupp: relaunch it when done.
-Filename: "{app}\Hupp.exe"; Flags: nowait; Check: WizardSilent
+Filename: "{app}\FlowVeil.exe"; Description: "{cm:LaunchProgram,FlowVeil}"; Flags: nowait postinstall skipifsilent
+; Silent updates started from inside FlowVeil: relaunch it when done.
+Filename: "{app}\FlowVeil.exe"; Flags: nowait; Check: WizardSilent
 
 [Code]
-// A running Hupp keeps the old window alive (it is single-instance and hides to tray
+// A running FlowVeil keeps the old window alive (it is single-instance and hides to tray
 // instead of closing), so stop it and its core before files are replaced.
 procedure KillHupp();
 var
   Code: Integer;
 begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM FlowVeil.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  // Versions before the rename were called Hupp.exe.
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM Hupp.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM xray.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM sing-box.exe /T', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Sleep(800);
 end;
 
-// Folder of a running Hupp.exe (installed or portable), or '' when none is running.
+// Folder of a running FlowVeil.exe (installed or portable), or '' when none is running.
 function RunningHuppDir(): String;
 var
   Tmp: String;
@@ -72,7 +82,7 @@ begin
   Result := '';
   Tmp := ExpandConstant('{tmp}\hupp-path.txt');
   Exec('powershell.exe',
-    '-NoProfile -ExecutionPolicy Bypass -Command "$p=(Get-Process Hupp -ErrorAction SilentlyContinue | Select-Object -First 1).Path; ' +
+    '-NoProfile -ExecutionPolicy Bypass -Command "$p=(Get-Process FlowVeil,Hupp -ErrorAction SilentlyContinue | Select-Object -First 1).Path; ' +
     'if ($p) { Set-Content -Encoding UTF8 -Path ''' + Tmp + ''' -Value (Split-Path $p) }"',
     '', SW_HIDE, ewWaitUntilTerminated, Code);
   if LoadStringsFromFile(Tmp, Lines) and (GetArrayLength(Lines) > 0) then
@@ -85,7 +95,7 @@ var
 begin
   // Update the copy the user is actually running, even a portable one in another folder.
   Dir := RunningHuppDir();
-  if (Dir <> '') and FileExists(AddBackslash(Dir) + 'Hupp.exe') then
+  if (Dir <> '') and (FileExists(AddBackslash(Dir) + 'FlowVeil.exe') or FileExists(AddBackslash(Dir) + 'Hupp.exe')) then
     WizardForm.DirEdit.Text := Dir;
 end;
 
@@ -119,7 +129,7 @@ begin
 end;
 
 [UninstallRun]
-Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM Hupp.exe /T"; Flags: runhidden; RunOnceId: "KillHupp"
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM FlowVeil.exe /T"; Flags: runhidden; RunOnceId: "KillHupp"
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM xray.exe /T"; Flags: runhidden; RunOnceId: "KillXray"
 
 [UninstallDelete]

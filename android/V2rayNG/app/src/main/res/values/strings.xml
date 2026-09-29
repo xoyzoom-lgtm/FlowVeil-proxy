@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Hupp</string>
+    <string name="app_name" translatable="false">FlowVeil</string>
     <string name="app_widget_name">Switch</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">Add a profile in the app before using this feature.</string>
@@ -14,7 +14,7 @@
     <string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
     <!-- Notifications -->
-    <string name="notification_channel_service">Hupp service</string>
+    <string name="notification_channel_service">FlowVeil service</string>
     <string name="notification_channel_subscription_updates">Subscription updates</string>
     <string name="notification_channel_connection_checks">Connection checks</string>
     <string name="notification_action_stop_v2ray">Stop</string>
@@ -625,7 +625,7 @@
     <string name="sub_frame_days_left">%1$d d. left</string>
     <string name="update_downloading">Downloading update… %1$s</string>
     <string name="update_download_failed">Could not download the update. Check the internet and try again.</string>
-    <string name="update_allow_install">Allow Hupp to install updates, then come back</string>
+    <string name="update_allow_install">Allow FlowVeil to install updates, then come back</string>
     <string name="about_author">Author</string>
     <string name="about_based_on">Based on v2rayNG (GPL-3.0)</string>
 </resources>

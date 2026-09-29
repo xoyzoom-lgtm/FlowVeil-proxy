@@ -1,4 +1,4 @@
-name: Build Hupp
+name: Build FlowVeil
 
 on:
   push:
@@ -67,7 +67,7 @@ jobs:
             PASS=$(openssl rand -hex 16)
             echo "::add-mask::$PASS"
             keytool -genkeypair -keystore "$RUNNER_TEMP/hupp.jks" -storepass "$PASS" -keypass "$PASS" \
-              -alias hupp -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=Hupp"
+              -alias hupp -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=FlowVeil"
             echo "SIGN_PASS=$PASS" >> $GITHUB_ENV
           fi
 
@@ -82,8 +82,8 @@ jobs:
             -Pandroid.injected.signing.key.alias=hupp \
             -Pandroid.injected.signing.key.password="$SIGN_PASS"
           mkdir -p "$GITHUB_WORKSPACE/out"
-          cp app/build/outputs/apk/playstore/release/*universal*.apk "$GITHUB_WORKSPACE/out/Hupp-android.apk"
-          cp app/build/outputs/apk/playstore/release/*arm64-v8a*.apk "$GITHUB_WORKSPACE/out/Hupp-android-arm64.apk"
+          cp app/build/outputs/apk/playstore/release/*universal*.apk "$GITHUB_WORKSPACE/out/FlowVeil-android.apk"
+          cp app/build/outputs/apk/playstore/release/*arm64-v8a*.apk "$GITHUB_WORKSPACE/out/FlowVeil-android-arm64.apk"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -103,10 +103,10 @@ jobs:
         with:
           dotnet-version: 10.0.1xx
 
-      - name: Build Hupp
+      - name: Build FlowVeil
         run: |
-          dotnet publish v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -p:InformationalVersion=build-${{ github.run_number }} -o Hupp
-          Rename-Item Hupp/v2rayN.exe Hupp.exe
+          dotnet publish v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -p:InformationalVersion=build-${{ github.run_number }} -o FlowVeil
+          Rename-Item FlowVeil/v2rayN.exe FlowVeil.exe
 
       - name: Self-test (paste subscription link -> servers)
         continue-on-error: true
@@ -117,15 +117,15 @@ jobs:
         run: |
           Invoke-WebRequest https://github.com/XTLS/Xray-core/releases/latest/download/Xray-windows-64.zip -OutFile xray.zip -MaximumRetryCount 5 -RetryIntervalSec 10
           Expand-Archive xray.zip xray
-          New-Item -ItemType Directory -Force Hupp/bin/xray | Out-Null
-          Copy-Item xray/xray.exe Hupp/bin/xray/
-          Copy-Item xray/*.dat Hupp/bin/
+          New-Item -ItemType Directory -Force FlowVeil/bin/xray | Out-Null
+          Copy-Item xray/xray.exe FlowVeil/bin/xray/
+          Copy-Item xray/*.dat FlowVeil/bin/
 
       - name: Add sing-box and wintun (TUN mode)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # sing-box runs the TUN device by default; Hupp supports sing-box up to 1.14.x.
+          # sing-box runs the TUN device by default; FlowVeil supports sing-box up to 1.14.x.
           $headers = @{ Authorization = "Bearer $env:GH_TOKEN" }
           # GitHub API occasionally times out: retry a few times before failing the build.
           for ($i = 1; $i -le 5; $i++) {
@@ -137,12 +137,12 @@ jobs:
           Write-Host "sing-box $ver"
           Invoke-WebRequest "https://github.com/SagerNet/sing-box/releases/download/v$ver/sing-box-$ver-windows-amd64.zip" -OutFile singbox.zip -MaximumRetryCount 5 -RetryIntervalSec 10
           Expand-Archive singbox.zip singbox
-          New-Item -ItemType Directory -Force Hupp/bin/sing_box | Out-Null
-          Copy-Item singbox/*/* Hupp/bin/sing_box/ -Recurse -Force
+          New-Item -ItemType Directory -Force FlowVeil/bin/sing_box | Out-Null
+          Copy-Item singbox/*/* FlowVeil/bin/sing_box/ -Recurse -Force
           # Xray's own TUN needs wintun.dll next to xray.exe.
           Invoke-WebRequest https://www.wintun.net/builds/wintun-0.14.1.zip -OutFile wintun.zip -MaximumRetryCount 5 -RetryIntervalSec 10
           Expand-Archive wintun.zip wintun
-          Copy-Item wintun/wintun/bin/amd64/wintun.dll Hupp/bin/xray/
+          Copy-Item wintun/wintun/bin/amd64/wintun.dll FlowVeil/bin/xray/
 
       - name: Build installer
         run: |
@@ -150,11 +150,13 @@ jobs:
           if (-not (Test-Path $iscc)) {
             choco install innosetup -y --no-progress
           }
-          & $iscc /Q Hupp.iss
+          & $iscc /Q FlowVeil.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force ../out | Out-Null
-          Copy-Item Hupp-Setup.exe ../out/
-          Compress-Archive Hupp/* ../out/Hupp-windows-portable.zip
+          Copy-Item FlowVeil-Setup.exe ../out/
+          # Builds released as "Hupp" look for Hupp-Setup.exe when updating: keep a copy under the old name.
+          Copy-Item FlowVeil-Setup.exe ../out/Hupp-Setup.exe
+          Compress-Archive FlowVeil/* ../out/FlowVeil-windows-portable.zip
 
       - uses: actions/upload-artifact@v7
         with:
@@ -179,5 +181,5 @@ jobs:
           # Zero-padded "v" tags sort correctly and always above the old "build-N" ones.
           TAG="v$(printf '%04d' ${{ github.run_number }})"
           gh release create "$TAG" out/* --repo "${{ github.repository }}" \
-            --target "${{ github.sha }}" --title "Hupp build-${{ github.run_number }}" --latest \
-            --notes "Android: Hupp-android.apk. Windows: Hupp-Setup.exe (установщик) или Hupp-windows-portable.zip."
+            --target "${{ github.sha }}" --title "FlowVeil build-${{ github.run_number }}" --latest \
+            --notes "Android: FlowVeil-android.apk. Windows: FlowVeil-Setup.exe (установщик) или FlowVeil-windows-portable.zip."

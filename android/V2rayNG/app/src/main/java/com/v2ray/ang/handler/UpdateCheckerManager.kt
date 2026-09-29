@@ -47,7 +47,7 @@ object UpdateCheckerManager {
             return@withContext CheckUpdateResult(hasUpdate = false)
         }
 
-        // Hupp releases are tagged "build-N"; the running build number is baked in by CI.
+        // FlowVeil releases are tagged "build-N"; the running build number is baked in by CI.
         val latestBuild = latestRelease.tagName.filter { it.isDigit() }.toIntOrNull() ?: 0
         LogUtil.i(AppConfig.TAG, "Latest build: $latestBuild (current: ${BuildConfig.HUPP_BUILD})")
 
@@ -66,7 +66,7 @@ object UpdateCheckerManager {
 
     private fun getDownloadUrl(release: GitHubRelease, abi: String): String {
         // Small arm64 build for modern phones, universal build for everything else.
-        val wanted = if (abi.contains("arm64", ignoreCase = true)) "Hupp-android-arm64.apk" else "Hupp-android.apk"
+        val wanted = if (abi.contains("arm64", ignoreCase = true)) "FlowVeil-android-arm64.apk" else "FlowVeil-android.apk"
         val asset = release.assets.firstOrNull { it.name == wanted }
             ?: release.assets.firstOrNull { it.name.endsWith(".apk") }
         return asset?.browserDownloadUrl

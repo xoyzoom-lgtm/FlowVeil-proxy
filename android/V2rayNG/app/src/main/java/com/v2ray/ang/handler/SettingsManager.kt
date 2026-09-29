@@ -496,7 +496,7 @@ object SettingsManager {
         MmkvManager.encodeSettings(AppConfig.PREF_RECOMMENDED_DEFAULTS_APPLIED, true)
     }
 
-    /** Hupp: servers keep their provider order and are not pinged automatically after an update. */
+    /** FlowVeil: servers keep their provider order and are not pinged automatically after an update. */
     private fun applyHuppDefaultsV2Once() {
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_HUPP_DEFAULTS_V2_APPLIED, false)) return
         MmkvManager.encodeSettings(AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION, false)

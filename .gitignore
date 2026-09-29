@@ -7,7 +7,7 @@ local.properties
 bin/
 obj/
 .vs/
-/windows/Hupp/
-/windows/Hupp-Setup.exe
+/windows/FlowVeil/
+/windows/FlowVeil-Setup.exe
 /android/libs/
 /android/hev-socks5-tunnel/

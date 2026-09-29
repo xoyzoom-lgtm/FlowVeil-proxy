@@ -60,7 +60,7 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
     private var downloadedApk: File? = null
     private var awaitingInstallPermission = false
 
-    /** Called on resume: continue installing after the user allowed installs from Hupp. */
+    /** Called on resume: continue installing after the user allowed installs from FlowVeil. */
     fun resumeInstallIfPending() {
         if (awaitingInstallPermission && !ApkUpdateInstaller.needsInstallPermission(getApplication())) {
             awaitingInstallPermission = false

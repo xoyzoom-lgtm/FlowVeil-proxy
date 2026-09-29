@@ -64,7 +64,7 @@ fun AboutScreen(
     var showOssDialog by remember { mutableStateOf(false) }
 
     val libVersion = CoreNativeManager.getLibVersion()
-    val versionText = "Hupp build ${BuildConfig.HUPP_BUILD} ($libVersion)"
+    val versionText = "FlowVeil build ${BuildConfig.HUPP_BUILD} ($libVersion)"
     val appIdText = BuildConfig.APPLICATION_ID
 
     Scaffold(
@@ -82,7 +82,7 @@ fun AboutScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Hupp author first; upstream credit is kept as the GPL-3.0 licence requires.
+            // FlowVeil author first; upstream credit is kept as the GPL-3.0 licence requires.
             SettingsMenuItem(
                 icon = painterResource(R.drawable.ic_telegram_24dp),
                 title = stringResource(R.string.about_author),

@@ -16,9 +16,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.coroutines.coroutineContext
 
-/** Downloads a Hupp APK inside the app and hands it to the system installer. */
+/** Downloads a FlowVeil APK inside the app and hands it to the system installer. */
 object ApkUpdateInstaller {
-    private const val FILE_NAME = "Hupp-update.apk"
+    private const val FILE_NAME = "FlowVeil-update.apk"
 
     /** Returns the downloaded file; [onProgress] gets 0..100 (or -1 while the size is unknown). */
     suspend fun download(context: Context, url: String, onProgress: (Int) -> Unit): File = withContext(Dispatchers.IO) {
@@ -32,7 +32,7 @@ object ApkUpdateInstaller {
                 instanceFollowRedirects = false
                 connectTimeout = 15_000
                 readTimeout = 30_000
-                setRequestProperty("User-Agent", "Hupp-updater")
+                setRequestProperty("User-Agent", "FlowVeil-updater")
             }
             try {
                 val code = conn.responseCode
@@ -72,7 +72,7 @@ object ApkUpdateInstaller {
         target
     }
 
-    /** True when Android still needs the user to allow installs from Hupp (Android 8+). */
+    /** True when Android still needs the user to allow installs from FlowVeil (Android 8+). */
     fun needsInstallPermission(context: Context): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()
 

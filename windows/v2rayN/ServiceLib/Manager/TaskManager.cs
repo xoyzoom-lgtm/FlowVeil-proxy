@@ -135,7 +135,7 @@ public class TaskManager
         var info = await HuppUpdater.CheckAsync();
         if (info?.HasUpdate == true)
         {
-            NoticeManager.Instance.Enqueue($"Доступно обновление Hupp ({info.Tag}). Настройки → Проверить обновления");
+            NoticeManager.Instance.Enqueue($"Доступно обновление FlowVeil ({info.Tag}). Настройки → Проверить обновления");
             AppEvents.HasUpdateNotified.Publish(true);
         }
     }

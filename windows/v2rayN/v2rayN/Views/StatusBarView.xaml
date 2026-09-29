@@ -107,7 +107,7 @@
             x:Name="tbNotify"
             IconSource="/Resources/v2rayN.ico"
             NoLeftClickDelay="True"
-            ToolTipText="Hupp">
+            ToolTipText="FlowVeil">
             <tb:TaskbarIcon.ContextMenu>
                 <!--  Items are rebuilt each time the menu opens (see StatusBarView.xaml.cs)  -->
                 <ContextMenu x:Name="trayMenu" Style="{StaticResource DefContextMenu}" />

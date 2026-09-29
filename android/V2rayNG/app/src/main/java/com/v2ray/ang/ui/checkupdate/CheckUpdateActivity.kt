@@ -71,7 +71,7 @@ fun CheckUpdateScreen(
     val downloadProgress by viewModel.downloadProgress.collectAsStateWithLifecycle()
 
     val libVersion = CoreNativeManager.getLibVersion()
-    val versionText = "Hupp build ${BuildConfig.HUPP_BUILD} ($libVersion)"
+    val versionText = "FlowVeil build ${BuildConfig.HUPP_BUILD} ($libVersion)"
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
