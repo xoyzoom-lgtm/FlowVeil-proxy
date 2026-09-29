@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.FavoriteServers
+import com.v2ray.ang.handler.ProxySpeedTest
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.LocateTarget
@@ -242,6 +244,26 @@ class MainViewModel(
         )
 
         is MainStatus.ConnectionTest -> formatConnectionTestResult(status.result)
+        is MainStatus.Message -> status.text
+    }
+
+    /** Download speed through the running connection, shown in the status pill. */
+    private fun runSpeedTest() {
+        if (!uiState.value.isRunning) {
+            toastError(R.string.speed_test_connect_first)
+            return
+        }
+        if (uiState.value.isTesting) return
+        _uiState.update { it.copy(isTesting = true, status = MainStatus.Message(dataSource.getString(R.string.speed_test_running))) }
+        viewModelScope.launch {
+            val mbps = withContext(ioDispatcher) { ProxySpeedTest.run() }
+            val text = if (mbps != null) {
+                dataSource.getString(R.string.speed_test_result, String.format(java.util.Locale.US, "%.1f", mbps))
+            } else {
+                dataSource.getString(R.string.speed_test_failed)
+            }
+            _uiState.update { it.copy(isTesting = false, status = MainStatus.Message(text)) }
+        }
     }
 
     private fun formatConnectionTestResult(result: ConnectionTestResult): String {
@@ -294,6 +316,14 @@ class MainViewModel(
             MainAction.TestRealAllServers -> testAllRealPing()
             MainAction.CheckServers -> checkServers()
             MainAction.ConnectBest -> connectBest()
+            MainAction.SpeedTest -> runSpeedTest()
+            is MainAction.ToggleFavorite -> {
+                FavoriteServers.toggle(action.guid)
+                viewModelScope.launch(ioDispatcher) {
+                    cacheMutex.withLock { groupDataCache.clear() }
+                    reloadAllGroups(_uiState.value.groups.map { it.id })
+                }
+            }
             MainAction.ConnectBestHandled -> _uiState.update { it.copy(connectBestGuid = null) }
             MainAction.CancelTesting -> cancelAllPing()
             MainAction.RemoveAllServers -> removeAllServerAsync()
@@ -408,7 +438,9 @@ class MainViewModel(
     }
 
     private fun updateGroupUi(groupId: String, servers: List<ServersCache>) {
-        val filteredServers = applyKeywordFilter(servers)
+        // Starred servers first, otherwise the provider's order is kept.
+        val favorites = FavoriteServers.all()
+        val filteredServers = applyKeywordFilter(servers).sortedBy { if (it.guid in favorites) 0 else 1 }
         mutableServerGroupState(groupId).value = ServerGroupUiState(
             servers = filteredServers,
             rows = buildServerRows(groupId, filteredServers)
@@ -427,10 +459,12 @@ class MainViewModel(
         } else {
             emptyMap()
         }
+        val favorites = FavoriteServers.all()
         return servers.map { server ->
             buildServerRowUiModel(
                 server = server,
-                subscriptionRemarks = subscriptionRemarks[server.profile.subscriptionId].orEmpty()
+                subscriptionRemarks = subscriptionRemarks[server.profile.subscriptionId].orEmpty(),
+                isFavorite = server.guid in favorites,
             )
         }
     }

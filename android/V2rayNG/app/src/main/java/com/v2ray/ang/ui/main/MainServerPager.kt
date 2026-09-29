@@ -75,7 +75,7 @@ internal fun ServerListItem(
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                text = displayName,
+                text = if (row.isFavorite) "★ $displayName" else displayName,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,

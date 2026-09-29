@@ -271,10 +271,17 @@ public partial class ProfilesViewModel : MyReactiveObject
         ReloadRequested.Publish();
     }
 
+    /// <summary>Raised when a server test run completed or was stopped.</summary>
+    public event Action? SpeedtestFinished;
+
     public async Task SetSpeedTestResult(SpeedTestResult result)
     {
         if (result.IndexId.IsNullOrEmpty())
         {
+            if (result.Delay == ResUI.SpeedtestingCompleted || result.Delay == ResUI.SpeedtestingStop)
+            {
+                SpeedtestFinished?.Invoke();
+            }
             NoticeManager.Instance.SendMessageEx(result.Delay);
             NoticeManager.Instance.Enqueue(result.Delay);
             return;

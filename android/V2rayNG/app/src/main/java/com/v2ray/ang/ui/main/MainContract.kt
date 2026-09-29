@@ -11,6 +11,7 @@ sealed interface MainStatus {
     data object Testing : MainStatus
     data class TestProgress(val progress: String) : MainStatus
     data class ConnectionTest(val result: ConnectionTestResult) : MainStatus
+    data class Message(val text: String) : MainStatus
 }
 
 /**
@@ -51,6 +52,8 @@ sealed interface MainAction {
     data object CheckServers : MainAction
     data object ConnectBest : MainAction
     data object ConnectBestHandled : MainAction
+    data class ToggleFavorite(val guid: String) : MainAction
+    data object SpeedTest : MainAction
     data object CancelTesting : MainAction
     data object RemoveAllServers : MainAction
     data object RemoveDuplicateServers : MainAction

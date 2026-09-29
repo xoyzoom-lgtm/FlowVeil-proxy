@@ -19,6 +19,7 @@ public partial class HuppHomeView : UserControl
         btnPower.Click += async (_, _) => await Run(() => _vm?.ToggleAsync());
         btnTestPing.Click += async (_, _) => await Run(() => _vm?.TestCurrentAsync());
         btnPingAll.Click += async (_, _) => await Run(() => _vm?.PingAllAsync());
+        btnConnectBest.Click += async (_, _) => await Run(() => _vm?.ConnectBestAsync());
         btnUpdateSubs.Click += async (_, _) => await UpdateSubsAsync("");
         btnAdd.Click += async (_, _) => await PasteAsync();
         btnEmptyPaste.Click += async (_, _) => await PasteAsync();

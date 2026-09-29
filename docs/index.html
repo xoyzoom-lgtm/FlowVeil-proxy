@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlowVeil — VPN-клиент для Android и Windows</title>
+<meta name="description" content="FlowVeil — простой и красивый VPN-клиент. Вставьте ссылку на подписку и нажмите одну кнопку. Android и Windows, бесплатно, без аналитики.">
+<meta property="og:title" content="FlowVeil — VPN-клиент для Android и Windows">
+<meta property="og:description" content="Вставьте ссылку на подписку — и нажмите одну кнопку.">
+<meta property="og:image" content="banner.png">
+<link rel="icon" href="logo.png">
+<style>
+  :root {
+    --bg: #040C23; --bg2: #0A1A38; --card: rgba(255,255,255,.06); --line: rgba(255,255,255,.12);
+    --text: #F2F7FA; --muted: #A9C0CC; --accent: #3BE0B0; --accent2: #106B7E;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--text); background: var(--bg);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-image: radial-gradient(1100px 600px at 85% -10%, rgba(59,224,176,.18), transparent 60%),
+                      radial-gradient(900px 500px at -10% 110%, rgba(56,189,248,.14), transparent 60%),
+                      linear-gradient(160deg, #0B3A4A 0%, var(--bg) 55%);
+    background-attachment: fixed;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; align-items: center; gap: 12px; padding: 20px 0; }
+  header img { width: 40px; height: 40px; border-radius: 11px; }
+  header b { font-size: 20px; letter-spacing: .2px; }
+  header nav { margin-left: auto; display: flex; gap: 18px; font-size: 15px; color: var(--muted); }
+  header nav a { text-decoration: none; }
+  .hero { display: grid; grid-template-columns: 1.2fr .8fr; gap: 32px; align-items: center; padding: 48px 0 32px; }
+  h1 { font-size: clamp(34px, 6vw, 58px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -.5px; }
+  h1 span { background: linear-gradient(90deg, #7CF3D2, #38BDF8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { font-size: 19px; color: var(--muted); margin: 0 0 28px; max-width: 34em; }
+  .btns { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-flex; flex-direction: column; justify-content: center; min-width: 210px; padding: 14px 20px;
+         border-radius: 16px; text-decoration: none; border: 1px solid var(--line); background: var(--card); }
+  .btn.primary { background: linear-gradient(135deg, #3BE0B0, #1FA37A); color: #02140F; border: 0; }
+  .btn b { font-size: 17px; } .btn small { opacity: .8; font-size: 13px; }
+  .hint { color: var(--muted); font-size: 14px; margin-top: 14px; }
+  .logo-card { justify-self: center; width: min(300px, 70vw); aspect-ratio: 1; border-radius: 28%;
+               background: var(--card); border: 1px solid var(--line); display: grid; place-items: center;
+               box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+  .logo-card img { width: 86%; border-radius: 24%; }
+  section { padding: 36px 0; }
+  h2 { font-size: 28px; margin: 0 0 20px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; counter-reset: s; }
+  .step, .feat { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+  .step::before { counter-increment: s; content: counter(s); display: inline-grid; place-items: center; width: 30px; height: 30px;
+                  border-radius: 50%; background: var(--accent2); color: #fff; font-weight: 700; margin-bottom: 10px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .feat .i { font-size: 26px; } .feat h3 { margin: 6px 0 4px; font-size: 17px; } .feat p { margin: 0; color: var(--muted); font-size: 15px; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; } details p { color: var(--muted); margin: 10px 0 0; }
+  code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 6px; }
+  footer { padding: 32px 0 48px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); margin-top: 24px; }
+  footer a { color: var(--text); }
+  @media (max-width: 800px) {
+    .hero { grid-template-columns: 1fr; padding-top: 16px; }
+    .logo-card { order: -1; width: 160px; }
+    .steps, .grid { grid-template-columns: 1fr; }
+    header nav { display: none; }
+    .btn { flex: 1 1 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="logo.png" alt="">
+    <b>FlowVeil</b>
+    <nav>
+      <a href="#start">Как начать</a>
+      <a href="#features">Возможности</a>
+      <a href="#faq">Вопросы</a>
+      <a href="https://t.me/GxoyzoomG">Telegram</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Вставьте ссылку.<br><span>Нажмите одну кнопку.</span></h1>
+      <p class="lead">FlowVeil — простой и красивый VPN-клиент для Android и Windows. Понимает подписки любых провайдеров, сам выбирает быстрый сервер и держит соединение.</p>
+      <div class="btns">
+        <a class="btn primary" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android.apk">
+          <b>Скачать для Android</b><small>APK · Android 7 и новее</small></a>
+        <a class="btn" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-Setup.exe">
+          <b>Скачать для Windows</b><small>Установщик · Windows 10 / 11</small></a>
+      </div>
+      <p class="hint">Бесплатно · без регистрации · без аналитики · <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest">все файлы</a></p>
+    </div>
+    <div class="logo-card"><img src="logo.png" alt="Логотип FlowVeil"></div>
+  </div>
+
+  <section id="start">
+    <h2>Как начать</h2>
+    <div class="steps">
+      <div class="step"><b>Скопируйте ссылку</b><br><span style="color:var(--muted)">на подписку, которую дал ваш VPN-провайдер.</span></div>
+      <div class="step"><b>Вставьте в FlowVeil</b><br><span style="color:var(--muted)">кнопкой «Вставить из буфера» или отсканируйте QR-код.</span></div>
+      <div class="step"><b>Нажмите кнопку</b><br><span style="color:var(--muted)">или «⚡ Лучший» — FlowVeil сам найдёт самый быстрый сервер.</span></div>
+    </div>
+  </section>
+
+  <section id="features">
+    <h2>Возможности</h2>
+    <div class="grid">
+      <div class="feat"><div class="i">🔗</div><h3>Любые подписки</h3><p>Ссылки, base64, Clash / Mihomo, sing-box и Xray JSON.</p></div>
+      <div class="feat"><div class="i">⚡</div><h3>Лучший сервер</h3><p>Одна кнопка проверяет серверы и подключает к самому быстрому.</p></div>
+      <div class="feat"><div class="i">🔁</div><h3>Не отваливается</h3><p>Если сервер перестал отвечать, FlowVeil сам переключится на рабочий.</p></div>
+      <div class="feat"><div class="i">📊</div><h3>Всё о подписке</h3><p>Остаток трафика, срок, объявления провайдера и напоминания заранее.</p></div>
+      <div class="feat"><div class="i">🇷🇺</div><h3>Российские сайты напрямую</h3><p>Банки и госуслуги без VPN — одним переключателем.</p></div>
+      <div class="feat"><div class="i">🎨</div><h3>17 тем и виджеты</h3><p>Светлые, тёмные, неоновые темы и виджеты на главный экран.</p></div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>Частые вопросы</h2>
+    <details><summary>Это бесплатно?</summary><p>Да. FlowVeil — бесплатное приложение с открытым кодом. Сами серверы даёт ваш VPN-провайдер.</p></details>
+    <details><summary>Подписка не добавляется</summary><p>FlowVeil покажет причину. Чаще всего ссылка открывает сайт, а не подписку — попросите у провайдера ссылку для приложения. Зашифрованные ссылки <code>happ://crypt…</code> открывает только приложение Happ.</p></details>
+    <details><summary>Какие данные собирает приложение?</summary><p>Никаких. Провайдеру подписки уходят только стандартные заголовки устройства для лимита устройств. Подробнее — в <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md">политике конфиденциальности</a>.</p></details>
+    <details><summary>Windows пишет «неизвестный издатель»</summary><p>Установщик пока не подписан сертификатом. Нажмите «Подробнее» → «Выполнить в любом случае». Сборки делаются автоматически из открытого кода.</p></details>
+    <details><summary>Как провайдеру дать ссылку-приглашение?</summary><p>Ссылка вида <code>flowveil://add?url=ССЫЛКА_НА_ПОДПИСКУ</code> открывает FlowVeil и сразу добавляет подписку.</p></details>
+  </section>
+
+  <footer>
+    FlowVeil · автор <a href="https://t.me/GxoyzoomG">@GxoyzoomG</a> ·
+    <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy">исходный код</a> ·
+    <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md">политика конфиденциальности</a><br>
+    Основано на v2rayNG и v2rayN · GPL-3.0
+  </footer>
+</div>
+</body>
+</html>

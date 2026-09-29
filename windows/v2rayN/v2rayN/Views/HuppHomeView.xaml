@@ -554,6 +554,14 @@
                             Content="Проверить соединение"
                             Style="{StaticResource MaterialDesignOutlinedButton}" />
                     </DockPanel>
+                    <Button
+                        x:Name="btnConnectBest"
+                        Height="44"
+                        Margin="0,10,0,0"
+                        materialDesign:ButtonAssist.CornerRadius="22"
+                        Content="⚡ Подключиться к лучшему"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        ToolTip="Проверить серверы подписки и подключиться к самому быстрому" />
                 </StackPanel>
             </DockPanel>
         </Border>

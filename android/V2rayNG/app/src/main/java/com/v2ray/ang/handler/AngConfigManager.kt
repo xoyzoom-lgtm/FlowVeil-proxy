@@ -1,5 +1,7 @@
 package com.v2ray.ang.handler
 
+import com.v2ray.ang.R
+import com.v2ray.ang.AngApplication
 import android.content.Context
 import android.graphics.Bitmap
 import android.text.TextUtils
@@ -29,6 +31,11 @@ import com.v2ray.ang.util.Utils
 import java.net.URI
 
 object AngConfigManager {
+
+    /** Localized text for messages shown to the user. */
+    private fun str(resId: Int, vararg args: Any): String =
+        AppLocaleManager.localizedContext(AngApplication.application).getString(resId, *args)
+
 
     private val SUB_URL_REGEX = Regex("""https?://[^\s<>"']+""")
 
@@ -487,7 +494,7 @@ object AngConfigManager {
 
             val url = HttpUtil.toIdnUrl(it.subscription.url)
             if (!Utils.isValidUrl(url)) {
-                SubscriptionErrors.record(it.guid, "это не ссылка на подписку")
+                SubscriptionErrors.record(it.guid, str(R.string.sub_error_not_link))
                 return SubscriptionUpdateResult(failureCount = 1)
             }
             // Plain http:// subscriptions (common for panels on an IP:port) are accepted like on the
@@ -538,7 +545,7 @@ object AngConfigManager {
                 useSecureDns = configText.isNotEmpty()
             }
             if (configText.isEmpty()) {
-                SubscriptionErrors.record(it.guid, "сервер подписки недоступен: ${lastNetworkError ?: "пустой ответ"}")
+                SubscriptionErrors.record(it.guid, str(R.string.sub_error_unreachable, lastNetworkError ?: str(R.string.sub_error_empty_response)))
                 return SubscriptionUpdateResult(failureCount = 1)
             }
 
@@ -571,9 +578,9 @@ object AngConfigManager {
                 SubscriptionErrors.record(
                     it.guid,
                     when {
-                        looksLikePage -> "по ссылке открывается сайт, а не подписка — возьмите у провайдера ссылку для приложения"
-                        configText.trimStart().startsWith("happ://") -> "это зашифрованная ссылка Happ, её может открыть только приложение Happ"
-                        else -> "в ответе нет серверов (формат не поддерживается или превышен лимит устройств)"
+                        looksLikePage -> str(R.string.sub_error_web_page)
+                        configText.trimStart().startsWith("happ://") -> str(R.string.sub_error_happ_crypt)
+                        else -> str(R.string.sub_error_no_servers)
                     }
                 )
                 return SubscriptionUpdateResult(failureCount = 1)

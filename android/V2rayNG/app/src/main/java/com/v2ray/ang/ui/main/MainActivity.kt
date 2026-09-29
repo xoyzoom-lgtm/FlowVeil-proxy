@@ -120,6 +120,7 @@ class MainActivity : HelperBaseComponentActivity() {
     @Composable
     override fun ScreenContent() {
         BackHandler { moveTaskToBack(false) }
+        WhatsNewDialog()
         MainScreen(
             mainViewModel = mainViewModel,
             onAction = { action ->

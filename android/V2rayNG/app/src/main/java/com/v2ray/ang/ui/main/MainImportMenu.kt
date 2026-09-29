@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isComplexType
@@ -36,7 +37,8 @@ enum class MainMoreMenuAction(@StringRes val labelRes: Int) {
     SortByTestResults(R.string.title_sort_by_test_results),
     TestAll(R.string.title_ping_all_server),
     TestAllRealPing(R.string.title_real_ping_all_server),
-    UpdateSubscriptions(R.string.title_sub_update)
+    UpdateSubscriptions(R.string.title_sub_update),
+    SpeedTest(R.string.speed_test_title),
 }
 
 // Everyday actions only; manual protocol editors and bulk export stay out of the main menus.
@@ -48,6 +50,7 @@ private val visibleImportActions = listOf(
 
 private val visibleMoreActions = listOf(
     MainMoreMenuAction.UpdateSubscriptions,
+    MainMoreMenuAction.SpeedTest,
     MainMoreMenuAction.TestAllRealPing,
     MainMoreMenuAction.SortByTestResults,
     MainMoreMenuAction.DeleteInvalid,
@@ -60,6 +63,7 @@ internal enum class ServerMenuAction(
     val isShareAction: Boolean,
     val supportsComplexProfiles: Boolean,
 ) {
+    Favorite(R.string.action_favorite_add, isShareAction = false, supportsComplexProfiles = true),
     ShareQRCode(R.string.share_method_qrcode, isShareAction = true, supportsComplexProfiles = false),
     ShareClipboard(R.string.share_method_clipboard, isShareAction = true, supportsComplexProfiles = false),
     ShareFullContent(R.string.share_method_full_content, isShareAction = true, supportsComplexProfiles = true),
@@ -103,10 +107,17 @@ fun ShareMethodDialog(
     )
     SelectListDialog(
         options = menuActions,
-        optionText = { stringResource(it.labelRes) },
+        optionText = {
+            if (it == ServerMenuAction.Favorite && FavoriteServers.isFavorite(guid)) {
+                stringResource(R.string.action_favorite_remove)
+            } else {
+                stringResource(it.labelRes)
+            }
+        },
         onSelected = { action ->
             onDismiss()
             when (action) {
+                ServerMenuAction.Favorite -> onAction(MainAction.ToggleFavorite(guid))
                 ServerMenuAction.ShareQRCode -> onAction(MainAction.ShareQRCode(guid))
                 ServerMenuAction.ShareClipboard -> onAction(MainAction.ShareClipboard(guid))
                 ServerMenuAction.ShareFullContent -> onAction(MainAction.ShareFullContent(guid))

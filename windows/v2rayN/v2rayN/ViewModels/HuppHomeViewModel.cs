@@ -253,6 +253,53 @@ public sealed class HuppHomeViewModel : HuppObservable
         Profiles.SelectedSub = card.Sub;
     }
 
+    /// <summary>Tests the servers of the open subscription, selects the fastest one and connects.</summary>
+    public async Task ConnectBestAsync()
+    {
+        if (IsBusy || Profiles.ProfileItems.Count == 0)
+        {
+            return;
+        }
+        IsBusy = true;
+        PingText = "Ищу лучший сервер…";
+        try
+        {
+            var finished = new TaskCompletionSource();
+            void OnFinished() => finished.TrySetResult();
+            Profiles.SpeedtestFinished += OnFinished;
+            try
+            {
+                await Profiles.ServerSpeedtest(ESpeedActionType.FastRealping);
+                await Task.WhenAny(finished.Task, Task.Delay(TimeSpan.FromMinutes(3)));
+            }
+            finally
+            {
+                Profiles.SpeedtestFinished -= OnFinished;
+            }
+            var best = Profiles.ProfileItems.Where(t => t.Delay > 0).OrderBy(t => t.Delay).FirstOrDefault();
+            if (best == null)
+            {
+                PingText = "Рабочий сервер не найден";
+                return;
+            }
+            await SelectServerAsync(best);
+            if (!IsConnected)
+            {
+                await ConnectAsync();
+            }
+            PingText = $"Лучший: {best.Remarks} · {best.Delay} мс";
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(nameof(HuppHomeViewModel), ex);
+            PingText = "Ошибка";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     public async Task PingAllAsync()
     {
         await Profiles.ServerSpeedtest(ESpeedActionType.FastRealping);

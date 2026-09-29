@@ -309,6 +309,7 @@ fun MainScreen(
                                 MainMoreMenuAction.TestAll -> onAction(MainAction.TestAllServers)
                                 MainMoreMenuAction.TestAllRealPing -> onAction(MainAction.TestRealAllServers)
                                 MainMoreMenuAction.UpdateSubscriptions -> onAction(MainAction.UpdateSubscriptions)
+                                MainMoreMenuAction.SpeedTest -> onAction(MainAction.SpeedTest)
                             }
                         }
                     )
