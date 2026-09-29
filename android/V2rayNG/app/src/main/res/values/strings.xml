@@ -9,6 +9,8 @@
     <string name="widget_toggle">Connect or disconnect</string>
     <string name="widget_switch_description">One-tap VPN button</string>
     <string name="widget_card_description">Connection state, server and a VPN button</string>
+    <string name="notification_label_vpn">VPN</string>
+    <string name="notification_label_direct">Direct</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">Add a profile in the app before using this feature.</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>

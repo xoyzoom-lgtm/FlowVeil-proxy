@@ -31,7 +31,6 @@ object NotificationManager {
     private const val NOTIFICATION_PENDING_INTENT_CONTENT = 0
     private const val NOTIFICATION_PENDING_INTENT_STOP_V2RAY = 1
     private const val NOTIFICATION_PENDING_INTENT_RESTART_V2RAY = 2
-    private const val NOTIFICATION_ICON_THRESHOLD = 3000
     private const val QUERY_INTERVAL_MS = 3000L
 
     private var lastQueryTime = 0L
@@ -92,7 +91,8 @@ object NotificationManager {
             }
 
         mBuilder = NotificationCompat.Builder(service, channelId)
-            .setSmallIcon(R.drawable.ic_stat_flow)
+            .setSmallIcon(R.drawable.ic_stat_fv)
+            .setColor(0xFF106B7E.toInt())
             .setContentTitle(currentConfig?.remarks ?: service.getString(R.string.app_name))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -179,13 +179,6 @@ object NotificationManager {
      */
     private fun updateNotification(contentText: String?, proxyTraffic: Long, directTraffic: Long) {
         if (mBuilder != null) {
-            if (proxyTraffic < NOTIFICATION_ICON_THRESHOLD && directTraffic < NOTIFICATION_ICON_THRESHOLD) {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_flow)
-            } else if (proxyTraffic > directTraffic) {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_proxy)
-            } else {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_direct)
-            }
             mBuilder?.setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
             mBuilder?.setContentText(contentText)
             getNotificationManager()?.notify(NOTIFICATION_ID, mBuilder?.build())
@@ -213,7 +206,7 @@ object NotificationManager {
      */
     private fun appendSpeedString(text: StringBuilder, name: String?, up: Double, down: Double) {
         var n = name ?: "no tag"
-        n = n.take(min(n.length, 6))
+        n = n.take(min(n.length, 8))
         text.append(n)
         for (i in n.length..6 step 2) {
             text.append("\t")
@@ -269,13 +262,13 @@ object NotificationManager {
         if (!zeroSpeed || !lastZeroSpeed) {
             val text = StringBuilder()
             appendSpeedString(
-                text, AppConfig.TAG_PROXY,
+                text, getService()?.getString(R.string.notification_label_vpn) ?: AppConfig.TAG_PROXY,
                 proxyUplink / sinceLastQueryInSeconds,
                 proxyDownlink / sinceLastQueryInSeconds
             )
 
             appendSpeedString(
-                text, AppConfig.TAG_DIRECT,
+                text, getService()?.getString(R.string.notification_label_direct) ?: AppConfig.TAG_DIRECT,
                 directUplink / sinceLastQueryInSeconds,
                 directDownlink / sinceLastQueryInSeconds
             )
