@@ -122,7 +122,7 @@ class SettingsActivity : BaseComponentActivity() {
             MainDestination.CheckUpdate -> CheckUpdateActivity::class.java
             MainDestination.BackupRestore -> BackupActivity::class.java
             MainDestination.About -> AboutActivity::class.java
-            MainDestination.Settings, MainDestination.Promotion -> return
+            MainDestination.Settings -> return
         }
         startActivity(Intent(this, target))
     }

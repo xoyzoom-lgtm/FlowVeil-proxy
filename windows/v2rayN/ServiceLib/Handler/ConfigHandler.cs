@@ -108,6 +108,10 @@ public static class ConfigHandler
         {
             config.UiItem.CurrentTheme = HappThemes.DefaultName;
         }
+        else
+        {
+            config.UiItem.CurrentTheme = HappThemes.Normalize(config.UiItem.CurrentTheme);
+        }
 
         // FlowVeil is Russian-first: default to Russian once, the user can switch later.
         var langMarker = Utils.GetConfigPath("hupp_lang_v1");

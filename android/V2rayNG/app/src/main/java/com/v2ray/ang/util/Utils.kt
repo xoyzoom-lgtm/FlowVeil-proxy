@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.LOOPBACK
-import com.v2ray.ang.BuildConfig
 import java.io.IOException
 import java.net.ServerSocket
 import java.net.URI
@@ -458,7 +457,7 @@ object Utils {
      *
      * @return True if the package is Xray, false otherwise.
      */
-    fun isXray(): Boolean = BuildConfig.APPLICATION_ID.startsWith("com.v2ray.ang")
+    fun isXray(): Boolean = true // FlowVeil always ships the Xray core
 
     /**
      * Check if an IPv4 address is within an IPv4 CIDR range

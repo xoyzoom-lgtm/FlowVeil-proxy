@@ -52,7 +52,10 @@ public sealed record HappTheme(
 
 public static class HappThemes
 {
-    public const string Prefix = "Happ · ";
+    public const string Prefix = "";
+
+    // Theme names saved by older builds carried this prefix.
+    private const string LegacyPrefix = "Happ · ";
 
     public static readonly IReadOnlyList<HappTheme> All =
     [
@@ -77,6 +80,9 @@ public static class HappThemes
 
     public const string DefaultName = Prefix + "iOS 27 Glass";
 
+    public static string Normalize(string name) =>
+        name.StartsWith(LegacyPrefix, StringComparison.Ordinal) ? name[LegacyPrefix.Length..] : name;
+
     public static HappTheme? Find(string? name) =>
-        name.IsNullOrEmpty() ? null : All.FirstOrDefault(t => t.Name == name);
+        name.IsNullOrEmpty() ? null : All.FirstOrDefault(t => t.Name == Normalize(name!));
 }

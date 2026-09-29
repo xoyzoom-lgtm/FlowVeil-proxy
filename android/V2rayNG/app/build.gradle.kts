@@ -10,7 +10,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.v2ray.ang"
+        applicationId = "com.flowveil.app"
         minSdk = 24
         targetSdk = 37
         // CI passes -PhuppBuild=<run number> so every build has a higher version and the in-app updater can compare.
