@@ -15,6 +15,8 @@ if (!AppManager.Instance.InitApp() || !AppManager.Instance.InitComponents())
     return 1;
 }
 var config = AppManager.Instance.Config;
+// Same startup step as MainWindowViewModel.Init: HTTPS downloads need the certificate policy.
+await CertPemManager.Instance.Init(config);
 
 // 1. DNS-over-HTTPS resolver used when the ISP hides the provider's domain.
 try
