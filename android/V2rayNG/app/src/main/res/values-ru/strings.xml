@@ -708,4 +708,6 @@
     <string name="title_direct_apps">Приложения напрямую</string>
     <string name="summary_direct_apps">Выберите приложения, которые работают без сервера (банки, такси, доставка…)</string>
     <string name="toast_direct_sites_saved">Сайтов напрямую: %1$d</string>
+    <string name="summary_direct_sites">Сайтов: %1$d · нажмите, чтобы изменить</string>
+    <string name="hint_direct_sites">По одному сайту в строке, например ozon.ru</string>
 </resources>

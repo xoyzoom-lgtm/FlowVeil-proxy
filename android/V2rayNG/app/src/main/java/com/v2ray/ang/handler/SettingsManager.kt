@@ -44,6 +44,8 @@ object SettingsManager {
         applyFlowVeilDefaultsV3Once()
         //ensureDefaultSubscription()
         initRoutingRulesets(context)
+        // After the presets exist, otherwise this rule alone would stop them from being installed.
+        runCatching { DirectSites.ensureDefaults() }
         migrateServerListToSubscriptions()
         migrateHysteria2PinSHA256()
     }

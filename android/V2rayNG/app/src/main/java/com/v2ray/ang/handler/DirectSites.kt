@@ -11,6 +11,37 @@ object DirectSites {
     private const val RULE_ID = "flowveil-direct-sites"
     private const val KEY = "pref_direct_sites"
 
+    private const val DEFAULTS_KEY = "pref_direct_sites_defaults_v1"
+
+    /** Popular Russian services that often refuse foreign IPs; subdomains are included. */
+    val DEFAULTS = listOf(
+        // marketplaces and shops
+        "ozon.ru", "ozone.ru", "wildberries.ru", "wb.ru", "wbbasket.ru", "megamarket.ru", "avito.ru",
+        "lamoda.ru", "dns-shop.ru", "mvideo.ru", "eldorado.ru", "citilink.ru", "detmir.ru", "lenta.com",
+        // banks and payments
+        "sberbank.ru", "sber.ru", "sberbank.com", "tbank.ru", "tinkoff.ru", "tinkoff.com", "alfabank.ru",
+        "vtb.ru", "gazprombank.ru", "raiffeisen.ru", "pochtabank.ru", "sovcombank.ru", "open.ru",
+        "rshb.ru", "mkb.ru", "psbank.ru", "nspk.ru", "sbp.nspk.ru", "mir-pay.ru", "yoomoney.ru",
+        // Yandex (Go, Taxi, Maps, Market, Lavka, Music, Kinopoisk) and VK
+        "yandex.ru", "yandex.com", "yandex.net", "ya.ru", "yastatic.net", "yandex-team.ru", "kinopoisk.ru",
+        "vk.com", "vk.ru", "userapi.com", "vk-cdn.net", "mail.ru", "ok.ru", "dzen.ru", "rutube.ru",
+        // maps, taxi, delivery
+        "2gis.ru", "2gis.com", "citymobil.ru", "samokat.ru", "vkusvill.ru", "kuper.ru", "eda.ru",
+        "delivery-club.ru", "magnit.ru", "5ka.ru", "perekrestok.ru", "x5.ru",
+        // government, transport, operators, post
+        "gosuslugi.ru", "nalog.gov.ru", "mos.ru", "pfr.gov.ru", "sfr.gov.ru", "rzd.ru", "aeroflot.ru",
+        "pobeda.aero", "tutu.ru", "pochta.ru", "cdek.ru", "mts.ru", "beeline.ru", "megafon.ru", "t2.ru",
+        "tele2.ru", "rostelecom.ru", "hh.ru",
+    )
+
+    /** First run: fill the list with [DEFAULTS] once; later the user's edits are kept. */
+    fun ensureDefaults() {
+        if (MmkvManager.decodeSettingsBool(DEFAULTS_KEY, false)) return
+        val current = text().lines().filter { it.isNotBlank() }
+        save((current + DEFAULTS).distinct().joinToString("\n"))
+        MmkvManager.encodeSettings(DEFAULTS_KEY, true)
+    }
+
     /** The list as the user typed it (one entry per line). */
     fun text(): String = MmkvManager.decodeSettingsString(KEY).orEmpty()
 

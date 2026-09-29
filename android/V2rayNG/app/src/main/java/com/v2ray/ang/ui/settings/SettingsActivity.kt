@@ -72,6 +72,8 @@ import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.handler.DirectSites
+import com.v2ray.ang.ui.compose.InputDialog
+import com.v2ray.ang.ui.compose.InputField
 import com.v2ray.ang.enums.RoutingType
 import androidx.compose.ui.platform.LocalContext
 import com.v2ray.ang.util.LogUtil
@@ -214,7 +216,8 @@ fun SettingsScreen(
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
     var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
     var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
-    var directSites by remember { mutableStateOf(DirectSites.text().lines().filter { it.isNotBlank() }.joinToString(", ")) }
+    var directSitesCount by remember { mutableStateOf(DirectSites.count()) }
+    var showDirectSites by remember { mutableStateOf(false) }
     var showBestButton by rememberMmkvBool(AppConfig.PREF_SHOW_BEST_BUTTON, true)
     var devMode by rememberMmkvBool(AppConfig.PREF_DEV_MODE, false)
     var subUpdateInterval by rememberMmkvString(AppConfig.PREF_SUB_UPDATE_INTERVAL, AppConfig.SUB_DEFAULT_UPDATE_MINUTES.toString())
@@ -327,16 +330,28 @@ fun SettingsScreen(
                         SettingsChangeManager.makeRestartService()
                     }
                 )
-                SettingsEditItem(
+                SettingsMenuItem(
                     title = stringResource(R.string.title_direct_sites),
-                    value = directSites,
-                    onValueChanged = {
-                        val count = DirectSites.save(it)
-                        directSites = DirectSites.text().lines().filter { l -> l.isNotBlank() }.joinToString(", ")
-                        SettingsChangeManager.makeRestartService()
-                        settingsContext.toastSuccess(settingsContext.getString(R.string.toast_direct_sites_saved, count))
-                    }
+                    subtitle = stringResource(R.string.summary_direct_sites, directSitesCount),
+                    onClick = { showDirectSites = true }
                 )
+                if (showDirectSites) {
+                    var text by remember { mutableStateOf(DirectSites.text()) }
+                    InputDialog(
+                        title = stringResource(R.string.title_direct_sites),
+                        fields = listOf(InputField(label = stringResource(R.string.hint_direct_sites), value = text, singleLine = false)),
+                        onFieldChange = { _, v -> text = v },
+                        confirmText = stringResource(R.string.action_ok),
+                        dismissText = stringResource(R.string.action_cancel),
+                        onConfirm = {
+                            showDirectSites = false
+                            directSitesCount = DirectSites.save(text)
+                            SettingsChangeManager.makeRestartService()
+                            settingsContext.toastSuccess(settingsContext.getString(R.string.toast_direct_sites_saved, directSitesCount))
+                        },
+                        onDismiss = { showDirectSites = false }
+                    )
+                }
                 SettingsMenuItem(
                     title = stringResource(R.string.title_direct_apps),
                     subtitle = stringResource(R.string.summary_direct_apps),
