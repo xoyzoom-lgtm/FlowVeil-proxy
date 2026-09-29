@@ -9,6 +9,7 @@ import com.v2ray.ang.R
 import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.ProxySpeedTest
+import com.v2ray.ang.handler.ServerCountry
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.LocateTarget
@@ -968,8 +969,9 @@ class MainViewModel(
         connectBestAfterTest = true
     }
 
+    // Servers in Russia answer fastest but do not help, so "Best" never picks them.
     private fun pickBestServer(): String? =
-        currentServers().map { it.guid }
+        currentServers().filterNot { ServerCountry.isRussian(it.profile.remarks) }.map { it.guid }
             .mapNotNull { guid -> dataSource.decodeAffiliationInfo(guid)?.testDelayMillis?.takeIf { it > 0 }?.let { guid to it } }
             .minByOrNull { it.second }
             ?.first

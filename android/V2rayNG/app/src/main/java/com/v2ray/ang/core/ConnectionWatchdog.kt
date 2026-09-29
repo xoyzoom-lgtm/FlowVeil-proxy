@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.PowerManager
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.ServerCountry
 import com.v2ray.ang.handler.SpeedtestManager
 import com.v2ray.ang.helper.MessageHelper
 import com.v2ray.ang.receiver.WidgetProvider
@@ -87,6 +88,8 @@ object ConnectionWatchdog {
         // Try the servers that tested fastest before, then the untested ones, in list order.
         val candidates = MmkvManager.decodeServerList(subId)
             .filter { it != current }
+            // Never fall back to a server in Russia: it would "work" but unblock nothing.
+            .filterNot { ServerCountry.isRussian(MmkvManager.decodeServerConfig(it)?.remarks) }
             .map { it to (MmkvManager.decodeServerAffiliationInfo(it)?.testDelayMillis ?: 0L) }
             .sortedWith(compareBy({ if (it.second > 0) 0 else 1 }, { if (it.second > 0) it.second else 0L }))
             .map { it.first }

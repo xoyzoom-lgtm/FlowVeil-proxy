@@ -276,7 +276,8 @@ public sealed class HuppHomeViewModel : HuppObservable
             {
                 Profiles.SpeedtestFinished -= OnFinished;
             }
-            var best = Profiles.ProfileItems.Where(t => t.Delay > 0).OrderBy(t => t.Delay).FirstOrDefault();
+            // Servers in Russia answer fastest but unblock nothing, so they are never "the best".
+            var best = Profiles.ProfileItems.Where(t => t.Delay > 0 && !IsRussianServer(t.Remarks)).OrderBy(t => t.Delay).FirstOrDefault();
             if (best == null)
             {
                 PingText = "Рабочий сервер не найден";
@@ -298,6 +299,23 @@ public sealed class HuppHomeViewModel : HuppObservable
         {
             IsBusy = false;
         }
+    }
+
+    private static readonly string[] RussianMarkers =
+    [
+        "🇷🇺", "россия", "russia", "москва", "moscow", "санкт-петербург", "петербург", "спб",
+        "st. petersburg", "saint petersburg", "новосибирск", "екатеринбург",
+    ];
+
+    private static bool IsRussianServer(string? remarks)
+    {
+        if (remarks.IsNullOrEmpty())
+        {
+            return false;
+        }
+        var name = remarks!.ToLowerInvariant();
+        return RussianMarkers.Any(m => name.Contains(m, StringComparison.Ordinal))
+            || System.Text.RegularExpressions.Regex.IsMatch(name, "(^|[^a-z])ru([^a-z]|$)");
     }
 
     public async Task PingAllAsync()
