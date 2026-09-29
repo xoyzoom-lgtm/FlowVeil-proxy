@@ -131,6 +131,18 @@ You are a blunt senior developer and a pragmatic technical partner. Goal: reliab
   - `v2rayN/Converters/HuppConverters.cs` — flags (local `flags/` first), ping text/colours.
   - `ServiceLib/Common/HappThemes.cs` — 17 colour themes (legacy "Happ · " prefix migrated).
 - UI text on Windows is hard-coded Russian (not localized).
+- Design system (redesign branch `ui-redesign`, merged to main when done): `v2rayN/Themes/FlowVeilStyles.xaml`
+  holds tokens `FV.Brush.*` (Window, Surface, Surface2, Border, Text, Text2, Text3, Accent, OnAccent,
+  AccentSoft, Overlay; fixed Ok/Warn/Bad) and styles `FV.Card`, `FV.Button.Primary/Secondary/Ghost/Icon`,
+  `FV.Chip*`, `FV.ProgressBar`, `FV.ScrollBar`, `FV.Toggle`, `FV.Segmented/Segment`, `FV.ContextMenu`,
+  `FV.Text.*`. `Common/FlowVeilPalette.cs` recomputes the tokens from the active theme in
+  `ThemeSettingViewModel.ModifyTheme` (never hard-code colours; light themes exist). `FvMotion`
+  gives animation durations (0 when Windows animations are off). Always use DynamicResource for FV brushes.
+- WPF builds on Linux: `dotnet build windows/v2rayN/v2rayN/v2rayN.csproj -p:EnableWindowsTargeting=true`
+  (apt `dotnet-sdk-10.0`); this compiles XAML too. `dotnet test --project windows/v2rayN/ServiceLib.Tests`.
+  StaticResource keys and PackIcon kinds are only checked at runtime: verify kinds against the
+  MaterialDesignThemes dll before using a new one.
+- CI builds `ui-*` branches (Windows only, no release); releases only from main.
 
 ## Website
 - `docs/index.html` (+ `logo.png`, `banner.png`) — single-file animated landing page

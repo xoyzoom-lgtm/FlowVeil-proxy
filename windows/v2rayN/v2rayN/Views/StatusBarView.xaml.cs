@@ -84,7 +84,7 @@ public partial class StatusBarView
             if (icon is { } kind)
             {
                 var packIcon = new PackIcon { Kind = kind, Width = 18, Height = 18 };
-                packIcon.SetResourceReference(ForegroundProperty, "MaterialDesign.Brush.Primary");
+                packIcon.SetResourceReference(ForegroundProperty, "FV.Brush.Accent");
                 item.Icon = packIcon;
             }
             if (onClick != null)
@@ -94,7 +94,12 @@ public partial class StatusBarView
             return item;
         }
 
-        Separator Divider() => new() { Margin = new Thickness(12, 4, 12, 4), Opacity = 0.5 };
+        Separator Divider()
+        {
+            var line = new Separator { Margin = new Thickness(12, 4, 12, 4) };
+            line.SetResourceReference(BackgroundProperty, "FV.Brush.Border");
+            return line;
+        }
 
         var connected = home?.IsConnected == true;
         var server = home?.ServerName ?? string.Empty;
@@ -106,16 +111,24 @@ public partial class StatusBarView
             Height = 10,
             Margin = new Thickness(2, 0, 12, 0),
             VerticalAlignment = VerticalAlignment.Center,
-            Fill = new SolidColorBrush(connected ? Color.FromRgb(0x3B, 0xE0, 0xB0) : Color.FromRgb(0x8A, 0x94, 0xA6)),
         };
-        var state = new TextBlock { Text = connected ? "Подключено" : "Отключено", FontWeight = FontWeights.SemiBold, FontSize = 14 };
-        state.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.Foreground");
+        // Same states and colours as the power button on the home screen.
+        var power = home?.PowerState ?? (connected ? "On" : "Off");
+        dot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, power switch
+        {
+            "On" => "FV.Brush.Ok",
+            "Connecting" => "FV.Brush.Warn",
+            "Error" => "FV.Brush.Bad",
+            _ => "FV.Brush.Text3",
+        });
+        var state = new TextBlock { Text = home?.StatusText ?? (connected ? "Подключено" : "Отключено"), FontWeight = FontWeights.SemiBold, FontSize = 14 };
+        state.SetResourceReference(TextBlock.ForegroundProperty, "FV.Brush.Text");
         var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         texts.Children.Add(state);
         if (server.IsNotEmpty())
         {
             var serverText = new TextBlock { Text = server, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 220 };
-            serverText.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.ForegroundLight");
+            serverText.SetResourceReference(TextBlock.ForegroundProperty, "FV.Brush.Text2");
             texts.Children.Add(serverText);
         }
         var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(10, 8, 10, 8) };

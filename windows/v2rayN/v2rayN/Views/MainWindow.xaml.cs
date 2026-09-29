@@ -324,22 +324,21 @@ public partial class MainWindow
 
         StackPanel Section(string title)
         {
-            settingsList.Children.Add(new TextBlock
+            var header = new TextBlock
             {
                 Text = title.ToUpperInvariant(),
-                Margin = new Thickness(8, settingsList.Children.Count == 0 ? 0 : 20, 0, 6),
-                FontSize = 12,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)FindResource("MaterialDesign.Brush.ForegroundLight"),
-            });
+                Margin = new Thickness(8, settingsList.Children.Count == 0 ? 8 : 24, 0, 8),
+                Style = (Style)FindResource("FV.Text.Overline"),
+            };
+            settingsList.Children.Add(header);
             var rows = new StackPanel();
-            var card = new Border { CornerRadius = new CornerRadius(18), Padding = new Thickness(6), Child = rows };
-            card.SetResourceReference(Border.BackgroundProperty, "MaterialDesign.Brush.Card.Background");
+            var card = new Border { Padding = new Thickness(6), Child = rows, Style = (Style)FindResource("FV.Card") };
             settingsList.Children.Add(card);
             return rows;
         }
 
-        void Row(StackPanel section, PackIconKind icon, string title, string hint, Action action)
+        // One settings row: icon tile, title, hint (secondary colour) and a chevron or a switch.
+        Border MakeRow(PackIconKind icon, string title, string hint, FrameworkElement? trailing)
         {
             var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -347,41 +346,50 @@ public partial class MainWindow
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             var iconBox = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(10), Margin = new Thickness(0, 0, 12, 0) };
-            iconBox.SetResourceReference(Border.BackgroundProperty, "MaterialDesign.Brush.Background");
+            iconBox.SetResourceReference(Border.BackgroundProperty, "FV.Brush.AccentSoft");
             var packIcon = new PackIcon { Kind = icon, Width = 20, Height = 20, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-            packIcon.SetResourceReference(ForegroundProperty, "MaterialDesign.Brush.Primary");
+            packIcon.SetResourceReference(ForegroundProperty, "FV.Brush.Accent");
             iconBox.Child = packIcon;
             grid.Children.Add(iconBox);
 
             var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            var titleBlock = new TextBlock { Text = title, FontSize = 14, FontWeight = FontWeights.SemiBold };
-            titleBlock.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.Foreground");
-            texts.Children.Add(titleBlock);
+            texts.Children.Add(new TextBlock { Text = title, Style = (Style)FindResource("FV.Text.BodyStrong") });
             if (hint.IsNotEmpty())
             {
-                var hintBlock = new TextBlock { Text = hint, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis };
-                hintBlock.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.ForegroundLight");
-                texts.Children.Add(hintBlock);
+                texts.Children.Add(new TextBlock { Text = hint, Margin = new Thickness(0, 2, 0, 0), Style = (Style)FindResource("FV.Text.Caption") });
             }
             Grid.SetColumn(texts, 1);
             grid.Children.Add(texts);
 
-            var chevron = new PackIcon { Kind = PackIconKind.ChevronRight, VerticalAlignment = VerticalAlignment.Center };
-            chevron.SetResourceReference(ForegroundProperty, "MaterialDesign.Brush.ForegroundLight");
-            Grid.SetColumn(chevron, 2);
-            grid.Children.Add(chevron);
+            trailing ??= new PackIcon { Kind = PackIconKind.ChevronRight, Width = 20, Height = 20 };
+            trailing.VerticalAlignment = VerticalAlignment.Center;
+            trailing.Margin = new Thickness(12, 0, 0, 0);
+            if (trailing is PackIcon chevron)
+            {
+                chevron.SetResourceReference(ForegroundProperty, "FV.Brush.Text3");
+            }
+            Grid.SetColumn(trailing, 2);
+            grid.Children.Add(trailing);
 
             var row = new Border
             {
                 Child = grid,
-                Padding = new Thickness(10, 8, 10, 8),
+                Padding = new Thickness(10, 10, 12, 10),
                 CornerRadius = new CornerRadius(12),
                 Background = Brushes.Transparent,
                 Cursor = Cursors.Hand,
+                Focusable = true,
+                FocusVisualStyle = (Style)FindResource("FV.FocusVisual"),
             };
-            row.MouseEnter += (_, _) => row.SetResourceReference(Border.BackgroundProperty, "MaterialDesign.Brush.Background");
+            row.MouseEnter += (_, _) => row.SetResourceReference(Border.BackgroundProperty, "FV.Brush.Surface2");
             row.MouseLeave += (_, _) => row.Background = Brushes.Transparent;
-            row.MouseLeftButtonUp += (_, _) =>
+            return row;
+        }
+
+        void Row(StackPanel section, PackIconKind icon, string title, string hint, Action action)
+        {
+            var row = MakeRow(icon, title, hint, null);
+            void Invoke()
             {
                 try
                 {
@@ -391,8 +399,57 @@ public partial class MainWindow
                 {
                     Logging.SaveLog("SettingsPage", ex);
                 }
+            }
+            row.MouseLeftButtonUp += (_, _) => Invoke();
+            // Keyboard: Tab to the row, Enter or Space opens it.
+            row.KeyDown += (_, e) =>
+            {
+                if (e.Key is Key.Enter or Key.Space)
+                {
+                    e.Handled = true;
+                    Invoke();
+                }
             };
             section.Children.Add(row);
+        }
+
+        void Toggle(StackPanel section, PackIconKind icon, string title, string hint, bool isOn, Action<bool> onChanged)
+        {
+            var toggle = new System.Windows.Controls.Primitives.ToggleButton { IsChecked = isOn, Style = (Style)FindResource("FV.Toggle"), Focusable = false };
+            var row = MakeRow(icon, title, hint, toggle);
+            toggle.Click += (_, _) => onChanged(toggle.IsChecked == true);
+            row.MouseLeftButtonUp += (_, e) =>
+            {
+                if (e.OriginalSource is DependencyObject d && IsInside(d, toggle))
+                {
+                    return;
+                }
+                toggle.IsChecked = toggle.IsChecked != true;
+                onChanged(toggle.IsChecked == true);
+            };
+            row.KeyDown += (_, e) =>
+            {
+                if (e.Key is Key.Enter or Key.Space)
+                {
+                    e.Handled = true;
+                    toggle.IsChecked = toggle.IsChecked != true;
+                    onChanged(toggle.IsChecked == true);
+                }
+            };
+            section.Children.Add(row);
+        }
+
+        static bool IsInside(DependencyObject d, DependencyObject container)
+        {
+            while (d != null)
+            {
+                if (d == container)
+                {
+                    return true;
+                }
+                d = d is Visual ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d);
+            }
+            return false;
         }
 
         void Exec(ICommand command) => command.Execute(null);
@@ -419,13 +476,14 @@ public partial class MainWindow
 
         var devMode = IsDevMode();
         var developer = Section("Для разработчиков");
-        Row(developer, PackIconKind.CodeBraces,
-            devMode ? "Режим разработчика: включён" : "Режим разработчика: выключен",
-            devMode ? "Нажмите, чтобы скрыть технические настройки" : "Показать маршрутизацию, DNS, ядро, ручное добавление серверов",
-            () =>
+        Toggle(developer, PackIconKind.CodeBraces, "Режим разработчика",
+            "Маршрутизация, DNS, ядро, ручное добавление серверов и технические подробности",
+            devMode,
+            on =>
             {
-                SetDevMode(!devMode);
-                BuildSettingsPage(vm);
+                SetDevMode(on);
+                // Rebuild after the switch animation so it does not jump.
+                Dispatcher.BeginInvoke(() => BuildSettingsPage(vm), DispatcherPriority.Background);
             });
         if (!devMode)
         {

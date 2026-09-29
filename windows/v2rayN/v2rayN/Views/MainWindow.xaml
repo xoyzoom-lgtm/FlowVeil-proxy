@@ -13,11 +13,13 @@
     Title="FlowVeil"
     Width="1200"
     Height="800"
-    MinWidth="800"
+    MinWidth="960"
+    MinHeight="600"
     x:TypeArguments="vms:MainWindowViewModel"
     Icon="/Resources/v2rayN.ico"
     ResizeMode="CanResizeWithGrip"
     ShowInTaskbar="True"
+    Background="{DynamicResource FV.Brush.Window}"
     Style="{StaticResource WindowGlobal}"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
@@ -27,34 +29,58 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Popupbox.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+            <!--  Navigation rail item: icon + caption, accent indicator on the left when active  -->
             <Style x:Key="HuppRailButton" TargetType="RadioButton">
                 <Setter Property="Height" Value="60" />
-                <Setter Property="Margin" Value="8,4" />
+                <Setter Property="Margin" Value="10,4" />
                 <Setter Property="Cursor" Value="Hand" />
-                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
+                <Setter Property="Foreground" Value="{DynamicResource FV.Brush.Text2}" />
+                <Setter Property="FocusVisualStyle" Value="{StaticResource FV.FocusVisual}" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
                             <Grid>
                                 <Border
                                     x:Name="bg"
-                                    Background="{DynamicResource MaterialDesign.Brush.Primary}"
-                                    CornerRadius="14"
+                                    Background="{DynamicResource FV.Brush.AccentSoft}"
+                                    CornerRadius="12"
+                                    Opacity="0" />
+                                <Border
+                                    x:Name="hover"
+                                    Background="{DynamicResource FV.Brush.Overlay}"
+                                    CornerRadius="12"
+                                    Opacity="0" />
+                                <Border
+                                    x:Name="bar"
+                                    Width="3"
+                                    Height="24"
+                                    Margin="-10,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Background="{DynamicResource FV.Brush.Accent}"
+                                    CornerRadius="0,2,2,0"
                                     Opacity="0" />
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Grid>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="bg" Property="Opacity" Value="0.15" />
-                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
-                                </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                    <Setter TargetName="hover" Property="Opacity" Value="0.06" />
+                                    <Setter Property="Foreground" Value="{DynamicResource FV.Brush.Text}" />
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="bg" Property="Opacity" Value="1" />
+                                    <Setter TargetName="bar" Property="Opacity" Value="1" />
+                                    <Setter Property="Foreground" Value="{DynamicResource FV.Brush.Accent}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+            </Style>
+            <Style x:Key="RailCaption" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,4,0,0" />
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontWeight" Value="SemiBold" />
             </Style>
         </ResourceDictionary>
     </Window.Resources>
@@ -67,19 +93,25 @@
         Style="{StaticResource MaterialDesignEmbeddedDialogHost}">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="76" />
+                <ColumnDefinition Width="84" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!--  FlowVeil navigation rail  -->
-            <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
-                <DockPanel Margin="0,12">
+            <Border
+                Grid.Column="0"
+                Background="{DynamicResource FV.Brush.Surface}"
+                BorderBrush="{DynamicResource FV.Brush.Border}"
+                BorderThickness="0,0,1,0">
+                <DockPanel Margin="0,16">
                     <StackPanel DockPanel.Dock="Top">
                         <Image
                             Width="40"
                             Height="40"
-                            Margin="0,0,0,16"
-                            Source="/Resources/v2rayN.ico" />
+                            Margin="0,0,0,20"
+                            RenderOptions.BitmapScalingMode="HighQuality"
+                            Source="/Resources/logo.png"
+                            ToolTip="FlowVeil" />
                         <RadioButton
                             x:Name="navHome"
                             GroupName="nav"
@@ -91,10 +123,9 @@
                                     Width="24"
                                     Height="24"
                                     HorizontalAlignment="Center"
-                                    Kind="Home" />
+                                    Kind="HomeVariantOutline" />
                                 <TextBlock
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
+                                    Style="{StaticResource RailCaption}"
                                     Text="Главная" />
                             </StackPanel>
                         </RadioButton>
@@ -111,8 +142,7 @@
                                     HorizontalAlignment="Center"
                                     Kind="ViewList" />
                                 <TextBlock
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
+                                    Style="{StaticResource RailCaption}"
                                     Text="Детально" />
                             </StackPanel>
                         </RadioButton>
@@ -128,23 +158,23 @@
                                     Width="24"
                                     Height="24"
                                     HorizontalAlignment="Center"
-                                    Kind="Cog" />
+                                    Kind="CogOutline" />
                                 <TextBlock
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
+                                    Style="{StaticResource RailCaption}"
                                     Text="Настройки" />
                             </StackPanel>
                         </RadioButton>
                         <Button
                             x:Name="btnNewUpdate"
                             Height="48"
-                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Width="60"
+                            Style="{StaticResource FV.Button.Icon}"
                             ToolTip="{x:Static resx:ResUI.menuNewUpdate}"
                             Visibility="Hidden">
                             <materialDesign:PackIcon
                                 Width="24"
                                 Height="24"
-                                Foreground="OrangeRed"
+                                Foreground="{DynamicResource FV.Brush.Warn}"
                                 Kind="ArrowUpBoldCircle" />
                         </Button>
                     </StackPanel>
@@ -159,24 +189,20 @@
                 Grid.Column="1"
                 VerticalScrollBarVisibility="Auto"
                 Visibility="Hidden">
-                <StackPanel MaxWidth="720" Margin="24,16,24,24">
+                <StackPanel MaxWidth="760" Margin="24,20,24,24">
+                    <StackPanel.Resources>
+                        <Style BasedOn="{StaticResource FV.ScrollBar}" TargetType="ScrollBar" />
+                    </StackPanel.Resources>
                     <TextBlock
-                        Margin="4,0,0,12"
-                        FontSize="26"
-                        FontWeight="Bold"
-                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Margin="4,0,0,8"
+                        Style="{StaticResource FV.Text.H1}"
                         Text="Настройки" />
                     <StackPanel x:Name="settingsList" />
                     <TextBlock
-                        Margin="8,20,0,6"
-                        FontSize="12"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                        Margin="8,24,0,8"
+                        Style="{StaticResource FV.Text.Overline}"
                         Text="ОФОРМЛЕНИЕ" />
-                    <Border
-                        Padding="16,8"
-                        Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
-                        CornerRadius="18">
+                    <Border Padding="16,8" Style="{StaticResource FV.Card}">
                         <ContentControl x:Name="pbTheme" />
                     </Border>
                 </StackPanel>

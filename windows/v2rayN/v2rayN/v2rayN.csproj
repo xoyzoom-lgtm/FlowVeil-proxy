@@ -33,6 +33,7 @@
 		<Resource Include="Resources\NotifyIcon3.ico" />
 		<Resource Include="Resources\NotifyIcon4.ico" />
 		<Resource Include="Resources\v2rayN.ico" />
+		<Resource Include="Resources\logo.png" />
 	</ItemGroup>
 
 	<ItemGroup>
