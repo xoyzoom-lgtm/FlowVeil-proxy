@@ -21,6 +21,7 @@ import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.AppLocaleManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.SubscriptionReminders
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.helper.MessageHelper
 import com.v2ray.ang.util.LogUtil
@@ -47,6 +48,12 @@ class MainRepository(
     private val serviceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val safeIntent = intent ?: return
+            if (safeIntent.action == AppConfig.BROADCAST_ACTION_SPEED) {
+                mainServiceEventChannel.trySend(
+                    MainServiceEvent.Speed(safeIntent.getLongExtra("up", 0L), safeIntent.getLongExtra("down", 0L))
+                )
+                return
+            }
             val requestId = safeIntent.getStringExtra(MessageHelper.EXTRA_REQUEST_ID).orEmpty()
             val event = when (safeIntent.getIntExtra("key", 0)) {
                 AppConfig.MSG_STATE_RUNNING -> MainServiceEvent.StateRunning
@@ -57,6 +64,8 @@ class MainRepository(
                 )
 
                 AppConfig.MSG_STATE_STOP_SUCCESS -> MainServiceEvent.StateStopSuccess
+                AppConfig.MSG_STATE_SERVER_SWITCHED -> safeIntent.getStringExtra("content")
+                    ?.let { MainServiceEvent.ServerSwitched(it) }
                 AppConfig.MSG_MEASURE_DELAY_RESULT -> safeIntent
                     .serializable<ConnectionTestResult>("content")
                     ?.let { MainServiceEvent.MeasureDelayResult(it, requestId) }
@@ -84,7 +93,7 @@ class MainRepository(
         ContextCompat.registerReceiver(
             app,
             serviceReceiver,
-            IntentFilter(AppConfig.BROADCAST_ACTION_ACTIVITY),
+            IntentFilter(AppConfig.BROADCAST_ACTION_ACTIVITY).apply { addAction(AppConfig.BROADCAST_ACTION_SPEED) },
             Utils.receiverFlags()
         )
         MessageHelper.sendMsg2Service(app, AppConfig.MSG_REGISTER_CLIENT, "")
@@ -234,6 +243,7 @@ class MainRepository(
 
     override fun syncSubscriptions() {
         SubscriptionUpdater.sync(app)
+        SubscriptionReminders.check(app)
     }
 
     override fun initAssets() {

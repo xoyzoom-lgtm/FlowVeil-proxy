@@ -30,7 +30,11 @@ data class MainUiState(
     /** guid -> server answered the availability check (step 1 of a server check). */
     val availability: Map<String, Boolean> = emptyMap(),
     val availabilityOnly: Boolean = false,
-    val shareQRCodeBitmap: android.graphics.Bitmap? = null
+    val shareQRCodeBitmap: android.graphics.Bitmap? = null,
+    /** Server picked by "connect to the best": the activity selects it and connects, then clears it. */
+    val connectBestGuid: String? = null,
+    /** Throughput while connected, bytes per second (null until the first sample). */
+    val speed: Pair<Long, Long>? = null,
 )
 
 /**
@@ -45,6 +49,8 @@ sealed interface MainAction {
     data object TestRealAllServers : MainAction
     /** Two steps: first which servers are alive, then their real ping. */
     data object CheckServers : MainAction
+    data object ConnectBest : MainAction
+    data object ConnectBestHandled : MainAction
     data object CancelTesting : MainAction
     data object RemoveAllServers : MainAction
     data object RemoveDuplicateServers : MainAction

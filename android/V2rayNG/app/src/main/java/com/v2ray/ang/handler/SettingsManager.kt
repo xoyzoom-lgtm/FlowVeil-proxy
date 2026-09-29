@@ -41,6 +41,7 @@ object SettingsManager {
         ensureDefaultSettings()
         applyRecommendedDefaultsOnce()
         applyHuppDefaultsV2Once()
+        applyFlowVeilDefaultsV3Once()
         //ensureDefaultSubscription()
         initRoutingRulesets(context)
         migrateServerListToSubscriptions()
@@ -502,6 +503,20 @@ object SettingsManager {
         MmkvManager.encodeSettings(AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION, false)
         MmkvManager.encodeSettings(AppConfig.PREF_AUTO_SORT_AFTER_TEST, false)
         MmkvManager.encodeSettings(AppConfig.PREF_HUPP_DEFAULTS_V2_APPLIED, true)
+    }
+
+    /** Subscriptions that were never set up to refresh now do so every few hours. */
+    private fun applyFlowVeilDefaultsV3Once() {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_FLOWVEIL_DEFAULTS_V3_APPLIED, false)) return
+        MmkvManager.decodeSubscriptions().forEach { sub ->
+            val item = sub.subscription
+            if (item.url.isNotBlank() && !item.autoUpdate) {
+                item.autoUpdate = true
+                item.updateInterval = AppConfig.SUB_DEFAULT_UPDATE_MINUTES
+                MmkvManager.encodeSubscription(sub.guid, item)
+            }
+        }
+        MmkvManager.encodeSettings(AppConfig.PREF_FLOWVEIL_DEFAULTS_V3_APPLIED, true)
     }
 
     private fun ensureDefaultValue(key: String, default: String) {

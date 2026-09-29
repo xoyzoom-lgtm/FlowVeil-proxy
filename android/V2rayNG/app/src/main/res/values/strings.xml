@@ -638,4 +638,23 @@
     <string name="about_author">Author</string>
     <string name="about_based_on">Based on v2rayNG (GPL-3.0)</string>
     <string name="toast_sub_failed_reason">Could not load servers: %1$s</string>
+    <string name="connect_best">Best server</string>
+    <string name="connect_best_testing">Checking servers to find the fastest…</string>
+    <string name="connect_best_no_servers">No servers in this subscription</string>
+    <string name="connect_best_none_working">No working server found</string>
+    <string name="connect_best_selected">Fastest: %1$s</string>
+    <string name="failover_switched">Server stopped responding, switched to %1$s</string>
+    <string name="settings_section_connection">Connection</string>
+    <string name="title_pref_ru_direct">Russian sites directly</string>
+    <string name="summary_pref_ru_direct">Russian sites and banks bypass the VPN, everything else goes through it</string>
+    <string name="title_pref_auto_failover">Switch server automatically</string>
+    <string name="summary_pref_auto_failover">If the server stops responding, move to the next working one without disconnecting</string>
+    <string name="title_pref_sub_reminders">Subscription reminders</string>
+    <string name="summary_pref_sub_reminders">Notify 3 days and 1 day before the subscription ends and when traffic runs low</string>
+    <string name="notification_channel_reminders">Subscription reminders</string>
+    <string name="reminder_expired">Your subscription has ended. Renew it with your provider.</string>
+    <string name="reminder_expires_tomorrow">Your subscription ends tomorrow.</string>
+    <string name="reminder_expires_days">Your subscription ends in %1$d days.</string>
+    <string name="reminder_traffic_over">Traffic of your subscription is used up.</string>
+    <string name="reminder_traffic_left">Only %1$s of traffic left.</string>
 </resources>

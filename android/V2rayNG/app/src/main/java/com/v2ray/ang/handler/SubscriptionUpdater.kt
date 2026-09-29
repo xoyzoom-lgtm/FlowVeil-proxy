@@ -177,6 +177,7 @@ object SubscriptionUpdater {
             }
 
             updateLastUpdatedAndReschedule(applicationContext, subId)
+            SubscriptionReminders.check(applicationContext)
 
             MessageHelper.sendMsg2SubscriptionService(
                 applicationContext,

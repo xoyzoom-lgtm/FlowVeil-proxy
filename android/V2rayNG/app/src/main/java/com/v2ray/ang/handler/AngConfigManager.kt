@@ -201,6 +201,7 @@ object AngConfigManager {
                 MmkvManager.decodeSubscriptions()
                     .filter { it.guid !in subsBefore }
                     .forEach { updateConfigViaSub(it) }
+                SubscriptionUpdater.sync()
             }
 
             count to countSub
@@ -664,6 +665,8 @@ object AngConfigManager {
         val subItem = SubscriptionItem()
         subItem.remarks = uri.fragment ?: uri.host ?: "import sub"
         subItem.url = url
+        subItem.autoUpdate = true
+        subItem.updateInterval = AppConfig.SUB_DEFAULT_UPDATE_MINUTES
         MmkvManager.encodeSubscription("", subItem)
         return 1
     }

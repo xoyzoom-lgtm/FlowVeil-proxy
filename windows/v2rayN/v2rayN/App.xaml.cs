@@ -26,6 +26,12 @@ public partial class App
         var exePathKey = Utils.GetMd5(Utils.GetExePath());
 
         var rebootas = e.Args.Any(t => t == Global.RebootAs);
+        var link = DeepLink.Parse(e.Args);
+        if (link != null)
+        {
+            // Picked up by the window of this or the already running copy.
+            DeepLink.SavePending(link);
+        }
         ProgramStarted = new EventWaitHandle(false, EventResetMode.AutoReset, exePathKey, out var bCreatedNew);
         if (!rebootas && !bCreatedNew)
         {

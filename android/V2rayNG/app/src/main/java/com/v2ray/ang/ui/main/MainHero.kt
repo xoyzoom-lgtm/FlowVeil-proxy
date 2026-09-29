@@ -1,5 +1,6 @@
 package com.v2ray.ang.ui.main
 
+import com.v2ray.ang.extension.toSpeedString
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -418,6 +419,9 @@ internal fun ConnectionHero(
     onTest: () -> Unit,
     modifier: Modifier = Modifier,
     buttonSize: Dp = 176.dp,
+    speed: Pair<Long, Long>? = null,
+    isTesting: Boolean = false,
+    onBest: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -442,20 +446,50 @@ internal fun ConnectionHero(
             )
             Spacer(Modifier.height(4.dp))
         }
-        Text(
-            text = statusText ?: stringResource(R.string.main_check_connection),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .clip(RoundedCornerShape(50))
-                .background(serverCardColor(selected = false))
-                .clickable(onClick = onTest)
-                .padding(horizontal = 16.dp, vertical = 7.dp)
-        )
+        if (isRunning && speed != null) {
+            Text(
+                text = "↓ ${speed.second.toSpeedString()}   ↑ ${speed.first.toSpeedString()}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+            Spacer(Modifier.height(6.dp))
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Text(
+                text = statusText ?: stringResource(R.string.main_check_connection),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .clip(RoundedCornerShape(50))
+                    .background(serverCardColor(selected = false))
+                    .clickable(onClick = onTest)
+                    .padding(horizontal = 16.dp, vertical = 7.dp)
+            )
+            if (onBest != null) {
+                val accent = mainAccentColor()
+                Text(
+                    text = "⚡ " + stringResource(R.string.connect_best),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = accent,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(accent.copy(alpha = 0.14f))
+                        .clickable(enabled = !isTesting, onClick = onBest)
+                        .padding(horizontal = 14.dp, vertical = 7.dp)
+                )
+            }
+        }
     }
 }
 

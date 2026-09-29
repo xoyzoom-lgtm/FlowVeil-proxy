@@ -68,6 +68,9 @@ import com.v2ray.ang.ui.compose.SettingsMenuItem
 import com.v2ray.ang.ui.compose.SettingsSwitchItem
 import com.v2ray.ang.ui.compose.ThemeManager
 import com.v2ray.ang.ui.compose.verticalScrollbar
+import com.v2ray.ang.handler.SettingsChangeManager
+import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.enums.RoutingType
 import androidx.compose.ui.platform.LocalContext
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
@@ -203,6 +206,10 @@ fun SettingsScreen(
 
     var speedEnabled by rememberMmkvBool(AppConfig.PREF_SPEED_ENABLED, false)
     var sendHwid by rememberMmkvBool(AppConfig.PREF_SEND_HWID, true)
+    var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
+    var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
+    var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
+    val settingsContext = LocalContext.current
     val deviceHwid = remember { DeviceIdentity.hwid() }
     var confirmRemove by rememberMmkvBool(AppConfig.PREF_CONFIRM_REMOVE, false)
     var language by remember {
@@ -291,6 +298,36 @@ fun SettingsScreen(
                         onClick = { onOpenSection(section) }
                     )
                 }
+            }
+
+            PreferenceGroupHeader(title = stringResource(R.string.settings_section_connection))
+            SettingsGroupCard {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_ru_direct),
+                    summary = stringResource(R.string.summary_pref_ru_direct),
+                    checked = ruDirect,
+                    onCheckedChange = {
+                        ruDirect = it
+                        // Russian sites and banks go direct, everything else through the VPN.
+                        SettingsManager.resetRoutingRulesetsFromPresets(
+                            settingsContext,
+                            if (it) RoutingType.WHITE_RUSSIA else RoutingType.WHITE
+                        )
+                        SettingsChangeManager.makeRestartService()
+                    }
+                )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_auto_failover),
+                    summary = stringResource(R.string.summary_pref_auto_failover),
+                    checked = autoFailover,
+                    onCheckedChange = { autoFailover = it }
+                )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_sub_reminders),
+                    summary = stringResource(R.string.summary_pref_sub_reminders),
+                    checked = subReminders,
+                    onCheckedChange = { subReminders = it }
+                )
             }
 
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_main))

@@ -9,7 +9,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.v2ray.ang.AngApplication
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -51,10 +53,17 @@ import com.v2ray.ang.ui.userasset.UserAssetActivity
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : HelperBaseComponentActivity() {
+    companion object {
+        /** Text to import on open: an invite link or shared subscription/config text. */
+        const val EXTRA_IMPORT_TEXT = "com.flowveil.extra.IMPORT_TEXT"
+    }
+
 
     private val mainViewModel: MainViewModel by viewModels {
         MainViewModel.Factory(application, MainRepository(application as AngApplication))
@@ -96,6 +105,14 @@ class MainActivity : HelperBaseComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainViewModel.onAction(MainAction.Initialize)
+        handleImportIntent(intent)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.uiState.map { it.connectBestGuid }.distinctUntilChanged().collect { guid ->
+                    if (guid != null) connectToBest(guid)
+                }
+            }
+        }
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {}
     }
@@ -155,6 +172,31 @@ class MainActivity : HelperBaseComponentActivity() {
             MainDestination.About -> Intent(this, AboutActivity::class.java)
         }
         settingsActivityLauncher.launch(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleImportIntent(intent)
+    }
+
+    /** Invite links and shared text (from [com.v2ray.ang.ui.UrlSchemeActivity]) import like a paste. */
+    private fun handleImportIntent(intent: Intent?) {
+        val text = intent?.getStringExtra(EXTRA_IMPORT_TEXT)?.takeIf { it.isNotBlank() } ?: return
+        intent.removeExtra(EXTRA_IMPORT_TEXT)
+        mainViewModel.onAction(MainAction.ImportBatchConfig(text))
+    }
+
+    /** "Connect to the best": select the fastest server and connect (or switch to it). */
+    private fun connectToBest(guid: String) {
+        mainViewModel.onAction(MainAction.ConnectBestHandled)
+        val running = mainViewModel.uiState.value.isRunning
+        if (guid != mainViewModel.uiState.value.selectedGuid) {
+            mainViewModel.updateSelectedGuid(guid)
+            WidgetProvider.refresh(this)
+            if (running) LauncherManager.restartService(this)
+        }
+        if (!running) requestServiceStart()
+        MmkvManager.decodeServerConfig(guid)?.remarks?.let { toastSuccess(getString(R.string.connect_best_selected, it)) }
     }
 
     private fun handleFabAction() {

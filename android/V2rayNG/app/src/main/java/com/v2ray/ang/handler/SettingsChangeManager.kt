@@ -24,6 +24,8 @@ object SettingsChangeManager {
         AppConfig.PREF_HAPP_THEME_ID,
         AppConfig.PREF_HAPP_THEME_CUSTOM_JSON,
         AppConfig.PREF_SEND_HWID,
+        AppConfig.PREF_AUTO_FAILOVER,
+        AppConfig.PREF_SUB_REMINDERS,
     )
 
     /**

@@ -171,6 +171,20 @@ class MainViewModel(
                 }
             }
 
+            is MainServiceEvent.ServerSwitched -> {
+                _uiState.update { it.copy(selectedGuid = event.guid) }
+                val name = dataSource.decodeServerConfig(event.guid)?.remarks.orEmpty()
+                toast(dataSource.getString(R.string.failover_switched, name))
+                viewModelScope.launch(ioDispatcher) {
+                    cacheMutex.withLock { groupDataCache.clear() }
+                    reloadAllGroups(_uiState.value.groups.map { it.id })
+                }
+            }
+
+            is MainServiceEvent.Speed -> {
+                if (uiState.value.isRunning) _uiState.update { it.copy(speed = event.up to event.down) }
+            }
+
             is MainServiceEvent.MeasureDelayCancelled -> {
                 if (testRequests.completeCurrent(event.requestId)) resetTestStatus()
             }
@@ -279,6 +293,8 @@ class MainViewModel(
             MainAction.TestAllServers -> testAllRealPing(true)
             MainAction.TestRealAllServers -> testAllRealPing()
             MainAction.CheckServers -> checkServers()
+            MainAction.ConnectBest -> connectBest()
+            MainAction.ConnectBestHandled -> _uiState.update { it.copy(connectBestGuid = null) }
             MainAction.CancelTesting -> cancelAllPing()
             MainAction.RemoveAllServers -> removeAllServerAsync()
             MainAction.RemoveDuplicateServers -> removeDuplicateServerAsync()
@@ -880,6 +896,7 @@ class MainViewModel(
     // ---------- Testing ----------
     fun cancelAllPing() {
         pingAfterAvailability = false
+        connectBestAfterTest = false
         _uiState.update { if (it.availabilityOnly) it.copy(availabilityOnly = false) else it }
         bulkTestJob?.cancel()
         bulkTestJob = null
@@ -901,6 +918,24 @@ class MainViewModel(
     }
 
     private var pingAfterAvailability = false
+    private var connectBestAfterTest = false
+
+    /** Tests every server of the open subscription, then selects the fastest one and connects. */
+    private fun connectBest() {
+        if (currentServers().isEmpty()) {
+            toastError(R.string.connect_best_no_servers)
+            return
+        }
+        toast(R.string.connect_best_testing)
+        testAllRealPing()
+        connectBestAfterTest = true
+    }
+
+    private fun pickBestServer(): String? =
+        currentServers().map { it.guid }
+            .mapNotNull { guid -> dataSource.decodeAffiliationInfo(guid)?.testDelayMillis?.takeIf { it > 0 }?.let { guid to it } }
+            .minByOrNull { it.second }
+            ?.first
 
     private fun checkServers() {
         // One real connection test through each server (TCP ping cannot check JSON/Hysteria
@@ -980,6 +1015,15 @@ class MainViewModel(
     private fun onTestsFinished(requestId: String) {
         if (testRequests.completeBulk(requestId) == null) return
         resetTestStatus()
+        if (connectBestAfterTest) {
+            connectBestAfterTest = false
+            val best = pickBestServer()
+            if (best == null) {
+                toastError(R.string.connect_best_none_working)
+            } else {
+                _uiState.update { it.copy(connectBestGuid = best) }
+            }
+        }
         if (pingAfterAvailability) {
             // Real test finished: every server already shows works / not working, now reveal the ping.
             pingAfterAvailability = false
@@ -1027,6 +1071,7 @@ class MainViewModel(
             state.copy(
                 isRunning = running,
                 connectedSince = connectedSince,
+                speed = if (running) state.speed else null,
                 isTesting = testRequests.isTesting,
                 status = if (!clearTestingText && state.isRunning == running) state.status
                 else if (running) MainStatus.Connected else MainStatus.Disconnected

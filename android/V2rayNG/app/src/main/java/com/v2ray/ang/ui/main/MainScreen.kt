@@ -180,7 +180,10 @@ fun MainScreen(
             selectedRow = selectedRow,
             onToggle = { onAction(MainAction.ToggleService) },
             onTest = { onAction(MainAction.TestCurrentServer) },
-            buttonSize = buttonSize
+            buttonSize = buttonSize,
+            speed = uiState.speed,
+            isTesting = uiState.isTesting,
+            onBest = if (rows.size > 1) ({ onAction(MainAction.ConnectBest) }) else null,
         )
     }
     val emptyContent: @Composable () -> Unit = {

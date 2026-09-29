@@ -46,6 +46,13 @@ Type: files; Name: "{userstartup}\Hupp.lnk"
 Type: files; Name: "{group}\Hupp.lnk"
 Type: files; Name: "{group}\Удалить Hupp.lnk"
 
+[Registry]
+; flowveil:// invite links open FlowVeil and add the subscription.
+Root: HKCU; Subkey: "Software\Classes\flowveil"; ValueType: string; ValueName: ""; ValueData: "URL:FlowVeil"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\flowveil"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\flowveil\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\FlowVeil.exe,0"
+Root: HKCU; Subkey: "Software\Classes\flowveil\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FlowVeil.exe"" ""%1"""
+
 [Icons]
 Name: "{group}\FlowVeil"; Filename: "{app}\FlowVeil.exe"
 Name: "{group}\Удалить FlowVeil"; Filename: "{uninstallexe}"

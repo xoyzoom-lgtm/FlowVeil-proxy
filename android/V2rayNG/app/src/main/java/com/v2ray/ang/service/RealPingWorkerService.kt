@@ -1,9 +1,6 @@
 package com.v2ray.ang.service
 
 import android.content.Context
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.v2ray.ang.core.CoreConfigManager
 import com.v2ray.ang.core.CoreNativeManager
 import com.v2ray.ang.dto.RealPingEvent
@@ -115,50 +112,8 @@ class RealPingWorkerService(
         }
     }
 
-    private suspend fun startRealPing(guid: String): Long {
-        val retFailure = -1L
-
-        val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
-        // No quick TCP pre-check here: on mobile networks a 1 s connect often times out for
-        // servers that work fine, and the real test below is the one that matters.
-        val configResult = CoreConfigManager.getV2rayConfig4Speedtest(context, guid)
-        if (!configResult.status) {
-            return retFailure
-        }
-        // A full custom JSON profile (DNS, routing, balancers...) is slow to start and unsafe to run
-        // in parallel. Its outbounds alone are enough to test the server, and then it runs in
-        // parallel like any other server.
-        val slim = if (config.configType == EConfigType.CUSTOM) slimCustomConfig(configResult.content) else null
-        val content = slim ?: configResult.content
-        val limiterType = if (slim != null) EConfigType.VLESS else config.configType
-        val urls = listOf(SettingsManager.getDelayTestUrl(), SettingsManager.getDelayTestUrl(second = true)).distinct()
-        for (url in urls) {
-            val delay = RealPingExecutionLimiter.run(limiterType) {
-                CoreNativeManager.measureOutboundDelay(content, url)
-            }
-            if (delay > 0) return delay
-        }
-        return retFailure
-    }
-
-    /** Only the outbounds of a custom profile, the main proxy first (it carries the test request). */
-    private fun slimCustomConfig(raw: String): String? = runCatching {
-        val root = JsonParser.parseString(raw).asJsonObject
-        val outbounds = root.getAsJsonArray("outbounds") ?: return null
-        val all = outbounds.mapNotNull { it.takeIf { o -> o.isJsonObject }?.asJsonObject }
-        val proxies = all.filter { o ->
-            o.get("protocol")?.asString?.lowercase() !in setOf("freedom", "blackhole", "dns", "loopback")
-        }
-        val main = proxies.firstOrNull { it.get("tag")?.asString == "proxy" } ?: proxies.firstOrNull() ?: return null
-        val ordered = JsonArray().apply {
-            add(main)
-            all.filter { it !== main }.forEach { add(it) }
-        }
-        JsonObject().apply {
-            add("log", JsonObject().apply { addProperty("loglevel", "none") })
-            add("outbounds", ordered)
-        }.toString()
-    }.getOrNull()
+    private suspend fun startRealPing(guid: String): Long =
+        RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(guid)) { SpeedtestConfig.measure(context, guid) }
 
     private fun startTcping(guid: String): Long {
         val retFailure = -1L

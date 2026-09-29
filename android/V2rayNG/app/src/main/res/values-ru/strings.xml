@@ -642,4 +642,23 @@
     <string name="about_author">Автор</string>
     <string name="about_based_on">Основано на v2rayNG (GPL-3.0)</string>
     <string name="toast_sub_failed_reason">Не удалось загрузить серверы: %1$s</string>
+    <string name="connect_best">Лучший</string>
+    <string name="connect_best_testing">Проверяю серверы, ищу самый быстрый…</string>
+    <string name="connect_best_no_servers">В этой подписке нет серверов</string>
+    <string name="connect_best_none_working">Рабочий сервер не найден</string>
+    <string name="connect_best_selected">Самый быстрый: %1$s</string>
+    <string name="failover_switched">Сервер перестал отвечать, переключились на %1$s</string>
+    <string name="settings_section_connection">Подключение</string>
+    <string name="title_pref_ru_direct">Российские сайты напрямую</string>
+    <string name="summary_pref_ru_direct">Российские сайты и банки открываются без VPN, остальное — через VPN</string>
+    <string name="title_pref_auto_failover">Автопереключение сервера</string>
+    <string name="summary_pref_auto_failover">Если сервер перестал отвечать — перейти на следующий рабочий, не отключаясь</string>
+    <string name="title_pref_sub_reminders">Напоминания о подписке</string>
+    <string name="summary_pref_sub_reminders">Уведомить за 3 дня и за 1 день до конца подписки и когда заканчивается трафик</string>
+    <string name="notification_channel_reminders">Напоминания о подписке</string>
+    <string name="reminder_expired">Подписка закончилась. Продлите её у своего провайдера.</string>
+    <string name="reminder_expires_tomorrow">Подписка заканчивается завтра.</string>
+    <string name="reminder_expires_days">Подписка закончится через %1$d дн.</string>
+    <string name="reminder_traffic_over">Трафик по подписке закончился.</string>
+    <string name="reminder_traffic_left">Осталось всего %1$s трафика.</string>
 </resources>

@@ -63,6 +63,8 @@ object AppConfig {
     const val PREF_HAPP_THEME_CUSTOM_JSON = "pref_happ_theme_custom_json"
     const val PREF_RECOMMENDED_DEFAULTS_APPLIED = "pref_recommended_defaults_applied"
     const val PREF_SEND_HWID = "pref_send_hwid"
+    const val PREF_AUTO_FAILOVER = "pref_auto_failover"
+    const val PREF_RU_DIRECT = "pref_ru_direct"
     const val PREF_IPV6_ENABLED = "pref_ipv6_enabled"
     const val PREF_PREFER_IPV6 = "pref_prefer_ipv6"
     const val PREF_PROXY_SHARING = "pref_proxy_sharing_enabled"
@@ -93,6 +95,10 @@ object AppConfig {
     const val PREF_AUTO_REMOVE_INVALID_AFTER_TEST = "pref_auto_remove_invalid_after_test"
     const val PREF_AUTO_SORT_AFTER_TEST = "pref_auto_sort_after_test"
     const val PREF_HUPP_DEFAULTS_V2_APPLIED = "pref_hupp_defaults_v2_applied"
+    const val PREF_FLOWVEIL_DEFAULTS_V3_APPLIED = "pref_flowveil_defaults_v3_applied"
+    const val PREF_SUB_REMINDERS = "pref_sub_reminders"
+    /** Subscriptions refresh themselves this often unless the user sets another interval. */
+    const val SUB_DEFAULT_UPDATE_MINUTES = 360L
     const val PREF_REAL_PING_CONCURRENCY = "pref_real_ping_concurrency"
 
     /** Cache keys. */
@@ -106,6 +112,7 @@ object AppConfig {
     /** Broadcast actions. */
     const val BROADCAST_ACTION_SERVICE = "$ANG_PACKAGE.action.service"
     const val BROADCAST_ACTION_ACTIVITY = "$ANG_PACKAGE.action.activity"
+    const val BROADCAST_ACTION_SPEED = "$ANG_PACKAGE.action.speed"
     const val BROADCAST_ACTION_WIDGET_CLICK = "$ANG_PACKAGE.action.widget.click"
 
     /** Tasker extras. */
@@ -189,6 +196,7 @@ object AppConfig {
     const val MSG_REGISTER_CLIENT = 1
     const val MSG_STATE_RUNNING = 11
     const val MSG_STATE_NOT_RUNNING = 12
+    const val MSG_STATE_SERVER_SWITCHED = 13
     const val MSG_UNREGISTER_CLIENT = 2
     const val MSG_STATE_START = 3
     const val MSG_STATE_START_SUCCESS = 31

@@ -182,6 +182,7 @@ object CoreServiceManager {
             MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_SUCCESS, "")
         }
         NotificationManager.startSpeedNotification()
+        ConnectionWatchdog.start(service)
         LogUtil.i(AppConfig.TAG, "StartCore-Manager: Core started successfully")
     }
 
@@ -191,6 +192,7 @@ object CoreServiceManager {
      * @return True if the core was stopped successfully, false otherwise.
      */
     fun stopCoreLoop(): Boolean {
+        ConnectionWatchdog.stop()
         connectionTestScope.coroutineContext.cancelChildren()
         val service = getService() ?: return false
 
@@ -254,6 +256,24 @@ object CoreServiceManager {
      *
      * @return True if the core is running again.
      */
+    /** Delay through the running core, or -1 when the check fails. Used by [ConnectionWatchdog]. */
+    internal fun measureCurrentDelay(): Long {
+        if (!isRunning() || isReloading) return 0L
+        for (url in listOf(SettingsManager.getDelayTestUrl(), SettingsManager.getDelayTestUrl(true))) {
+            val time = runCatching { coreController.measureDelay(url) }.getOrDefault(-1L)
+            if (time > 0) return time
+        }
+        return -1L
+    }
+
+    internal fun currentServerGuid(): String? = MmkvManager.getSelectServer()
+
+    /** Selects [guid] and restarts the core on it while the VPN interface stays up. */
+    internal fun switchServer(guid: String): Boolean {
+        MmkvManager.setSelectServer(guid)
+        return reloadCore()
+    }
+
     private fun reloadCore(): Boolean {
         if (isReloading) return false
         val service = getService() ?: return false

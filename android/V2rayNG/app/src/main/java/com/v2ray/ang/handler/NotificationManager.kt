@@ -274,6 +274,17 @@ object NotificationManager {
             )
             updateNotification(text.toString(), proxyTotal, directTotal)
         }
+        // Live speed for the main screen (only the app's own receiver gets it).
+        getService()?.let { service ->
+            runCatching {
+                service.sendBroadcast(
+                    Intent(AppConfig.BROADCAST_ACTION_SPEED)
+                        .setPackage(AppConfig.ANG_PACKAGE)
+                        .putExtra("up", ((proxyUplink + directUplink) / sinceLastQueryInSeconds).toLong())
+                        .putExtra("down", ((proxyDownlink + directDownlink) / sinceLastQueryInSeconds).toLong())
+                )
+            }
+        }
         lastQueryTime = queryTime
         return zeroSpeed
     }

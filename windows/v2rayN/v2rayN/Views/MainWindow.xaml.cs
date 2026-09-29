@@ -173,6 +173,7 @@ public partial class MainWindow
         Application.Current?.Dispatcher.Invoke(() =>
         {
             ShowHideWindow(true);
+            _ = ImportPendingLinkAsync();
         });
     }
 
@@ -483,6 +484,19 @@ public partial class MainWindow
             ShowHideWindow(false);
         }
         RestoreUI();
+        _ = ImportPendingLinkAsync();
+    }
+
+    /// <summary>Adds the subscription from a flowveil:// link that opened the app.</summary>
+    private async Task ImportPendingLinkAsync()
+    {
+        var link = DeepLink.TakePending();
+        if (link == null || ViewModel == null)
+        {
+            return;
+        }
+        ShowHideWindow(true);
+        await ViewModel.AddServerViaClipboardAsync(link);
     }
 
     private void RestoreUI()
