@@ -27,6 +27,9 @@ data class MainUiState(
     val locateTarget: LocateTarget? = null,
     val confirmRemove: Boolean = false,
     val doubleColumnDisplay: Boolean = false,
+    /** guid -> server answered the availability check (step 1 of a server check). */
+    val availability: Map<String, Boolean> = emptyMap(),
+    val availabilityOnly: Boolean = false,
     val shareQRCodeBitmap: android.graphics.Bitmap? = null
 )
 

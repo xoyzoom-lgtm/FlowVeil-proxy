@@ -608,4 +608,6 @@
     <string name="settings_section_sections">Разделы</string>
     <string name="check_servers_step1">Шаг 1: проверяю, какие серверы работают…</string>
     <string name="check_servers_step2">Шаг 2: измеряю пинг…</string>
+    <string name="server_status_alive">Работает</string>
+    <string name="server_status_dead">Не работает</string>
 </resources>

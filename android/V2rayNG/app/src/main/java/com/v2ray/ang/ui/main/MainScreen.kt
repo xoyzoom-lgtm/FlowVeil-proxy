@@ -263,7 +263,9 @@ fun MainScreen(
                 ServerListItem(
                     row = row,
                     isSelected = row.guid == selectedGuid,
-                    actions = rowActions
+                    actions = rowActions,
+                    alive = uiState.availability[row.guid],
+                    availabilityOnly = uiState.availabilityOnly
                 )
             }
         }

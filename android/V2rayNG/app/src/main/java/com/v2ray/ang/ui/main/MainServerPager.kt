@@ -43,6 +43,8 @@ internal fun ServerListItem(
     row: ServerRowUiModel,
     isSelected: Boolean,
     actions: ServerRowActions,
+    alive: Boolean? = null,
+    availabilityOnly: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val accent = mainAccentColor()
@@ -89,7 +91,7 @@ internal fun ServerListItem(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        PingPill(row.testDelayMillis)
+        PingPill(row.testDelayMillis, availabilityOnly = availabilityOnly, alive = alive)
         Spacer(Modifier.width(4.dp))
         IconButton(onClick = { actions.more(row.guid, row.profile) }, Modifier.size(36.dp)) {
             Icon(

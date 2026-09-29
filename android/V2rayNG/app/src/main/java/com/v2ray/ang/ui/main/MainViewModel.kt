@@ -866,6 +866,7 @@ class MainViewModel(
     // ---------- Testing ----------
     fun cancelAllPing() {
         pingAfterAvailability = false
+        _uiState.update { if (it.availabilityOnly) it.copy(availabilityOnly = false) else it }
         bulkTestJob?.cancel()
         bulkTestJob = null
         testRequests.cancelBulk()
@@ -889,12 +890,16 @@ class MainViewModel(
 
     private fun checkServers() {
         toast(R.string.check_servers_step1)
-        testAllRealPing(onlyTcp = true)
+        testAllRealPing(onlyTcp = true, keepAvailability = true)
+        _uiState.update { it.copy(availability = emptyMap(), availabilityOnly = true) }
         pingAfterAvailability = true
     }
 
-    fun testAllRealPing(onlyTcp: Boolean = false) {
+    fun testAllRealPing(onlyTcp: Boolean = false, keepAvailability: Boolean = false) {
         cancelAllPing()
+        if (!keepAvailability) {
+            _uiState.update { it.copy(availability = emptyMap(), availabilityOnly = false) }
+        }
         val groupId = uiState.value.selectedGroupId
         val servers = currentServers()
         if (servers.isEmpty()) {
@@ -962,8 +967,11 @@ class MainViewModel(
         if (pingAfterAvailability) {
             // Step 1 (is the server alive?) is done: now measure the real ping.
             pingAfterAvailability = false
+            val groupId = uiState.value.selectedGroupId
+            val alive = mutableServerGroupState(groupId).value.rows.associate { it.guid to (it.testDelayMillis > 0L) }
+            _uiState.update { it.copy(availability = alive, availabilityOnly = false) }
             toast(R.string.check_servers_step2)
-            testAllRealPing()
+            testAllRealPing(keepAvailability = true)
             return
         }
         viewModelScope.launch(ioDispatcher) {

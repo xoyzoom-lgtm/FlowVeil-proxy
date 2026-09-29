@@ -604,4 +604,6 @@
     <string name="settings_section_sections">Sections</string>
     <string name="check_servers_step1">Step 1: checking which servers work…</string>
     <string name="check_servers_step2">Step 2: measuring ping…</string>
+    <string name="server_status_alive">Works</string>
+    <string name="server_status_dead">Not working</string>
 </resources>

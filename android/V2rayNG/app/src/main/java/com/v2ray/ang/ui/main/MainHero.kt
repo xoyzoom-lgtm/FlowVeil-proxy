@@ -254,21 +254,51 @@ private fun PowerGlyph(color: Color, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Server status pill. Step 1 of a check shows only "works" (check) or "doesn't work" (cross);
+ * once real ping is measured the number is added. [alive] keeps the step-1 verdict while ping is pending.
+ */
 @Composable
-internal fun PingPill(delayMillis: Long, modifier: Modifier = Modifier) {
-    if (delayMillis == 0L) return
-    if (delayMillis < 0L) {
-        Box(
+internal fun PingPill(
+    delayMillis: Long,
+    modifier: Modifier = Modifier,
+    availabilityOnly: Boolean = false,
+    alive: Boolean? = null,
+) {
+    val dead = delayMillis < 0L || (delayMillis == 0L && alive == false)
+    val aliveOnly = (delayMillis > 0L && availabilityOnly) || (delayMillis == 0L && alive == true)
+    if (dead || aliveOnly) {
+        val color = if (dead) PingBad else PingGood
+        Row(
             modifier = modifier
-                .size(22.dp)
-                .clip(CircleShape)
-                .background(PingBad.copy(alpha = 0.18f)),
-            contentAlignment = Alignment.Center
+                .clip(RoundedCornerShape(50))
+                .background(color.copy(alpha = 0.15f))
+                .padding(start = 4.dp, end = 10.dp, top = 3.dp, bottom = 3.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("!", color = PingBad, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Box(
+                modifier = Modifier.size(16.dp).clip(CircleShape).background(color),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(if (dead) R.drawable.ic_status_cross else R.drawable.ic_action_done),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(12.dp)
+                )
+            }
+            Spacer(Modifier.width(5.dp))
+            Text(
+                text = stringResource(if (dead) R.string.server_status_dead else R.string.server_status_alive),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = color,
+                maxLines = 1
+            )
         }
         return
     }
+    if (delayMillis == 0L) return
     val color = when {
         delayMillis < 300L -> PingGood
         delayMillis < 800L -> PingMedium
