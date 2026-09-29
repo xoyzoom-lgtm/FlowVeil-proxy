@@ -529,7 +529,7 @@ public partial class MainWindowViewModel : MyReactiveObject
         var servers = await AppManager.Instance.ProfileItems(target.Id) ?? [];
         if (servers.Count == 0)
         {
-            NoticeManager.Instance.Enqueue("Не удалось загрузить серверы. Проверьте ссылку и интернет, затем нажмите «Обновить».");
+            NoticeManager.Instance.Enqueue($"Не удалось загрузить серверы: {SubscriptionHandler.LastError ?? "неизвестная ошибка"}");
             return;
         }
 

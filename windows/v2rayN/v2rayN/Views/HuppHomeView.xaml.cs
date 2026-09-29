@@ -72,7 +72,7 @@ public partial class HuppHomeView : UserControl
         var servers = await AppManager.Instance.ProfileItems(subId);
         NoticeManager.Instance.Enqueue(servers is { Count: > 0 }
             ? $"Готово! Серверов: {servers.Count}"
-            : "Не удалось загрузить серверы. Проверьте ссылку и интернет.");
+            : $"Не удалось загрузить серверы: {SubscriptionHandler.LastError ?? "неизвестная ошибка"}");
     }
 
     private async Task PasteAsync()
@@ -181,13 +181,100 @@ public partial class HuppHomeView : UserControl
         }
     }
 
+    /// <summary>Everything you can do with a subscription, same list as on the phone.</summary>
     private void CardMenu_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is DependencyObject d && FindAncestor<Border>(d, b => b.ContextMenu != null) is { } border)
+        var card = CardOf(sender);
+        if (card == null || _vm == null || _main == null)
         {
-            border.ContextMenu.PlacementTarget = sender as UIElement;
-            border.ContextMenu.DataContext = border.DataContext;
-            border.ContextMenu.IsOpen = true;
+            return;
+        }
+        e.Handled = true;
+
+        MenuItem Item(string header, MaterialDesignThemes.Wpf.PackIconKind icon, Func<Task> action)
+        {
+            var item = new MenuItem
+            {
+                Header = header,
+                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = icon },
+            };
+            item.Click += async (_, _) => await Run(action);
+            return item;
+        }
+
+        var menu = new ContextMenu { PlacementTarget = sender as UIElement };
+        menu.Items.Add(Item("Обновить подписку", MaterialDesignThemes.Wpf.PackIconKind.Refresh, () => UpdateSubsAsync(card.Sub.Id)));
+        menu.Items.Add(Item("Проверить серверы", MaterialDesignThemes.Wpf.PackIconKind.Speedometer, async () =>
+        {
+            await SelectCardAsync(card);
+            await _vm.PingAllAsync();
+        }));
+        menu.Items.Add(Item("Отсортировать по пингу", MaterialDesignThemes.Wpf.PackIconKind.SortAscending, async () =>
+        {
+            await SelectCardAsync(card);
+            await _vm.Profiles.SortServer(nameof(EServerColName.DelayVal));
+        }));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Изменить подписку", MaterialDesignThemes.Wpf.PackIconKind.Pencil, async () =>
+        {
+            var item = await AppManager.Instance.GetSubItem(card.Sub.Id);
+            if (item != null && await AppManager.Instance.WindowDialog.ShowDialogAsync(new SubEditViewModel(item)) == true)
+            {
+                await _vm.Profiles.RefreshSubscriptions();
+            }
+        }));
+        menu.Items.Add(Item("Скопировать ссылку", MaterialDesignThemes.Wpf.PackIconKind.ContentCopy, () =>
+        {
+            WindowsUtils.SetClipboardData(card.Sub.Url);
+            NoticeManager.Instance.Enqueue("Ссылка скопирована");
+            return Task.CompletedTask;
+        }));
+        if (card.SupportUrl.IsNotEmpty())
+        {
+            menu.Items.Add(Item("Поддержка провайдера", MaterialDesignThemes.Wpf.PackIconKind.Send, () =>
+            {
+                ProcUtils.ProcessStart(card.SupportUrl);
+                return Task.CompletedTask;
+            }));
+        }
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Удалить дубликаты", MaterialDesignThemes.Wpf.PackIconKind.LayersRemove, async () =>
+        {
+            var (before, kept) = await ConfigHandler.DedupServerList(AppManager.Instance.Config, card.Sub.Id);
+            var removed = before - kept;
+            await _vm.Profiles.RefreshServers();
+            NoticeManager.Instance.Enqueue($"Удалено дубликатов: {removed}");
+        }));
+        menu.Items.Add(Item("Удалить нерабочие серверы", MaterialDesignThemes.Wpf.PackIconKind.CloseCircleOutline, async () =>
+        {
+            var removed = await ConfigHandler.RemoveInvalidServerResult(AppManager.Instance.Config, card.Sub.Id);
+            await _vm.Profiles.RefreshServers();
+            NoticeManager.Instance.Enqueue($"Удалено нерабочих: {removed}");
+        }));
+        menu.Items.Add(Item("Удалить подписку", MaterialDesignThemes.Wpf.PackIconKind.DeleteOutline, async () =>
+        {
+            if (UI.ShowYesNo($"Удалить подписку «{card.Title}» и все её серверы?") != MessageBoxResult.Yes)
+            {
+                return;
+            }
+            await ConfigHandler.DeleteSubItem(AppManager.Instance.Config, card.Sub.Id);
+            SubscriptionInfoStore.Remove(card.Sub.Id);
+            await _vm.Profiles.RefreshSubscriptions();
+            await _vm.Profiles.RefreshServers();
+            await _main.Reload();
+        }));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Добавить ещё подписку", MaterialDesignThemes.Wpf.PackIconKind.Plus, PasteAsync));
+        menu.IsOpen = true;
+    }
+
+    private async Task SelectCardAsync(HuppSubCard card)
+    {
+        if (!card.IsSelected)
+        {
+            _vm?.SelectCard(card);
+            // Let the server list switch to this subscription first.
+            await Task.Delay(300);
         }
     }
 

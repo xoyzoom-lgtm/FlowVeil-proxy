@@ -139,7 +139,8 @@
                             <Border
                                 Margin="0,0,0,10"
                                 Cursor="Hand"
-                                MouseLeftButtonUp="Card_MouseLeftButtonUp">
+                                MouseLeftButtonUp="Card_MouseLeftButtonUp"
+                                MouseRightButtonUp="CardMenu_Click">
                                 <Border.Style>
                                     <Style BasedOn="{StaticResource HuppCard}" TargetType="Border">
                                         <Style.Triggers>
@@ -149,15 +150,6 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <Border.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Click="CardUpdate_Click" Header="Обновить подписку" />
-                                        <MenuItem Click="CardPing_Click" Header="Проверить пинг серверов" />
-                                        <MenuItem Click="CardCopy_Click" Header="Скопировать ссылку" />
-                                        <Separator />
-                                        <MenuItem Click="CardSettings_Click" Header="Все подписки…" />
-                                    </ContextMenu>
-                                </Border.ContextMenu>
                                 <StackPanel>
                                     <DockPanel>
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -171,7 +163,7 @@
                                             <Button
                                                 Click="CardPing_Click"
                                                 Style="{StaticResource RoundIconButton}"
-                                                ToolTip="Проверить пинг">
+                                                ToolTip="Проверить серверы">
                                                 <materialDesign:PackIcon Kind="Speedometer" />
                                             </Button>
                                             <Button
@@ -195,33 +187,54 @@
                                             Text="{Binding Title}"
                                             TextTrimming="CharacterEllipsis" />
                                     </DockPanel>
-                                    <ProgressBar
-                                        Height="6"
-                                        Margin="0,8,0,4"
-                                        materialDesign:TransitionAssist.DisableTransitions="True"
-                                        Maximum="100"
-                                        Visibility="{Binding HasProgress, Converter={StaticResource BoolToVis}}"
-                                        Value="{Binding Progress, Mode=OneWay}" />
-                                    <DockPanel Margin="0,4,0,0">
-                                        <TextBlock
-                                            DockPanel.Dock="Right"
-                                            Style="{StaticResource SubText}"
-                                            Text="{Binding ExpireText}" />
-                                        <TextBlock Style="{StaticResource SubText}" Text="{Binding TrafficText}" />
-                                    </DockPanel>
+                                    <!--  Two framed facts: traffic and validity  -->
+                                    <UniformGrid
+                                        Margin="0,8,0,0"
+                                        Columns="2"
+                                        Visibility="{Binding TrafficText, Converter={StaticResource NotEmptyToVis}}">
+                                        <Border
+                                            Margin="0,0,4,0"
+                                            Padding="10,6"
+                                            BorderBrush="{DynamicResource MaterialDesign.Brush.Primary}"
+                                            BorderThickness="1"
+                                            CornerRadius="12">
+                                            <StackPanel>
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                                    Text="{Binding TrafficText}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <ProgressBar
+                                                    Height="3"
+                                                    Margin="0,4,0,0"
+                                                    materialDesign:TransitionAssist.DisableTransitions="True"
+                                                    Maximum="100"
+                                                    Visibility="{Binding HasProgress, Converter={StaticResource BoolToVis}}"
+                                                    Value="{Binding Progress, Mode=OneWay}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border
+                                            Margin="4,0,0,0"
+                                            Padding="10,6"
+                                            BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                                            BorderThickness="1"
+                                            CornerRadius="12"
+                                            Visibility="{Binding ExpireText, Converter={StaticResource NotEmptyToVis}}">
+                                            <TextBlock
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                                                Text="{Binding ExpireText}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </Border>
+                                    </UniformGrid>
                                     <TextBlock
-                                        Margin="0,2,0,0"
-                                        FontSize="12"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                        Text="{Binding LeftText}"
-                                        Visibility="{Binding LeftText, Converter={StaticResource NotEmptyToVis}}" />
-                                    <TextBlock
-                                        Margin="0,6,0,0"
-                                        MaxHeight="54"
+                                        Margin="0,8,0,0"
                                         Style="{StaticResource SubText}"
                                         Text="{Binding Announce}"
-                                        TextWrapping="Wrap"
+                                        TextTrimming="CharacterEllipsis"
+                                        ToolTip="{Binding Announce}"
                                         Visibility="{Binding Announce, Converter={StaticResource NotEmptyToVis}}" />
                                 </StackPanel>
                             </Border>

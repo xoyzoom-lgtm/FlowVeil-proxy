@@ -118,31 +118,23 @@
                         </RadioButton>
                     </StackPanel>
                     <StackPanel VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
-                        <materialDesign:PopupBox
-                            HorizontalAlignment="Center"
-                            PlacementMode="RightAndAlignBottomEdges"
-                            StaysOpen="True"
-                            ToolTip="Темы">
-                            <materialDesign:PopupBox.ToggleContent>
+                        <RadioButton
+                            x:Name="navSettings"
+                            GroupName="nav"
+                            Style="{StaticResource HuppRailButton}"
+                            ToolTip="Настройки">
+                            <StackPanel>
                                 <materialDesign:PackIcon
                                     Width="24"
                                     Height="24"
-                                    Margin="0,8"
-                                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                    Kind="Palette" />
-                            </materialDesign:PopupBox.ToggleContent>
-                            <ContentControl x:Name="pbTheme" />
-                        </materialDesign:PopupBox>
-                        <Button
-                            x:Name="btnSettings"
-                            Height="48"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            ToolTip="Настройки">
-                            <materialDesign:PackIcon
-                                Width="24"
-                                Height="24"
-                                Kind="Cog" />
-                        </Button>
+                                    HorizontalAlignment="Center"
+                                    Kind="Cog" />
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    FontSize="10"
+                                    Text="Настройки" />
+                            </StackPanel>
+                        </RadioButton>
                         <Button
                             x:Name="btnNewUpdate"
                             Height="48"
@@ -160,6 +152,35 @@
             </Border>
 
             <view:HuppHomeView x:Name="homeView" Grid.Column="1" />
+
+            <!--  Happ-style settings page: grouped rows, built in MainWindow.xaml.cs  -->
+            <ScrollViewer
+                x:Name="settingsPage"
+                Grid.Column="1"
+                VerticalScrollBarVisibility="Auto"
+                Visibility="Hidden">
+                <StackPanel MaxWidth="720" Margin="24,16,24,24">
+                    <TextBlock
+                        Margin="4,0,0,12"
+                        FontSize="26"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Text="Настройки" />
+                    <StackPanel x:Name="settingsList" />
+                    <TextBlock
+                        Margin="8,20,0,6"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                        Text="ОФОРМЛЕНИЕ" />
+                    <Border
+                        Padding="16,8"
+                        Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                        CornerRadius="18">
+                        <ContentControl x:Name="pbTheme" />
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
 
             <DockPanel
                 x:Name="advancedPanel"

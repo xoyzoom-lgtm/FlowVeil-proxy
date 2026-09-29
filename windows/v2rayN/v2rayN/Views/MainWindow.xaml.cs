@@ -31,16 +31,17 @@ public partial class MainWindow
 
         pbTheme.Content ??= new ThemeSettingView();
 
-        navHome.Checked += (_, _) => ShowPage(advanced: false);
-        navAdvanced.Checked += (_, _) => ShowPage(advanced: true);
+        navHome.Checked += (_, _) => ShowPage(homeView);
+        navAdvanced.Checked += (_, _) => ShowPage(advancedPanel);
+        navSettings.Checked += (_, _) => ShowPage(settingsPage);
         navHome.Checked += (_, _) => navAdvanced.Visibility = Visibility.Collapsed;
-        btnSettings.Click += BtnSettings_Click;
 
         this.WhenActivated(disposables =>
         {
             if (homeView.HomeViewModel == null && ViewModel != null)
             {
                 homeView.Attach(ViewModel);
+                BuildSettingsPage(ViewModel);
             }
 
             //servers
@@ -309,82 +310,144 @@ public partial class MainWindow
 
     public ViewModels.HuppHomeViewModel? HomeViewModel => homeView.HomeViewModel;
 
-    private void ShowPage(bool advanced)
+    private void ShowPage(FrameworkElement page)
     {
         // Hidden (not Collapsed) keeps the classic views loaded so their bindings stay active.
-        homeView.Visibility = advanced ? Visibility.Hidden : Visibility.Visible;
-        advancedPanel.Visibility = advanced ? Visibility.Visible : Visibility.Hidden;
+        foreach (var candidate in new FrameworkElement[] { homeView, advancedPanel, settingsPage })
+        {
+            candidate.Visibility = candidate == page ? Visibility.Visible : Visibility.Hidden;
+        }
     }
 
-    private void BtnSettings_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Settings as grouped rows (icon, title, hint, chevron) like Happ: everyday items on top,
+    /// technical ones in "Для опытных".
+    /// </summary>
+    private void BuildSettingsPage(MainWindowViewModel vm)
     {
-        var vm = ViewModel;
-        if (vm == null)
-        {
-            return;
-        }
+        settingsList.Children.Clear();
 
-        MenuItem Item(string header, ICommand? command = null, RoutedEventHandler? click = null)
+        StackPanel Section(string title)
         {
-            var item = new MenuItem { Header = header, Command = command };
-            if (click != null)
+            settingsList.Children.Add(new TextBlock
             {
-                item.Click += click;
-            }
-            return item;
+                Text = title.ToUpperInvariant(),
+                Margin = new Thickness(8, settingsList.Children.Count == 0 ? 0 : 20, 0, 6),
+                FontSize = 12,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = (Brush)FindResource("MaterialDesign.Brush.ForegroundLight"),
+            });
+            var rows = new StackPanel();
+            var card = new Border { CornerRadius = new CornerRadius(18), Padding = new Thickness(6), Child = rows };
+            card.SetResourceReference(Border.BackgroundProperty, "MaterialDesign.Brush.Card.Background");
+            settingsList.Children.Add(card);
+            return rows;
         }
 
-        var addMenu = Item("Добавить сервер");
-        addMenu.Items.Add(Item("Из буфера обмена (Ctrl+V)", vm.AddServerViaClipboardCmd));
-        addMenu.Items.Add(Item("Сканировать QR с экрана", vm.AddServerViaScanCmd));
-        addMenu.Items.Add(Item("QR из картинки", vm.AddServerViaImageCmd));
-        addMenu.Items.Add(new Separator());
-        addMenu.Items.Add(Item("VLESS", vm.AddVlessServerCmd));
-        addMenu.Items.Add(Item("VMess", vm.AddVmessServerCmd));
-        addMenu.Items.Add(Item("Trojan", vm.AddTrojanServerCmd));
-        addMenu.Items.Add(Item("Shadowsocks", vm.AddShadowsocksServerCmd));
-        addMenu.Items.Add(Item("Hysteria2", vm.AddHysteria2ServerCmd));
-        addMenu.Items.Add(Item("TUIC", vm.AddTuicServerCmd));
-        addMenu.Items.Add(Item("WireGuard", vm.AddWireguardServerCmd));
-        addMenu.Items.Add(Item("SOCKS", vm.AddSocksServerCmd));
-        addMenu.Items.Add(Item("HTTP", vm.AddHttpServerCmd));
-        addMenu.Items.Add(Item("Свой конфиг (JSON)", vm.AddCustomServerCmd));
+        void Row(StackPanel section, PackIconKind icon, string title, string hint, Action action)
+        {
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        var expert = Item("Для опытных");
-        expert.Items.Add(addMenu);
-        expert.Items.Add(Item("Подписки и группы", vm.SubSettingCmd));
-        expert.Items.Add(Item("Обновить подписки через прокси", vm.SubUpdateViaProxyCmd));
-        expert.Items.Add(new Separator());
-        expert.Items.Add(Item("Параметры ядра и портов", vm.OptionSettingCmd));
-        expert.Items.Add(Item("Маршрутизация", vm.RoutingSettingCmd));
-        expert.Items.Add(Item("DNS", vm.DNSSettingCmd));
-        expert.Items.Add(Item("Горячие клавиши", vm.GlobalHotkeySettingCmd));
-        expert.Items.Add(Item("Шаблон конфигурации", vm.FullConfigTemplateCmd));
-        expert.Items.Add(new Separator());
-        expert.Items.Add(Item("Расширенный режим (таблица серверов, журнал)", click: (_, _) =>
+            var iconBox = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(10), Margin = new Thickness(0, 0, 12, 0) };
+            iconBox.SetResourceReference(Border.BackgroundProperty, "MaterialDesign.Brush.Background");
+            var packIcon = new PackIcon { Kind = icon, Width = 20, Height = 20, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            packIcon.SetResourceReference(ForegroundProperty, "MaterialDesign.Brush.Primary");
+            iconBox.Child = packIcon;
+            grid.Children.Add(iconBox);
+
+            var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            var titleBlock = new TextBlock { Text = title, FontSize = 14, FontWeight = FontWeights.SemiBold };
+            titleBlock.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.Foreground");
+            texts.Children.Add(titleBlock);
+            if (hint.IsNotEmpty())
+            {
+                var hintBlock = new TextBlock { Text = hint, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis };
+                hintBlock.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.ForegroundLight");
+                texts.Children.Add(hintBlock);
+            }
+            Grid.SetColumn(texts, 1);
+            grid.Children.Add(texts);
+
+            var chevron = new PackIcon { Kind = PackIconKind.ChevronRight, VerticalAlignment = VerticalAlignment.Center };
+            chevron.SetResourceReference(ForegroundProperty, "MaterialDesign.Brush.ForegroundLight");
+            Grid.SetColumn(chevron, 2);
+            grid.Children.Add(chevron);
+
+            var row = new Border
+            {
+                Child = grid,
+                Padding = new Thickness(10, 8, 10, 8),
+                CornerRadius = new CornerRadius(12),
+                Background = Brushes.Transparent,
+                Cursor = Cursors.Hand,
+            };
+            row.MouseEnter += (_, _) => row.SetResourceReference(Border.BackgroundProperty, "MaterialDesign.Brush.Background");
+            row.MouseLeave += (_, _) => row.Background = Brushes.Transparent;
+            row.MouseLeftButtonUp += (_, _) =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    Logging.SaveLog("SettingsPage", ex);
+                }
+            };
+            section.Children.Add(row);
+        }
+
+        void Exec(ICommand command) => command.Execute(null);
+
+        var main = Section("Подписки");
+        Row(main, PackIconKind.ContentPaste, "Добавить подписку или сервер", "Скопируйте ссылку и нажмите сюда (Ctrl+V)", () => Exec(vm.AddServerViaClipboardCmd));
+        Row(main, PackIconKind.Refresh, "Обновить все подписки", "Скачать свежий список серверов", () => Exec(vm.SubUpdateCmd));
+        Row(main, PackIconKind.QrcodeScan, "Сканировать QR-код с экрана", "Если провайдер дал QR-код", () => Exec(vm.AddServerViaScanCmd));
+
+        var connection = Section("Подключение");
+        Row(connection, PackIconKind.Directions, "Маршрутизация", "Какие сайты открывать через VPN, а какие напрямую", () => Exec(vm.RoutingSettingCmd));
+        Row(connection, PackIconKind.Dns, "DNS", "Серверы для поиска адресов сайтов", () => Exec(vm.DNSSettingCmd));
+        Row(connection, PackIconKind.ShieldAccount, "Запустить от администратора", "Нужно для режима TUN (весь трафик)", () => Exec(vm.RebootAsAdminCmd));
+
+        var app = Section("Приложение");
+        Row(app, PackIconKind.Update, "Проверить обновления", $"Сейчас: build {HuppUpdater.CurrentBuild()}", () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));
+        Row(app, PackIconKind.BackupRestore, "Резервная копия", "Сохранить или восстановить настройки и подписки", () => MenuBackupAndRestore_Click(this, new RoutedEventArgs()));
+        Row(app, PackIconKind.TrayArrowDown, "Свернуть в трей", "Hupp продолжит работать у часов", () => MenuClose_Click(this, new RoutedEventArgs()));
+
+        var expert = Section("Для опытных");
+        Row(expert, PackIconKind.Tune, "Параметры ядра и портов", "Порты, автозапуск, TUN, звук и прочее", () => Exec(vm.OptionSettingCmd));
+        Row(expert, PackIconKind.ServerPlus, "Добавить сервер вручную", "VLESS, VMess, Trojan, Shadowsocks, JSON…", () => OpenAddServerMenu(vm));
+        Row(expert, PackIconKind.FormatListBulleted, "Все подписки и группы", "Таблица подписок, фильтры, User-Agent", () => Exec(vm.SubSettingCmd));
+        Row(expert, PackIconKind.ViewList, "Расширенный режим", "Таблица серверов и журнал, как в v2rayN", () =>
         {
             navAdvanced.Visibility = Visibility.Visible;
             navAdvanced.IsChecked = true;
-        }));
-        expert.Items.Add(Item("Перезапустить ядро (F5)", vm.ReloadCmd));
-        expert.Items.Add(Item("Запустить от администратора (для TUN)", vm.RebootAsAdminCmd));
-        expert.Items.Add(Item("Открыть папку программы", vm.OpenTheFileLocationCmd));
+        });
+        Row(expert, PackIconKind.Keyboard, "Горячие клавиши", "", () => Exec(vm.GlobalHotkeySettingCmd));
+        Row(expert, PackIconKind.CodeJson, "Шаблон конфигурации", "", () => Exec(vm.FullConfigTemplateCmd));
+        Row(expert, PackIconKind.RestartAlert, "Перезапустить ядро", "F5", () => Exec(vm.ReloadCmd));
+        Row(expert, PackIconKind.FolderOpen, "Открыть папку программы", "", () => Exec(vm.OpenTheFileLocationCmd));
+    }
 
-        var menu = new ContextMenu
-        {
-            PlacementTarget = btnSettings,
-            Placement = System.Windows.Controls.Primitives.PlacementMode.Right,
-        };
-        // Everyday actions first; everything technical lives under "Для опытных".
-        menu.Items.Add(Item("Вставить подписку или сервер (Ctrl+V)", vm.AddServerViaClipboardCmd));
-        menu.Items.Add(Item("Обновить подписки", vm.SubUpdateCmd));
-        menu.Items.Add(Item("Мои подписки", vm.SubSettingCmd));
+    private void OpenAddServerMenu(MainWindowViewModel vm)
+    {
+        MenuItem Item(string header, ICommand command) => new() { Header = header, Command = command };
+        var menu = new ContextMenu();
+        menu.Items.Add(Item("QR из картинки", vm.AddServerViaImageCmd));
         menu.Items.Add(new Separator());
-        menu.Items.Add(Item("Резервная копия", click: MenuBackupAndRestore_Click));
-        menu.Items.Add(Item("Проверить обновления", click: MenuCheckUpdate_Click));
-        menu.Items.Add(expert);
-        menu.Items.Add(new Separator());
-        menu.Items.Add(Item("Свернуть в трей", click: MenuClose_Click));
+        menu.Items.Add(Item("VLESS", vm.AddVlessServerCmd));
+        menu.Items.Add(Item("VMess", vm.AddVmessServerCmd));
+        menu.Items.Add(Item("Trojan", vm.AddTrojanServerCmd));
+        menu.Items.Add(Item("Shadowsocks", vm.AddShadowsocksServerCmd));
+        menu.Items.Add(Item("Hysteria2", vm.AddHysteria2ServerCmd));
+        menu.Items.Add(Item("TUIC", vm.AddTuicServerCmd));
+        menu.Items.Add(Item("WireGuard", vm.AddWireguardServerCmd));
+        menu.Items.Add(Item("SOCKS", vm.AddSocksServerCmd));
+        menu.Items.Add(Item("HTTP", vm.AddHttpServerCmd));
+        menu.Items.Add(Item("Свой конфиг (JSON)", vm.AddCustomServerCmd));
         menu.IsOpen = true;
     }
 

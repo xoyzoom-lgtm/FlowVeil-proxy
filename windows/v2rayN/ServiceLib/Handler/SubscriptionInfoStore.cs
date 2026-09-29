@@ -40,6 +40,26 @@ public static class SubscriptionInfoStore
         }
     }
 
+    public static void Remove(string subId)
+    {
+        lock (_lock)
+        {
+            if (!Load().Remove(subId))
+            {
+                return;
+            }
+            try
+            {
+                File.WriteAllText(Utils.GetConfigPath(FileName), JsonUtils.Serialize(Load()));
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(nameof(SubscriptionInfoStore), ex);
+            }
+        }
+        Changed?.Invoke();
+    }
+
     public static void Save(string subId, SubscriptionInfo info)
     {
         lock (_lock)

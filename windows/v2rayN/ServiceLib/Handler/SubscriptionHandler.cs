@@ -2,8 +2,12 @@ namespace ServiceLib.Handler;
 
 public static class SubscriptionHandler
 {
+    /// <summary>Why the last subscription update got no servers, in plain words for the UI.</summary>
+    public static string? LastError { get; private set; }
+
     public static async Task UpdateProcess(Config config, string subId, bool blProxy, Func<bool, string, Task> updateFunc)
     {
+        LastError = null;
         await updateFunc?.Invoke(false, ResUI.MsgUpdateSubscriptionStart);
         var subItem = await AppManager.Instance.SubItems();
 
@@ -115,6 +119,16 @@ public static class SubscriptionHandler
             result = await downloadHandle.TryDownloadString(url, false, userAgent);
         }
 
+        // Some panels only answer clients they know: retry as the Android client, which works there.
+        if (result.IsNullOrEmpty() && userAgent.IsNullOrEmpty())
+        {
+            result = await downloadHandle.TryDownloadString(url, false, "v2rayNG/1.10.5");
+        }
+
+        if (result.IsNullOrEmpty())
+        {
+            LastError = downloadHandle.LastError ?? "сервер подписки ничего не вернул";
+        }
         return result ?? string.Empty;
     }
 
@@ -230,6 +244,9 @@ public static class SubscriptionHandler
         var ret = await ConfigHandler.AddBatchServers(config, result, id, true);
         if (ret <= 0)
         {
+            LastError = HtmlPageFmt.IsHtmlPage(result)
+                ? "по ссылке открывается сайт, а не подписка — скопируйте ссылку для приложения"
+                : "в ответе провайдера нет серверов (возможно, превышен лимит устройств)";
             Logging.SaveLog("FailedImportSubscription");
             Logging.SaveLog(result);
         }

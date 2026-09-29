@@ -421,25 +421,24 @@ public sealed class HuppHomeViewModel : HuppObservable
         }
 
         var traffic = string.Empty;
-        var left = string.Empty;
         var progress = 0d;
         if (info.Total > 0)
         {
-            traffic = $"Потрачено {Utils.HumanFy(info.Used)} из {Utils.HumanFy(info.Total)}";
-            left = $"Осталось {Utils.HumanFy(Math.Max(0, info.Total - info.Used))}";
-            progress = Math.Clamp(info.Used * 100d / info.Total, 0, 100);
+            traffic = $"Осталось {Utils.HumanFy(Math.Max(0, info.Total - info.Used))} из {Utils.HumanFy(info.Total)}";
+            progress = Math.Clamp((info.Total - info.Used) * 100d / info.Total, 0, 100);
         }
         else if (info.Used > 0 || info.Expire > 0)
         {
-            traffic = $"Потрачено {Utils.HumanFy(info.Used)} · Безлимит";
+            traffic = $"∞ Безлимит · {Utils.HumanFy(info.Used)}";
         }
+        var left = string.Empty;
 
         var expire = string.Empty;
         if (info.Expire > 0)
         {
             var date = DateTimeOffset.FromUnixTimeSeconds(info.Expire).LocalDateTime;
             var days = Math.Max(0, (int)(date - DateTime.Now).TotalDays);
-            expire = $"До {date:d MMM yyyy} · ещё {days} дн.";
+            expire = $"До {date:d MMM} · {days} дн.";
         }
 
         return new HuppSubCard

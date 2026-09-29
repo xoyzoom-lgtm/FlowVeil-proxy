@@ -18,6 +18,9 @@ public class DownloadService
     /// <summary>Response headers (lower-cased names) of the last successful string download via HttpClient.</summary>
     public IReadOnlyDictionary<string, string>? LastResponseHeaders { get; private set; }
 
+    /// <summary>Human-readable reason of the last failed string download, for the UI.</summary>
+    public string? LastError { get; private set; }
+
     private static readonly string _tag = "DownloadService";
 
     /// <summary>
@@ -214,10 +217,20 @@ public class DownloadService
     {
         try
         {
+            LastError = null;
             var result1 = await DownloadStringAsync(url, webProxy, userAgent, cancellationToken);
             if (result1.IsNotEmpty())
             {
                 return result1;
+            }
+            if (webProxy == null)
+            {
+                // The ISP may hide the provider's domain: resolve it over HTTPS and try again.
+                var viaSecureDns = await DownloadStringAsync(url, null, userAgent, cancellationToken, secureDns: true);
+                if (viaSecureDns.IsNotEmpty())
+                {
+                    return viaSecureDns;
+                }
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -262,7 +275,7 @@ public class DownloadService
     /// <summary>
     /// Downloads string content via HttpClient.
     /// </summary>
-    private async Task<string?> DownloadStringAsync(string url, IWebProxy? webProxy, string userAgent, CancellationToken cancellationToken = default)
+    private async Task<string?> DownloadStringAsync(string url, IWebProxy? webProxy, string userAgent, CancellationToken cancellationToken = default, bool secureDns = false)
     {
         try
         {
@@ -273,6 +286,10 @@ public class DownloadService
                 AutomaticDecompression = DecompressionMethods.All,
                 ConnectTimeout = webProxy is null ? Global.DirectDownloadConnect : Global.ProxyDownloadConnect,
             };
+            if (secureDns && webProxy == null)
+            {
+                handler.ConnectCallback = SecureDns.ConnectAsync;
+            }
             var certificateChainPolicy = CertPemManager.Instance.BuildCertificateChainPolicy();
             if (certificateChainPolicy != null)
             {
@@ -305,6 +322,10 @@ public class DownloadService
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
             using var response = await client.GetAsync(url, linkedCts.Token);
+            if (!response.IsSuccessStatusCode)
+            {
+                LastError = $"сервер подписки ответил {(int)response.StatusCode} {response.ReasonPhrase}";
+            }
             response.EnsureSuccessStatusCode();
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var (name, values) in response.Headers.Concat(response.Content.Headers))
@@ -321,6 +342,10 @@ public class DownloadService
         catch (Exception ex)
         {
             Logging.SaveLog(_tag, ex);
+            if (LastError == null || !LastError.StartsWith("сервер подписки ответил"))
+            {
+                LastError = ex is OperationCanceledException ? "нет ответа (таймаут)" : (ex.InnerException?.Message ?? ex.Message);
+            }
             Error?.Invoke(this, new ErrorEventArgs(ex));
             if (ex.InnerException != null)
             {
