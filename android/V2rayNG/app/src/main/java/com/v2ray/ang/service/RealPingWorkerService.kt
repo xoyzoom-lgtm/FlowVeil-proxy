@@ -49,7 +49,8 @@ class RealPingWorkerService(
     private val onEvent: (RealPingEvent) -> Unit = {}
 ) {
     private val job = SupervisorJob()
-    private val concurrency = SettingsManager.getRealPingConcurrency()
+    // Many parallel handshakes choke mobile networks and make healthy servers time out.
+    private val concurrency = if (onlyTcp) SettingsManager.getRealPingConcurrency() else SettingsManager.getRealPingConcurrency().coerceAtMost(6)
     private val dispatcher = Executors.newFixedThreadPool(if (onlyTcp) concurrency * 2 else concurrency).asCoroutineDispatcher()
     private val scope = CoroutineScope(job + dispatcher + CoroutineName("RealPingBatchWorker"))
 
@@ -62,12 +63,19 @@ class RealPingWorkerService(
             scope.launch {
                 runningCount.incrementAndGet()
                 try {
-                    val result = if (onlyTcp) startTcping(guid) else startRealPing(guid)
+                    val result = try {
+                        if (onlyTcp) startTcping(guid) else startRealPing(guid)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Throwable) {
+                        -1L
+                    }
+                    // Always report, so a failed test never leaves the row without a result.
                     if (scope.isActive) {
                         onEvent(RealPingEvent.Result(guid, result))
                     }
-                } catch (_: Throwable) {
-                    // ignore
+                } catch (_: CancellationException) {
+                    // cancelled
                 } finally {
                     val count = totalCount.decrementAndGet()
                     val left = runningCount.decrementAndGet()
@@ -108,28 +116,20 @@ class RealPingWorkerService(
         val retFailure = -1L
 
         val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
-        if (!config.configType.isComplexType()
-            && config.configType != EConfigType.HYSTERIA2
-            && config.configType != EConfigType.WIREGUARD
-            && config.alpn?.startsWith("h3") != true
-            && config.server.isNotNullEmpty()
-            && config.serverPort?.toIntOrNull() != null
-        ) {
-            val url = config.server.orEmpty()
-            val port = config.serverPort.orEmpty().toInt()
-            val tcpTime = SpeedtestManager.socketConnectTime(url, port, 1000)
-            if (tcpTime <= -1L) {
-                return retFailure
-            }
-        }
-
+        // No quick TCP pre-check here: on mobile networks a 1 s connect often times out for
+        // servers that work fine, and the real test below is the one that matters.
         val configResult = CoreConfigManager.getV2rayConfig4Speedtest(context, guid)
         if (!configResult.status) {
             return retFailure
         }
-        return RealPingExecutionLimiter.run(config.configType) {
-            CoreNativeManager.measureOutboundDelay(configResult.content, SettingsManager.getDelayTestUrl())
+        val urls = listOf(SettingsManager.getDelayTestUrl(), SettingsManager.getDelayTestUrl(second = true)).distinct()
+        for (url in urls) {
+            val delay = RealPingExecutionLimiter.run(config.configType) {
+                CoreNativeManager.measureOutboundDelay(configResult.content, url)
+            }
+            if (delay > 0) return delay
         }
+        return retFailure
     }
 
     private fun startTcping(guid: String): Long {
@@ -145,7 +145,7 @@ class RealPingWorkerService(
         ) {
             val url = config.server.orEmpty()
             val port = config.serverPort.orEmpty().toInt()
-            val tcpTime = SpeedtestManager.socketConnectTime(url, port, 1000)
+            val tcpTime = SpeedtestManager.socketConnectTime(url, port, 3000)
 
             return tcpTime
         }
