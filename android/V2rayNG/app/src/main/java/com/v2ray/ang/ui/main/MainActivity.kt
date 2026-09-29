@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AngApplication
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.receiver.WidgetProvider
 import com.v2ray.ang.core.LauncherManager
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.EConfigType
@@ -270,6 +271,7 @@ class MainActivity : HelperBaseComponentActivity() {
         val selected = mainViewModel.uiState.value.selectedGuid
         if (guid != selected) {
             mainViewModel.updateSelectedGuid(guid)
+            WidgetProvider.refresh(this)
             LauncherManager.restartService(this)
         }
     }

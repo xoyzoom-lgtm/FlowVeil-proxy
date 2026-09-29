@@ -2,6 +2,13 @@
 <resources>
     <string name="app_name" translatable="false">FlowVeil</string>
     <string name="app_widget_name">FlowVeil</string>
+    <string name="app_widget_card_name">FlowVeil — статус</string>
+    <string name="widget_state_on">Подключено</string>
+    <string name="widget_state_off">Отключено</string>
+    <string name="widget_no_server">Сервер не выбран</string>
+    <string name="widget_toggle">Подключить или отключить</string>
+    <string name="widget_switch_description">Кнопка VPN в одно касание</string>
+    <string name="widget_card_description">Статус, сервер и кнопка VPN</string>
     <string name="app_tile_name">FlowVeil</string>
     <string name="app_tile_first_use">Добавьте профиль в приложении перед использованием этой функции.</string>
     <string name="navigation_drawer_open">Открыть панель навигации</string>

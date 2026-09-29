@@ -1,35 +1,122 @@
-# FlowVeil
+<div align="center">
 
-VPN-клиент для Android и Windows с темами в стиле Happ (17 тем, по умолчанию iOS 27 Glass).
+<img src="docs/banner.png" alt="FlowVeil" width="100%">
 
-## Скачать
+<br>
 
-Готовые файлы: **[Releases → последняя версия](../../releases/latest)**
+[![Последняя версия](https://img.shields.io/github/v/release/xoyzoom-lgtm/FlowVeil-proxy?label=%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F&style=for-the-badge&color=106B7E)](https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest)
+[![Скачивания](https://img.shields.io/github/downloads/xoyzoom-lgtm/FlowVeil-proxy/total?label=%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F&style=for-the-badge&color=1FA37A)](https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases)
+[![Сборка](https://img.shields.io/github/actions/workflow/status/xoyzoom-lgtm/FlowVeil-proxy/build.yml?branch=main&label=%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0&style=for-the-badge)](https://github.com/xoyzoom-lgtm/FlowVeil-proxy/actions)
+[![Лицензия](https://img.shields.io/badge/%D0%BB%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F-GPL--3.0-040C23?style=for-the-badge)](LICENSE)
 
-- `FlowVeil-android.apk` — Android (универсальный), `FlowVeil-android-arm64.apk` — для современных телефонов
-- `FlowVeil-Setup.exe` — установщик для Windows 10/11
-- `FlowVeil-windows-portable.zip` — Windows без установки
+![Android](https://img.shields.io/badge/Android_7%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
+![Windows](https://img.shields.io/badge/Windows_10%20%2F%2011-0078D6?style=flat-square&logo=windows&logoColor=white)
+[![Telegram](https://img.shields.io/badge/Telegram-@GxoyzoomG-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://t.me/GxoyzoomG)
 
-Файлы собираются автоматически (GitHub Actions) после каждого изменения в `main`.
+**Вставьте ссылку на подписку — и нажмите одну кнопку.**
+Простой и красивый VPN-клиент, который понимает подписки любых провайдеров.
 
-## Что умеет
+</div>
 
-- Подписки любых провайдеров: VLESS, VMess, Trojan, Shadowsocks, Hysteria/Hysteria2, TUIC, WireGuard, Xray JSON; транспорты TCP, WS, gRPC, XHTTP и др.
-- Отправляет стандартные заголовки устройства (`x-hwid`, `x-device-os`, `x-ver-os`, `x-device-model`) — нужны панелям с лимитом устройств (Remnawave и др.). HWID случайный, на Android отключается в настройках.
-- Показывает трафик, срок подписки, объявление и поддержку провайдера (заголовки `subscription-userinfo`, `profile-title`, `announce`, `support-url`).
-- Темы Happ, свой код темы (JSON).
+---
 
-## Исходники
+## ⬇️ Скачать
 
-- `android/` — форк [2dust/v2rayNG](https://github.com/2dust/v2rayNG) (GPL-3.0)
-- `windows/` — форк [2dust/v2rayN](https://github.com/2dust/v2rayN) (GPL-3.0); локальная сборка: `windows/BUILD-FlowVeil.bat`
+<table>
+<tr>
+<td align="center" width="50%">
 
-## Стабильная подпись APK (по желанию)
+### 📱 Android
 
-Без настройки каждая сборка APK подписывается новым ключом, и перед установкой новой версии старую надо удалить.
-Чтобы обновления ставились поверх, добавьте в Settings → Secrets → Actions:
-`HUPP_KEYSTORE_BASE64` (keystore в base64, alias `hupp`) и `HUPP_KEYSTORE_PASSWORD`.
+[**FlowVeil-android.apk**](https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android.apk)
+<br><sub>подходит для всех телефонов</sub>
 
-## Политика конфиденциальности
+[FlowVeil-android-arm64.apk](https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android-arm64.apk)
+<br><sub>меньше размер, для современных 64-битных</sub>
 
-[PRIVACY.md](PRIVACY.md) · Автор: Telegram [@GxoyzoomG](https://t.me/GxoyzoomG)
+</td>
+<td align="center" width="50%">
+
+### 💻 Windows
+
+[**FlowVeil-Setup.exe**](https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-Setup.exe)
+<br><sub>установщик, Windows 10 / 11</sub>
+
+[FlowVeil-windows-portable.zip](https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-windows-portable.zip)
+<br><sub>без установки</sub>
+
+</td>
+</tr>
+</table>
+
+Уже пользуетесь? Обновления приходят прямо в приложение — **Настройки → Проверить обновления**.
+
+## 🚀 Как начать
+
+1. Скопируйте ссылку на подписку, которую дал ваш VPN-провайдер.
+2. Откройте FlowVeil и нажмите **«Вставить из буфера»** (или отсканируйте QR-код).
+3. Нажмите большую кнопку — готово.
+
+## ✨ Возможности
+
+| | |
+|---|---|
+| 🔗 **Любые подписки** | Ссылки, base64, Clash / Mihomo (YAML), sing-box и Xray JSON — FlowVeil сам разберётся с форматом |
+| 🛰️ **Все популярные протоколы** | VLESS (Reality, XHTTP), VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard |
+| 📊 **Информация о подписке** | Остаток трафика, срок действия, объявление и кнопка поддержки провайдера |
+| ✅ **Проверка серверов в два шага** | Сначала «работает / не работает», потом пинг — сразу видно, куда подключаться |
+| 🎨 **17 цветовых тем** | Светлые, тёмные, неоновые — плюс свой код темы |
+| 🧩 **Виджеты** | Кнопка 1×1 и карточка со статусом и сервером на главном экране Android |
+| 🛡️ **Режим TUN на ПК** | Весь трафик компьютера через VPN, а не только браузер |
+| 🔄 **Обновления в одно касание** | Новая версия скачивается и ставится из самого приложения |
+| 🔒 **Без аналитики** | Никаких аккаунтов, трекеров и серверов разработчика |
+
+## 🔒 Приватность
+
+FlowVeil ничего не собирает и не отправляет разработчику. Провайдеру подписки передаются только стандартные
+заголовки устройства (`x-hwid` и модель), которые нужны панелям с лимитом устройств; на Android это можно отключить.
+Подробно — в [политике конфиденциальности](PRIVACY.md).
+
+## ❓ Частые вопросы
+
+<details>
+<summary><b>Подписка не добавляется / «Не удалось загрузить серверы»</b></summary>
+
+FlowVeil покажет причину. Чаще всего: ссылка открывает сайт, а не подписку (скопируйте ссылку «для приложения»),
+провайдер недоступен из вашей сети, или это зашифрованная ссылка `happ://crypt…` — её открывает только приложение Happ,
+попросите у провайдера обычную ссылку.
+</details>
+
+<details>
+<summary><b>Провайдер пишет, что у меня лишнее устройство</b></summary>
+
+Удалите старое устройство в личном кабинете или боте провайдера. В новых версиях FlowVeil ID устройства
+не меняется после переустановки.
+</details>
+
+<details>
+<summary><b>Windows предупреждает о неизвестном издателе</b></summary>
+
+Установщик пока не подписан сертификатом. Нажмите «Подробнее» → «Выполнить в любом случае».
+Исходный код открыт, а сборки делает GitHub Actions прямо из этого репозитория.
+</details>
+
+## 💬 Связь
+
+Вопросы и предложения — в Telegram [@GxoyzoomG](https://t.me/GxoyzoomG).
+
+---
+
+<details>
+<summary><b>Для разработчиков</b></summary>
+
+- `android/` — форк [2dust/v2rayNG](https://github.com/2dust/v2rayNG)
+- `windows/` — форк [2dust/v2rayN](https://github.com/2dust/v2rayN); локальная сборка: `windows/BUILD-FlowVeil.bat`
+- Сборка и релиз — `.github/workflows/build.yml`, каждый пуш в `main` публикует новую версию.
+- Подпись APK берётся из секретов `HUPP_KEYSTORE_BASE64` (alias `hupp`) и `HUPP_KEYSTORE_PASSWORD`.
+
+</details>
+
+<div align="center">
+<sub>FlowVeil основан на <a href="https://github.com/2dust/v2rayNG">v2rayNG</a> и <a href="https://github.com/2dust/v2rayN">v2rayN</a> · распространяется по лицензии GPL-3.0</sub>
+</div>

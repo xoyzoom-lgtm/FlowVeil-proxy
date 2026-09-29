@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">FlowVeil</string>
-    <string name="app_widget_name">Switch</string>
+    <string name="app_widget_name">FlowVeil</string>
+    <string name="app_widget_card_name">FlowVeil — status</string>
+    <string name="widget_state_on">Connected</string>
+    <string name="widget_state_off">Disconnected</string>
+    <string name="widget_no_server">No server selected</string>
+    <string name="widget_toggle">Connect or disconnect</string>
+    <string name="widget_switch_description">One-tap VPN button</string>
+    <string name="widget_card_description">Connection state, server and a VPN button</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">Add a profile in the app before using this feature.</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>

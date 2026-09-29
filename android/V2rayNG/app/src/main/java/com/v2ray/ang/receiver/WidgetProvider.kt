@@ -16,93 +16,121 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.core.LauncherManager
+import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.ui.main.MainActivity
 import com.v2ray.ang.ui.compose.HappThemeManager
 import com.v2ray.ang.ui.compose.toHappColor
 
-class WidgetProvider : AppWidgetProvider() {
+/**
+ * 1x1 home-screen button. [WidgetCardProvider] reuses this logic with a wider layout that also
+ * shows the selected server. Both follow the active colour theme on Android 12+.
+ */
+open class WidgetProvider : AppWidgetProvider() {
 
     companion object {
-        /** Redraws all home-screen widgets, e.g. after the colour theme changed. */
+        /** Redraws all home-screen widgets, e.g. after the colour theme or the server changed. */
         fun refresh(context: Context) {
             val manager = AppWidgetManager.getInstance(context) ?: return
-            val ids = manager.getAppWidgetIds(ComponentName(context, WidgetProvider::class.java))
-            if (ids.isEmpty()) return
-            context.sendBroadcast(
-                Intent(context, WidgetProvider::class.java)
-                    .setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            )
+            for (cls in listOf(WidgetProvider::class.java, WidgetCardProvider::class.java)) {
+                val ids = manager.getAppWidgetIds(ComponentName(context, cls))
+                if (ids.isEmpty()) continue
+                context.sendBroadcast(
+                    Intent(context, cls)
+                        .setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                )
+            }
         }
     }
-    /**
-     * This method is called every time the widget is updated.
-     * It updates the widget background based on the V2Ray service running state.
-     *
-     * @param context The Context in which the receiver is running.
-     * @param appWidgetManager The AppWidgetManager instance.
-     * @param appWidgetIds The appWidgetIds for which an update is needed.
-     */
+
+    protected open val layoutRes: Int = R.layout.widget_switch
+
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        updateWidgetBackground(context, appWidgetManager, appWidgetIds, CoreServiceManager.isRunning())
+        render(context, appWidgetManager, appWidgetIds, CoreServiceManager.isRunning())
     }
 
-    /**
-     * Updates the widget background based on whether the V2Ray service is running.
-     *
-     * @param context The Context in which the receiver is running.
-     * @param appWidgetManager The AppWidgetManager instance.
-     * @param appWidgetIds The appWidgetIds for which an update is needed.
-     * @param isRunning Boolean indicating if the V2Ray service is running.
-     */
-    private fun updateWidgetBackground(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray, isRunning: Boolean) {
-        val remoteViews = RemoteViews(context.packageName, R.layout.widget_switch)
-        val intent = Intent(context, WidgetProvider::class.java)
-        intent.action = AppConfig.BROADCAST_ACTION_WIDGET_CLICK
-        val pendingIntent = PendingIntent.getBroadcast(
+    private fun render(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray, isRunning: Boolean) {
+        if (appWidgetIds.isEmpty()) return
+        val views = RemoteViews(context.packageName, layoutRes)
+
+        // The power button toggles the VPN; on the wide card the rest opens the app.
+        val toggle = PendingIntent.getBroadcast(
             context,
-            R.id.layout_switch,
-            intent,
+            layoutRes,
+            Intent(context, javaClass).setAction(AppConfig.BROADCAST_ACTION_WIDGET_CLICK),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        remoteViews.setOnClickPendingIntent(R.id.layout_switch, pendingIntent)
-        remoteViews.setInt(R.id.image_switch, "setImageResource", R.drawable.ic_stat_flow)
-        val theme = HappThemeManager.selected.value
-        if (theme != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Paint the widget in the active colour theme (background tinting needs Android 12+).
-            val accent = theme.buttonColor.toHappColor().toArgb()
-            val onAccent = theme.buttonTextColor.toHappColor().toArgb()
-            val idle = theme.serverRowBackgroundColor.toHappColor()
-                .compositeOver(theme.backgroundColors.firstOrNull().orEmpty().toHappColor(Color.Black))
-                .toArgb()
-            remoteViews.setInt(R.id.layout_background, "setBackgroundResource", R.drawable.widget_circle)
-            remoteViews.setColorStateList(
-                R.id.layout_background,
-                "setBackgroundTintList",
-                ColorStateList.valueOf(if (isRunning) accent else idle)
-            )
-            remoteViews.setInt(R.id.image_switch, "setColorFilter", if (isRunning) onAccent else accent)
+        views.setOnClickPendingIntent(R.id.layout_background, toggle)
+        if (layoutRes == R.layout.widget_switch) {
+            views.setOnClickPendingIntent(R.id.layout_switch, toggle)
         } else {
-            remoteViews.setInt(
-                R.id.layout_background,
-                "setBackgroundResource",
-                if (isRunning) R.drawable.ic_rounded_corner_active else R.drawable.ic_rounded_corner_inactive
+            val open = PendingIntent.getActivity(
+                context,
+                0,
+                Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
-            remoteViews.setInt(R.id.image_switch, "setColorFilter", android.graphics.Color.WHITE)
+            views.setOnClickPendingIntent(R.id.layout_card, open)
+            views.setTextViewText(R.id.text_server, selectedServerName(context))
+        }
+        views.setTextViewText(
+            R.id.text_status,
+            context.getString(if (isRunning) R.string.widget_state_on else R.string.widget_state_off)
+        )
+        views.setInt(
+            R.id.layout_background,
+            "setBackgroundResource",
+            if (isRunning) R.drawable.widget_button_on else R.drawable.widget_button_off
+        )
+        views.setInt(R.id.image_switch, "setColorFilter", android.graphics.Color.WHITE)
+
+        val theme = HappThemeManager.selected.value
+        val root = if (layoutRes == R.layout.widget_switch) R.id.layout_switch else R.id.layout_card
+        if (theme != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Paint the card and the button in the active colour theme (tinting needs Android 12+).
+            val background = theme.backgroundColors.firstOrNull().orEmpty().toHappColor(Color.Black)
+            val card = theme.serverRowBackgroundColor.toHappColor().compositeOver(background)
+            val text = theme.serverRowTitleTextColor.toHappColor(Color.White).toArgb()
+            val subText = theme.serverRowSubTitleTextColor.toHappColor(Color.White).toArgb()
+            views.setInt(root, "setBackgroundResource", R.drawable.widget_card_solid)
+            views.setColorStateList(root, "setBackgroundTintList", ColorStateList.valueOf(card.toArgb()))
+            views.setTextColor(R.id.text_status, text)
+            if (layoutRes != R.layout.widget_switch) views.setTextColor(R.id.text_server, subText)
+            if (isRunning) {
+                views.setInt(R.id.layout_background, "setBackgroundResource", R.drawable.widget_circle)
+                views.setColorStateList(
+                    R.id.layout_background,
+                    "setBackgroundTintList",
+                    ColorStateList.valueOf(theme.buttonColor.toHappColor().toArgb())
+                )
+                views.setInt(R.id.image_switch, "setColorFilter", theme.buttonTextColor.toHappColor().toArgb())
+            } else {
+                views.setInt(R.id.image_switch, "setColorFilter", text)
+                views.setColorStateList(
+                    R.id.layout_background,
+                    "setBackgroundTintList",
+                    ColorStateList.valueOf(theme.buttonColor.toHappColor().copy(alpha = 0.25f).toArgb())
+                )
+            }
         }
 
         for (appWidgetId in appWidgetIds) {
-            appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }
 
-    /**
-     * This method is called when the BroadcastReceiver is receiving an Intent broadcast.
-     * It handles widget click actions and updates the widget background based on the V2Ray service state.
-     *
-     * @param context The Context in which the receiver is running.
-     * @param intent The Intent being received.
-     */
+    private fun selectedServerName(context: Context): String =
+        MmkvManager.getSelectServer()
+            ?.let { MmkvManager.decodeServerConfig(it)?.remarks }
+            ?.takeIf { it.isNotBlank() }
+            ?: context.getString(R.string.widget_no_server)
+
+    private fun renderAll(context: Context, isRunning: Boolean) {
+        val manager = AppWidgetManager.getInstance(context) ?: return
+        render(context, manager, manager.getAppWidgetIds(ComponentName(context, javaClass)), isRunning)
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (AppConfig.BROADCAST_ACTION_WIDGET_CLICK == intent.action) {
@@ -112,22 +140,10 @@ class WidgetProvider : AppWidgetProvider() {
                 LauncherManager.startServiceFromToggle(context)
             }
         } else if (AppConfig.BROADCAST_ACTION_ACTIVITY == intent.action) {
-            AppWidgetManager.getInstance(context)?.let { manager ->
-                when (intent.getIntExtra("key", 0)) {
-                    AppConfig.MSG_STATE_RUNNING, AppConfig.MSG_STATE_START_SUCCESS -> {
-                        updateWidgetBackground(
-                            context, manager, manager.getAppWidgetIds(ComponentName(context, WidgetProvider::class.java)),
-                            true
-                        )
-                    }
-
-                    AppConfig.MSG_STATE_NOT_RUNNING, AppConfig.MSG_STATE_START_FAILURE, AppConfig.MSG_STATE_STOP_SUCCESS -> {
-                        updateWidgetBackground(
-                            context, manager, manager.getAppWidgetIds(ComponentName(context, WidgetProvider::class.java)),
-                            false
-                        )
-                    }
-                }
+            when (intent.getIntExtra("key", 0)) {
+                AppConfig.MSG_STATE_RUNNING, AppConfig.MSG_STATE_START_SUCCESS -> renderAll(context, true)
+                AppConfig.MSG_STATE_NOT_RUNNING, AppConfig.MSG_STATE_START_FAILURE, AppConfig.MSG_STATE_STOP_SUCCESS ->
+                    renderAll(context, false)
             }
         }
     }

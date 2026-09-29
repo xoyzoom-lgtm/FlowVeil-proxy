@@ -655,11 +655,10 @@ object AngConfigManager {
      * @return The number of subscriptions imported.
      */
     private fun importUrlAsSubscription(url: String): Int {
-        val subscriptions = MmkvManager.decodeSubscriptions()
-        subscriptions.forEach {
-            if (it.subscription.url == url) {
-                return 0
-            }
+        // The same link pasted again (maybe with a trailing slash or spaces) must not become a second subscription.
+        fun norm(u: String) = u.trim().trimEnd('/')
+        if (MmkvManager.decodeSubscriptions().any { norm(it.subscription.url) == norm(url) }) {
+            return 0
         }
         val uri = URI(Utils.fixIllegalUrl(url))
         val subItem = SubscriptionItem()
