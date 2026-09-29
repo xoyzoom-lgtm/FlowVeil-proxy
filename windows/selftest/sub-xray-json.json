@@ -1,0 +1,114 @@
+[
+ {
+  "remarks": "🇩🇪 Германия",
+  "log": {
+   "loglevel": "warning"
+  },
+  "inbounds": [
+   {
+    "tag": "socks",
+    "port": 10808,
+    "listen": "127.0.0.1",
+    "protocol": "socks",
+    "settings": {
+     "udp": true
+    }
+   }
+  ],
+  "outbounds": [
+   {
+    "tag": "proxy",
+    "protocol": "vless",
+    "settings": {
+     "vnext": [
+      {
+       "address": "198.51.100.10",
+       "port": 443,
+       "users": [
+        {
+         "id": "11111111-2222-3333-4444-555555555555",
+         "encryption": "none",
+         "flow": "xtls-rprx-vision"
+        }
+       ]
+      }
+     ]
+    },
+    "streamSettings": {
+     "network": "tcp",
+     "security": "reality",
+     "realitySettings": {
+      "serverName": "example.com",
+      "fingerprint": "chrome",
+      "publicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "shortId": "01"
+     }
+    }
+   },
+   {
+    "tag": "direct",
+    "protocol": "freedom"
+   },
+   {
+    "tag": "block",
+    "protocol": "blackhole"
+   }
+  ]
+ },
+ {
+  "remarks": "🇸🇪 Швеция",
+  "log": {
+   "loglevel": "warning"
+  },
+  "inbounds": [
+   {
+    "tag": "socks",
+    "port": 10808,
+    "listen": "127.0.0.1",
+    "protocol": "socks",
+    "settings": {
+     "udp": true
+    }
+   }
+  ],
+  "outbounds": [
+   {
+    "tag": "proxy",
+    "protocol": "vless",
+    "settings": {
+     "vnext": [
+      {
+       "address": "198.51.100.11",
+       "port": 443,
+       "users": [
+        {
+         "id": "11111111-2222-3333-4444-555555555555",
+         "encryption": "none",
+         "flow": "xtls-rprx-vision"
+        }
+       ]
+      }
+     ]
+    },
+    "streamSettings": {
+     "network": "tcp",
+     "security": "reality",
+     "realitySettings": {
+      "serverName": "example.com",
+      "fingerprint": "chrome",
+      "publicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "shortId": "01"
+     }
+    }
+   },
+   {
+    "tag": "direct",
+    "protocol": "freedom"
+   },
+   {
+    "tag": "block",
+    "protocol": "blackhole"
+   }
+  ]
+ }
+]
