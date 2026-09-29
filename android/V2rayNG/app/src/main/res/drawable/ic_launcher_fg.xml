@@ -3,20 +3,24 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#26FFFFFF"
-        android:pathData="M54,24a30,30 0 1,1 0,60a30,30 0 1,1 0,-60z" />
-    <path
-        android:pathData="M54,24a30,30 0 1,1 0,60a30,30 0 1,1 0,-60z"
-        android:strokeWidth="1.5"
-        android:strokeColor="#66FFFFFF" />
+    <!-- FlowVeil: flowing lines under a draped veil -->
     <group
-        android:scaleX="1.6"
-        android:scaleY="1.6"
-        android:translateX="34.8"
-        android:translateY="34.8">
+        android:pivotX="54"
+        android:pivotY="57"
+        android:scaleX="1.18"
+        android:scaleY="1.18">
         <path
             android:fillColor="#FFFFFFFF"
-            android:pathData="M13,3h-2v10h2L13,3zM17.83,5.17l-1.42,1.42C17.99,7.86 19,9.81 19,12c0,3.87 -3.13,7 -7,7s-7,-3.13 -7,-7c0,-2.19 1.01,-4.14 2.58,-5.42L6.17,5.17C4.23,6.82 3,9.26 3,12c0,4.97 4.03,9 9,9s9,-4.03 9,-9c0,-2.74 -1.23,-5.18 -3.17,-6.83z" />
+            android:pathData="M30,37 C38,31 46,40 54,36 C62,32 70,41 78,35 C76,52 66,67 54,79 C42,67 32,52 30,37 Z" />
+        <path
+            android:pathData="M37,48 C43,44 48,52 54,48 C60,44 65,52 71,48"
+            android:strokeColor="#FF5B5BD6"
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M42,58 C46,55 50,61 54,58 C58,55 62,61 66,58"
+            android:strokeColor="#FF5B5BD6"
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round" />
     </group>
 </vector>
