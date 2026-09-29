@@ -2,176 +2,270 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FlowVeil — маршрутизатор трафика на Xray и sing-box · Android и Windows</title>
-<meta name="description" content="FlowVeil — прокси-клиент и маршрутизатор трафика на ядрах Xray и sing-box. VLESS, Reality, VMess, Trojan, Hysteria2, Shadowsocks, WireGuard. Гибкие правила маршрутизации, TUN, подписки. Android и Windows, открытый код.">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FlowVeil — прокси-клиент и маршрутизатор трафика для Android и Windows</title>
+<meta name="description" content="FlowVeil — бесплатный прокси-клиент и маршрутизатор трафика для Android и Windows. Импорт подписки в один тап, правила по доменам и приложениям, 17 тем. Открытый код, без аналитики.">
 <meta name="theme-color" content="#040C23">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<!-- TODO(domain): when a custom domain is attached (docs/CNAME), replace SITE_URL below (canonical, og:url, og:image, twitter:image, JSON-LD) and in robots.txt / sitemap.xml -->
+<link rel="canonical" href="https://xoyzoom-lgtm.github.io/FlowVeil-proxy/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="FlowVeil — маршрутизатор трафика на Xray и sing-box">
-<meta property="og:description" content="Прокси-клиент для Android и Windows: подписки, правила маршрутизации, TUN, все популярные протоколы. Открытый код.">
-<meta property="og:image" content="banner.png">
+<meta property="og:site_name" content="FlowVeil">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="FlowVeil — прокси-клиент и маршрутизатор трафика">
+<meta property="og:description" content="Бесплатный клиент для Android и Windows: подписка в один тап, правила по доменам и приложениям, открытый код, без аналитики.">
+<meta property="og:url" content="https://xoyzoom-lgtm.github.io/FlowVeil-proxy/">
+<meta property="og:image" content="https://xoyzoom-lgtm.github.io/FlowVeil-proxy/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="FlowVeil — прокси-клиент и маршрутизатор трафика для Android и Windows">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="logo.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<meta name="twitter:title" content="FlowVeil — прокси-клиент и маршрутизатор трафика">
+<meta name="twitter:description" content="Бесплатный клиент для Android и Windows: подписка в один тап, правила по доменам и приложениям, открытый код.">
+<meta name="twitter:image" content="https://xoyzoom-lgtm.github.io/FlowVeil-proxy/assets/og.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "FlowVeil",
+  "description": "Прокси-клиент и маршрутизатор трафика для Android и Windows с открытым исходным кодом.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Android 7.0+, Windows 10+",
+  "inLanguage": "ru",
+  "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+  "url": "https://xoyzoom-lgtm.github.io/FlowVeil-proxy/",
+  "image": "https://xoyzoom-lgtm.github.io/FlowVeil-proxy/assets/og.png",
+  "downloadUrl": "https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest",
+  "codeRepository": "https://github.com/xoyzoom-lgtm/FlowVeil-proxy",
+  "author": {"@type": "Person", "name": "GxoyzoomG", "url": "https://t.me/GxoyzoomG"},
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+}
+</script>
 <style>
+/* ---------- fonts (self-hosted, no external requests) ---------- */
+@font-face{font-family:Manrope;font-style:normal;font-weight:200 800;font-display:swap;src:url(assets/fonts/manrope-cyrillic.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Manrope;font-style:normal;font-weight:200 800;font-display:swap;src:url(assets/fonts/manrope-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+/* Same metrics as the system font that stands in until Manrope loads: no jump of the layout. */
+@font-face{font-family:"Manrope Fallback";src:local("Arial"),local("Helvetica Neue"),local("Roboto");size-adjust:104%;ascent-override:97%;descent-override:27%;line-gap-override:0%}
+
+/* ---------- tokens ---------- */
 :root{
-  --bg:#040C23;--bg2:#0A1A38;--teal:#106B7E;--mint:#3BE0B0;--sky:#38BDF8;--violet:#8B7CF6;--amber:#F59E0B;--red:#EF4444;
-  --text:#F2F7FA;--muted:#A9C0CC;--dim:#6F8796;
-  --card:rgba(255,255,255,.055);--card2:rgba(255,255,255,.09);--line:rgba(255,255,255,.11);
-  --r:24px;--ease:cubic-bezier(.2,.7,.2,1);--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+  --bg:#040C23;--bg2:#0A1A38;--teal:#106B7E;--mint:#3BE0B0;--sky:#38BDF8;--violet:#8B7CF6;--red:#EF4444;
+  --text:#F2F7FA;--muted:#B4C8D3;--dim:#8DA4B2;
+  --card:rgba(255,255,255,.055);--card2:rgba(255,255,255,.09);--line:rgba(255,255,255,.12);
+  --r:24px;--r-sm:16px;--ease:cubic-bezier(.2,.7,.2,1);
+  --font:Manrope,"Manrope Fallback",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  --header:68px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;overflow-x:hidden}
-body{background:var(--bg);color:var(--text);font:16px/1.6 Manrope,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+html{-webkit-text-size-adjust:100%;overflow-x:hidden;scroll-padding-top:calc(var(--header) + 12px)}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{background:var(--bg);color:var(--text);font:16px/1.6 var(--font);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img,svg{display:block;max-width:100%}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 ::selection{background:rgba(59,224,176,.35)}
 code,.mono{font-family:var(--mono)}
+code{background:rgba(255,255,255,.08);padding:2px 7px;border-radius:7px;font-size:.9em;word-break:break-all}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--mint);outline-offset:3px;border-radius:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:fixed;left:12px;top:-60px;z-index:100;padding:10px 16px;border-radius:12px;background:var(--mint);color:#02140F;font-weight:800;transition:top .2s}
+.skip:focus{top:12px}
+.ico{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.fill{fill:currentColor;stroke:none}
+.mint{color:var(--mint)}
 
-.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
-.bg canvas{position:absolute;inset:0;width:100%;height:100%}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;will-change:transform}
-.orb.o1{width:560px;height:560px;background:radial-gradient(circle,#0f8a8a,transparent 70%);top:-160px;right:-120px;animation:drift1 22s ease-in-out infinite}
-.orb.o2{width:520px;height:520px;background:radial-gradient(circle,#1f3fa8,transparent 70%);bottom:-200px;left:-160px;animation:drift2 26s ease-in-out infinite}
-.orb.o3{width:380px;height:380px;background:radial-gradient(circle,#5b3fd1,transparent 70%);top:40%;left:45%;opacity:.25;animation:drift3 30s ease-in-out infinite}
-@keyframes drift1{50%{transform:translate(-120px,80px) scale(1.1)}}
-@keyframes drift2{50%{transform:translate(140px,-100px) scale(1.15)}}
-@keyframes drift3{50%{transform:translate(-160px,60px) scale(.9)}}
+/* ---------- background: grid, two soft orbs, hero particles ---------- */
+.bg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.bg::before,.bg::after{content:"";position:absolute;border-radius:50%}
+.bg::before{width:760px;height:760px;top:-260px;right:-200px;background:radial-gradient(circle,rgba(16,140,140,.42),transparent 68%)}
+.bg::after{width:700px;height:700px;bottom:-280px;left:-220px;background:radial-gradient(circle,rgba(40,70,190,.38),transparent 68%)}
 .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 55% at 50% 30%,#000 30%,transparent 80%);mask-image:radial-gradient(ellipse 70% 55% at 50% 30%,#000 30%,transparent 80%)}
+.progress{position:fixed;top:0;left:0;height:2px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--mint),var(--sky));z-index:60}
 
-.progress{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--mint),var(--sky));z-index:60}
-header{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
-header.scrolled{background:rgba(4,12,35,.72);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border-color:var(--line)}
-.nav{display:flex;align-items:center;gap:16px;height:68px}
+/* ---------- header ---------- */
+header{position:fixed;top:0;left:0;right:0;z-index:50;border-bottom:1px solid transparent;transition:background .3s,border-color .3s}
+header.scrolled,header.menu-open{background:rgba(4,12,35,.82);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border-color:var(--line)}
+.nav{display:flex;align-items:center;gap:16px;height:var(--header)}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px}
 .brand img{width:34px;height:34px;border-radius:10px}
 .links{display:flex;gap:26px;margin-left:auto;font-size:15px;color:var(--muted)}
-.links a{position:relative;padding:4px 0;transition:color .2s}
-.links a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;border-radius:2px;background:var(--mint);transform:scaleX(0);transition:transform .3s var(--ease)}
+.links a{position:relative;padding:6px 0;transition:color .2s}
+.links a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:2px;background:var(--mint);transform:scaleX(0);transition:transform .3s var(--ease)}
 .links a:hover,.links a.active{color:var(--text)}
 .links a.active::after,.links a:hover::after{transform:scaleX(1)}
 .nav .btn{padding:10px 18px;font-size:14px}
-@media(max-width:900px){.links{display:none}.nav .btn{margin-left:auto}}
+.burger{display:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;place-items:center}
+.burger .ico{width:22px;height:22px}
+.burger .close{display:none}
+.menu-open .burger .open{display:none}.menu-open .burger .close{display:block}
+.panel{display:none}
+@media(max-width:860px){
+  .links{display:none}
+  .nav .btn{margin-left:auto}
+  .burger{display:grid}
+  .panel{display:block;position:absolute;left:0;right:0;top:var(--header);background:#050e26;border-bottom:1px solid var(--line);padding:8px 20px 18px}
+  .panel[hidden]{display:none!important}
+  .panel a{display:block;padding:14px 4px;font-weight:700;font-size:18px;border-bottom:1px solid var(--line)}
+  .panel a:last-child{border:0}
+}
 
-.btn{position:relative;display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:16px;font-weight:700;border:1px solid var(--line);background:var(--card);overflow:hidden;transition:transform .25s var(--ease),box-shadow .25s,background .25s;cursor:pointer;isolation:isolate}
-.btn:hover{background:var(--card2)}
-.btn.primary{background:linear-gradient(135deg,#3BE0B0,#1FA37A);color:#02140F;border:0;box-shadow:0 10px 40px -10px rgba(59,224,176,.6);overflow:visible}
-.btn.primary:hover{box-shadow:0 14px 50px -8px rgba(59,224,176,.8)}
-.btn.primary::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,#3BE0B0,#38BDF8);z-index:-1;filter:blur(14px);opacity:.55;animation:pulse 2.8s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.12}}
-.btn svg{width:20px;height:20px;flex:none}
+/* ---------- buttons ---------- */
+.btn{position:relative;display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:16px;font:inherit;font-weight:700;color:var(--text);border:1px solid var(--line);background:var(--card);overflow:hidden;transition:transform .2s var(--ease),box-shadow .25s,background .25s;cursor:pointer;isolation:isolate}
+.btn:hover{background:var(--card2);transform:translateY(-2px)}
+.btn.primary{background:linear-gradient(135deg,#3BE0B0,#1FA37A);color:#02140F;border:0;box-shadow:0 10px 36px -12px rgba(59,224,176,.7)}
+.btn.primary:hover{box-shadow:0 14px 44px -10px rgba(59,224,176,.85)}
+.btn .ico{width:20px;height:20px}
 .btn .txt{display:flex;flex-direction:column;line-height:1.25;text-align:left}
-.btn .sub{display:block;font-size:12px;font-weight:600;opacity:.75;line-height:1.2}
-.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.45);transform:scale(0);animation:ripple .6s linear;pointer-events:none}
+.btn .sub{display:block;font-size:12px;font-weight:600;opacity:.85;line-height:1.2}
+.btn.small{padding:9px 14px;font-size:14px;border-radius:12px}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.4);transform:scale(0);animation:ripple .6s linear;pointer-events:none}
 @keyframes ripple{to{transform:scale(4);opacity:0}}
 
-/* hero */
-.hero{padding-top:130px;padding-bottom:50px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;min-height:100vh}
-.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--muted);margin-bottom:22px}
+/* ---------- hero ---------- */
+.hero-wrap{position:relative}
+#particles{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero{position:relative;padding-top:130px;padding-bottom:50px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;min-height:100vh;min-height:100svh}
+.badge{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--muted);margin-bottom:22px}
 .badge b{white-space:nowrap;background:linear-gradient(90deg,var(--mint),var(--sky));color:#02140F;padding:2px 9px;border-radius:99px;font-size:12px}
 h1{font-size:clamp(36px,5.6vw,66px);line-height:1.04;letter-spacing:-1.5px;font-weight:800;margin-bottom:22px}
-h1 .w{display:inline-block;opacity:0;transform:translateY(24px);filter:blur(8px);animation:wordIn .8s var(--ease) forwards}
-@keyframes wordIn{to{opacity:1;transform:none;filter:none}}
-.grad{background:linear-gradient(92deg,#7CF3D2 0%,#38BDF8 55%,#8B7CF6 100%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:shine 6s linear infinite}
-h1 .w.grad{animation:wordIn .8s var(--ease) forwards,shine 6s linear infinite}
-@keyframes shine{to{background-position:200% center}}
+h1 .w{display:inline-block;opacity:0;transform:translateY(22px);animation:wordIn .7s var(--ease) forwards}
+@keyframes wordIn{to{opacity:1;transform:none}}
+.grad{background:linear-gradient(92deg,#7CF3D2 0%,#38BDF8 55%,#8B7CF6 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lead{font-size:clamp(17px,1.5vw,19px);color:var(--muted);max-width:34em;margin-bottom:30px}
 .lead b{color:var(--text);font-weight:700}
 .cta{display:flex;flex-wrap:wrap;gap:14px}
 .note{margin-top:18px;font-size:14px;color:var(--dim)}
+.platform-note{margin-top:12px;font-size:14px;color:var(--muted);padding:10px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:inline-block}
 
 /* routing diagram */
-.router{position:relative;width:100%;aspect-ratio:1/1.02;max-width:560px;margin:0 auto}
+.router{position:relative;width:100%;aspect-ratio:1/1.02;max-width:560px;margin:0 auto;will-change:transform}
 .router svg{width:100%;height:100%;overflow:visible}
-.router .path{fill:none;stroke:rgba(255,255,255,.12);stroke-width:2}
+.router .path{fill:none;stroke:rgba(255,255,255,.14);stroke-width:2}
 .router .flow{fill:none;stroke-width:2.2;stroke-dasharray:5 14;animation:dash 1.4s linear infinite}
 @keyframes dash{to{stroke-dashoffset:-19}}
-.router .node rect{fill:rgba(10,26,56,.85);stroke:rgba(255,255,255,.12)}
-.router text{fill:var(--text);font:600 13px Manrope,sans-serif}
+.router .node rect{fill:rgba(10,26,56,.9);stroke:rgba(255,255,255,.14)}
+.router text{fill:var(--text);font:600 13px var(--font)}
 .router .small{fill:var(--muted);font:500 10.5px var(--mono)}
-.router .hub{filter:drop-shadow(0 0 30px rgba(59,224,176,.45))}
 .router .hub circle.ring{fill:none;stroke:rgba(59,224,176,.5);stroke-width:2;transform-origin:280px 285px;animation:hubring 2.6s ease-out infinite}
 .router .hub circle.ring.r2{animation-delay:1.3s}
 @keyframes hubring{from{transform:scale(.8);opacity:.9}to{transform:scale(1.45);opacity:0}}
-.router .pkt{filter:drop-shadow(0 0 6px currentColor)}
-.rule-log{position:absolute;left:0;right:0;bottom:-6px;margin:0 auto;width:max-content;max-width:100%;padding:8px 14px;border-radius:12px;background:rgba(10,26,56,.8);border:1px solid var(--line);font:500 12px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rule-log b{font-weight:700}
+.router.paused *{animation-play-state:paused!important}
+.rule-log{position:absolute;left:0;right:0;bottom:-6px;margin:0 auto;width:max-content;max-width:100%;padding:8px 14px;border-radius:12px;background:rgba(10,26,56,.85);border:1px solid var(--line);font:500 12px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* marquee */
-.marquee{border-block:1px solid var(--line);background:rgba(255,255,255,.02);overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+/* ---------- marquee ---------- */
+.marquee{position:relative;border-block:1px solid var(--line);background:rgba(255,255,255,.02);overflow:hidden}
+.marquee .mask{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
 .track{display:flex;width:max-content;padding:22px 0;animation:scroll 36s linear infinite}
-.track span{font-weight:800;font-size:22px;color:var(--dim);white-space:nowrap;display:flex;align-items:center;gap:28px;padding-right:28px}
-.track span::after{content:"✦";color:var(--teal);font-size:14px}
+.marquee:hover .track,.marquee:focus-within .track,.marquee.paused .track{animation-play-state:paused}
+.track ul{display:flex;list-style:none}
+.track li{font-weight:800;font-size:22px;color:var(--dim);white-space:nowrap;display:flex;align-items:center;gap:28px;padding-right:28px}
+.track li::after{content:"";width:8px;height:8px;border-radius:2px;background:var(--teal);transform:rotate(45deg)}
 @keyframes scroll{to{transform:translateX(-50%)}}
+.marquee .pause{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:rgba(4,12,35,.9);color:var(--text);cursor:pointer;display:grid;place-items:center;z-index:2}
+.marquee .pause .play{display:none}.marquee.paused .pause .play{display:block}.marquee.paused .pause .pz{display:none}
+.marquee .pause .ico{width:18px;height:18px}
 
-section{padding:110px 0}
+/* ---------- sections ---------- */
+section{padding:84px 0}
 .eyebrow{display:inline-block;font-size:13px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--mint);margin-bottom:14px}
 h2{font-size:clamp(30px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;font-weight:800;margin-bottom:16px}
 .subtitle{color:var(--muted);font-size:18px;max-width:38em}
-.head{margin-bottom:54px}
+.head{margin-bottom:48px}
 .center{text-align:center}.center .subtitle{margin:0 auto}
-.reveal{opacity:0;transform:translateY(34px);filter:blur(6px);transition:opacity .9s var(--ease),transform .9s var(--ease),filter .9s var(--ease),border-color .35s}
-.reveal.in{opacity:1;transform:none;filter:none}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease),transform .8s var(--ease),border-color .35s}
+.reveal.in{opacity:1;transform:none}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
 .stat{padding:26px;border-radius:var(--r);background:var(--card);border:1px solid var(--line);text-align:center}
-.stat b{display:block;font-size:44px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat b{display:block;font-size:42px;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
 .stat span{color:var(--muted);font-size:14px}
 
-.bento{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.about{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .card{position:relative;padding:28px;border-radius:var(--r);background:var(--card);border:1px solid var(--line);overflow:hidden}
-.card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(59,224,176,.14),transparent 45%);opacity:0;transition:opacity .35s;pointer-events:none}
-.card.in:hover{transform:translateY(-6px);border-color:rgba(59,224,176,.35);transition:transform .35s var(--ease),border-color .35s}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(59,224,176,.13),transparent 45%);opacity:0;transition:opacity .35s;pointer-events:none}
 .card:hover::before{opacity:1}
-.card.wide{grid-column:span 2}
-.card .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(59,224,176,.18),rgba(56,189,248,.12));border:1px solid rgba(59,224,176,.25);margin-bottom:18px;font-size:22px}
+.card .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(59,224,176,.18),rgba(56,189,248,.12));border:1px solid rgba(59,224,176,.25);margin-bottom:18px;color:var(--mint)}
+.card .ic .ico{width:24px;height:24px}
 .card h3{font-size:19px;margin-bottom:8px}
 .card p{color:var(--muted);font-size:15px}
-.card a{color:var(--mint)}
+.card a{color:var(--mint);text-decoration:underline;text-underline-offset:3px}
+.card.wide{grid-column:span 2}
+.bento{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
 .chips i{font-style:normal;font-size:12px;font-weight:700;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);font-family:var(--mono)}
 
-/* rules showcase */
+/* routing showcase */
 .rules{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center}
+.hero>*,.rules>*,.modes>*,.install>*,.plat>*,.about>*,.bento>*,.steps>*,.gen .out>*{min-width:0}
 .term{border-radius:22px;background:#050d20;border:1px solid var(--line);overflow:hidden;box-shadow:0 30px 80px -30px rgba(0,0,0,.7)}
 .term .bar{display:flex;gap:7px;padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03)}
 .term .bar i{width:11px;height:11px;border-radius:50%;background:#334155}
 .term .bar i:nth-child(1){background:#ef4444}.term .bar i:nth-child(2){background:#f59e0b}.term .bar i:nth-child(3){background:#22c55e}
 .term .bar span{margin-left:10px;font:500 12px var(--mono);color:var(--dim)}
 .term pre{padding:18px 20px;font:500 13.5px/1.75 var(--mono);color:#cbd5e1;overflow-x:auto;min-height:330px}
-.term .k{color:#7dd3fc}.term .s{color:#86efac}.term .c{color:#64748b}.term .o{color:#fbbf24}
+.term .k{color:#7dd3fc}.term .s{color:#86efac}.term .c{color:#8aa0b8}.term .o{color:#fbbf24}
 .term .cursor{display:inline-block;width:8px;height:16px;background:var(--mint);vertical-align:-3px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .ruleitems{display:flex;flex-direction:column;gap:12px}
 .ri{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
 .ri .tag{flex:none;font:700 12px var(--mono);padding:4px 10px;border-radius:8px}
 .tag.proxy{background:rgba(56,189,248,.15);color:var(--sky)}.tag.direct{background:rgba(59,224,176,.15);color:var(--mint)}.tag.block{background:rgba(239,68,68,.15);color:#f87171}
-.ri h4{font-size:16px;margin-bottom:2px}
+.ri h3{font-size:16px;margin-bottom:2px}
 .ri p{color:var(--muted);font-size:14px}
 
 /* modes */
 .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.mode{padding:28px;border-radius:var(--r);background:var(--card);border:1px solid var(--line);position:relative;overflow:hidden}
+.mode{padding:28px;border-radius:var(--r);background:var(--card);border:1px solid var(--line)}
 .mode .num{font:700 12px var(--mono);color:var(--mint);margin-bottom:14px;display:block}
 .mode h3{font-size:20px;margin-bottom:8px}
 .mode p{color:var(--muted);font-size:15px}
 .mode .where{margin-top:14px;font:500 12px var(--mono);color:var(--dim)}
 
+/* steps */
 .steps{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
 .steps .line{position:absolute;top:34px;left:16%;right:16%;height:2px;background:var(--line);overflow:hidden}
-.steps .line i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--sky));transition:width 1.6s var(--ease)}
-.steps.in .line i{width:100%}
+.steps .line i{display:block;height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--mint),var(--sky));transition:transform 1.6s var(--ease)}
+.steps.in .line i{transform:scaleX(1)}
 .step{text-align:center;padding:0 10px}
-.step .n{position:relative;z-index:1;width:68px;height:68px;margin:0 auto 20px;border-radius:50%;display:grid;place-items:center;font-size:24px;font-weight:800;background:var(--bg2);border:2px solid var(--line);transition:all .5s var(--ease)}
+.step .n{position:relative;z-index:1;width:68px;height:68px;margin:0 auto 20px;border-radius:50%;display:grid;place-items:center;font-size:24px;font-weight:800;background:var(--bg2);border:2px solid var(--line);transition:border-color .5s,box-shadow .5s,color .5s}
 .steps.in .step .n{border-color:var(--mint);box-shadow:0 0 30px -4px rgba(59,224,176,.6);color:var(--mint)}
-.steps.in .step:nth-child(3) .n{transition-delay:.5s}.steps.in .step:nth-child(4) .n{transition-delay:1s}
+.steps.in .step:nth-of-type(2) .n{transition-delay:.4s}.steps.in .step:nth-of-type(3) .n{transition-delay:.9s}
 .step h3{font-size:19px;margin-bottom:8px}
 .step p{color:var(--muted);font-size:15px}
 
+/* screenshots (shown only when real files exist) */
+.shots-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:28px}
+.tab{font:inherit;font-weight:700;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+.tab[aria-selected=true]{background:rgba(59,224,176,.14);color:var(--mint);border-color:rgba(59,224,176,.4)}
+.shots{display:flex;gap:18px;overflow-x:auto;padding:6px 4px 18px;scroll-snap-type:x proximity}
+.shots figure{flex:none;scroll-snap-align:center}
+.shots img{border-radius:22px;border:1px solid var(--line);background:var(--card);height:min(64vh,520px);width:auto}
+.shots.win img{height:auto;width:min(86vw,720px)}
+.shots figcaption{margin-top:10px;font-size:14px;color:var(--muted);text-align:center}
+
+/* install steps */
+.install{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.install ol{list-style:none;counter-reset:s;margin-top:14px}
+.install li{counter-increment:s;position:relative;padding:8px 0 8px 44px;color:var(--muted);font-size:15px}
+.install li::before{content:counter(s);position:absolute;left:0;top:6px;width:30px;height:30px;border-radius:50%;background:rgba(59,224,176,.14);border:1px solid rgba(59,224,176,.35);color:var(--mint);font-weight:800;font-size:14px;display:grid;place-items:center}
+.install li b{color:var(--text)}
+
+/* download */
 .plat{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .pcard{position:relative;padding:34px;border-radius:28px;background:var(--card);border:1px solid var(--line);overflow:hidden}
+.pcard.recommended{border-color:rgba(59,224,176,.55);box-shadow:0 0 0 1px rgba(59,224,176,.25)}
+.pcard .rec{display:none;position:absolute;top:18px;right:18px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:99px;background:var(--mint);color:#02140F}
+.pcard.recommended .rec{display:block}
 .pcard .logo{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;margin-bottom:18px}
 .pcard.and .logo{background:rgba(61,220,132,.14)}.pcard.win .logo{background:rgba(56,189,248,.14)}
 .pcard h3{font-size:26px;margin-bottom:6px}
@@ -180,148 +274,251 @@ h2{font-size:clamp(30px,4.2vw,48px);line-height:1.1;letter-spacing:-1px;font-wei
 .pcard li{padding-left:18px;position:relative;margin:4px 0}
 .pcard li::before{content:"›";position:absolute;left:4px;color:var(--mint);font-weight:800}
 .pcard .row{display:flex;flex-wrap:wrap;gap:10px}
-.pcard .glow{position:absolute;width:300px;height:300px;right:-100px;top:-100px;border-radius:50%;filter:blur(70px);opacity:.25;pointer-events:none}
-.pcard.and .glow{background:#3DDC84}.pcard.win .glow{background:#38BDF8}
-.warn{margin-top:18px;font-size:14px;color:var(--dim);text-align:center}
+.sha{margin-top:16px;font:500 12px/1.5 var(--mono);color:var(--dim);word-break:break-all;white-space:pre-line}
+.sha[hidden]{display:none}
+.release{margin:22px auto 0;max-width:820px;padding:18px 22px;border-radius:20px;background:var(--card);border:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;justify-content:space-between}
+.release .meta{color:var(--muted);font-size:14px}
+.release .meta b{color:var(--text)}
+.changelog{margin:12px auto 0;max-width:820px;padding:20px 24px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--muted);font-size:15px}
+.changelog h4{color:var(--text);font-size:15px;margin:14px 0 6px}
+.changelog h4:first-child{margin-top:0}
+.changelog ul{margin-left:20px}
+.changelog li{margin:4px 0}
+.warn{margin-top:18px;font-size:14px;color:var(--muted);text-align:center}
+.warn a,.fine a{color:var(--mint);text-decoration:underline;text-underline-offset:3px}
+.fine{margin-top:10px;font-size:13px;color:var(--dim);text-align:center}
 
+/* providers: invite generator */
+.gen{max-width:820px;margin:0 auto;padding:28px;border-radius:var(--r);background:var(--card);border:1px solid var(--line)}
+.gen label{display:block;font-weight:700;margin-bottom:8px}
+.gen .field{display:flex;gap:10px;flex-wrap:wrap}
+.gen input{flex:1 1 280px;min-width:0;font:inherit;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(4,12,35,.7);color:var(--text)}
+.gen input:focus-visible{outline:3px solid var(--mint);outline-offset:2px}
+.gen .err{margin-top:8px;font-size:14px;color:#fca5a5;min-height:1.4em}
+.gen .out{margin-top:16px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start}
+.gen .link{padding:14px;border-radius:14px;background:#050d20;border:1px solid var(--line);font:500 13px/1.6 var(--mono);color:#cbd5e1;word-break:break-all}
+.gen .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.gen canvas{width:220px;height:220px;border-radius:14px;background:#fff;image-rendering:pixelated}
+.gen .hint{margin-top:14px;font-size:13px;color:var(--dim)}
+
+/* faq */
 .faq{max-width:820px;margin:0 auto}
 .q{border-radius:18px;background:var(--card);border:1px solid var(--line);margin-bottom:12px;overflow:hidden}
 .q.open{border-color:rgba(59,224,176,.35)}
+.q h3{font-size:inherit}
 .q button{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 22px;font-weight:700;font-size:17px;cursor:pointer}
-.q button:focus-visible{outline:2px solid var(--mint);outline-offset:-2px;border-radius:18px}
+.q button:focus-visible{outline:3px solid var(--mint);outline-offset:-3px;border-radius:18px}
 .q .plus{width:28px;height:28px;flex:none;border-radius:50%;background:var(--card2);display:grid;place-items:center;transition:transform .35s var(--ease),background .35s}
 .q.open .plus{transform:rotate(45deg);background:rgba(59,224,176,.2)}
-.q .a{height:0;overflow:hidden;transition:height .4s var(--ease)}
-.q .a div{padding:0 22px 20px;color:var(--muted)}
-code{background:rgba(255,255,255,.08);padding:2px 7px;border-radius:7px;font-size:.9em;word-break:break-all}
+.q .a{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .35s var(--ease),visibility 0s .35s}
+.q.open .a{grid-template-rows:1fr;visibility:visible;transition-delay:0s}
+.q .a>div{overflow:hidden;min-height:0}
+.q .a p,.q .a ol{padding:0 22px 8px;color:var(--muted)}
+.q .a p:last-child,.q .a ol:last-child{padding-bottom:20px}
+.q .a ol{margin-left:22px}
+.q .a a{color:var(--mint);text-decoration:underline;text-underline-offset:3px}
 
-.final{position:relative;padding:70px 40px;border-radius:34px;text-align:center;overflow:hidden;isolation:isolate}
-.final::before{content:"";position:absolute;inset:-60%;background:conic-gradient(from 0deg,transparent 0 70%,#3BE0B0 80%,#38BDF8 88%,transparent 95%);animation:spin 6s linear infinite;z-index:-2}
-.final::after{content:"";position:absolute;inset:2px;border-radius:32px;background:radial-gradient(100% 120% at 50% 0%,#0d2e45,#050d22 70%);z-index:-1}
-@keyframes spin{to{transform:rotate(1turn)}}
+.final{position:relative;padding:70px 40px;border-radius:34px;text-align:center;border:1px solid rgba(59,224,176,.4);background:radial-gradient(100% 120% at 50% 0%,#0d2e45,#050d22 70%)}
 .final .cta{justify-content:center;margin-top:28px}
 
 footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid var(--line);margin-top:40px}
-.foot{display:flex;flex-wrap:wrap;gap:18px;justify-content:space-between;align-items:center}
+.foot{display:flex;flex-wrap:wrap;gap:18px;justify-content:space-between;align-items:flex-start}
 .foot nav{display:flex;flex-wrap:wrap;gap:18px}
+.foot a{color:var(--muted)}
 .foot a:hover{color:var(--text)}
+.foot .priv{flex:1 1 100%;font-size:13px;color:var(--dim)}
+p a,li a,.foot div a{text-decoration:underline;text-underline-offset:3px}
 
+/* sticky download on phones */
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(4,12,35,.92);border-top:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transform:translateY(110%);transition:transform .3s var(--ease);display:none}
+.sticky .btn{width:100%;justify-content:center}
+.sticky.show{transform:none}
+
+/* ---------- responsive ---------- */
 @media(max-width:1000px){
   .hero{grid-template-columns:1fr;text-align:center;padding-top:110px;min-height:auto}
   .lead{margin-inline:auto}.cta{justify-content:center}
-  .bento{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}
-  .rules{grid-template-columns:1fr}.modes{grid-template-columns:1fr}
+  .bento{grid-template-columns:1fr 1fr}
+  .rules,.modes,.install,.about{grid-template-columns:1fr}
 }
+@media(max-width:860px){.sticky{display:block}body{padding-bottom:0}}
 @media(max-width:680px){
-  section{padding:80px 0}
+  section{padding:60px 0}
   .bento,.plat,.steps{grid-template-columns:1fr}.card.wide{grid-column:auto}
   .steps .line{display:none}
   .hero .btn,.final .btn,.pcard .btn{width:100%;justify-content:center}
   .final{padding:54px 22px}
-  .stat b{font-size:36px}
+  .stat b{font-size:34px}
   .term pre{font-size:12px;min-height:0}
   .badge{font-size:12px}
+  .gen .out{grid-template-columns:1fr}
+  .gen canvas{width:min(100%,240px);height:auto;aspect-ratio:1}
 }
+
+/* ---------- reduced motion: everything visible at once, nothing moves ---------- */
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-  .reveal,h1 .w{opacity:1!important;transform:none!important;filter:none!important}
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .reveal,h1 .w{opacity:1!important;transform:none!important}
+  .track{width:auto;flex-wrap:wrap}
+  .track ul:nth-child(2){display:none}
+  .marquee .pause{display:none}
+  .progress{display:none}
 }
+html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!important}
 </style>
 </head>
 <body>
-<div class="progress" id="progress"></div>
-<div class="bg" aria-hidden="true">
-  <div class="grid"></div>
-  <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
-  <canvas id="particles"></canvas>
-</div>
+<a class="skip" href="#main">К содержимому</a>
+
+<!-- icon sprite: one set, one weight -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-import" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-switch" viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5M5.5 15A7 7 0 0018 17.5M18.5 9A7 7 0 006 6.5"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 16a8 8 0 1116 0M12 16l4-5"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18c1.5 0 2-1 1.5-2s0-2 1.5-2h2a3 3 0 003-3c0-5-4-11-8-11z"/><path d="M7.5 11h.01M10 7.5h.01M14.5 7.5h.01"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></symbol>
+  <symbol id="i-devices" viewBox="0 0 24 24"><rect x="2" y="6" width="13" height="10" rx="2"/><path d="M6 20h5M8.5 16v4"/><rect x="17" y="9" width="5" height="10" rx="1.5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></symbol>
+  <symbol id="i-android" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M17.6 9.48l1.84-3.18a.5.5 0 10-.87-.5l-1.87 3.23A11.4 11.4 0 0012 8a11.4 11.4 0 00-4.7 1.03L5.43 5.8a.5.5 0 10-.87.5L6.4 9.48A10.5 10.5 0 001 18h22a10.5 10.5 0 00-5.4-8.52zM7 15.25a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm10 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></symbol>
+  <symbol id="i-windows" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M3 5.1l7.4-1v7.2H3zm0 13.8l7.4 1V12.7H3zM11.3 4l9.7-1.4v8.6h-9.7zm0 16l9.7 1.4v-8.6h-9.7z"/></symbol>
+</svg>
+
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="bg" aria-hidden="true"><div class="grid"></div></div>
 
 <header id="top">
   <div class="wrap nav">
-    <a class="brand" href="#"><img src="logo.png" alt="">FlowVeil</a>
-    <nav class="links">
+    <a class="brand" href="#" aria-label="FlowVeil, к началу страницы"><img src="assets/logo-144.webp" width="34" height="34" alt="">FlowVeil</a>
+    <nav class="links" aria-label="Разделы">
+      <a href="#about">О приложении</a>
       <a href="#features">Возможности</a>
       <a href="#routing">Маршрутизация</a>
-      <a href="#modes">Режимы</a>
       <a href="#download">Скачать</a>
+      <a href="#providers">Провайдерам</a>
       <a href="#faq">Вопросы</a>
     </nav>
     <a class="btn primary" href="#download">Скачать</a>
+    <button class="burger" id="menuBtn" type="button" aria-expanded="false" aria-controls="menuPanel" aria-label="Открыть меню">
+      <svg class="ico open" aria-hidden="true"><use href="#i-menu"/></svg><svg class="ico close" aria-hidden="true"><use href="#i-x"/></svg>
+    </button>
   </div>
+  <nav class="panel" id="menuPanel" aria-label="Разделы" hidden>
+    <a href="#about">О приложении</a>
+    <a href="#features">Возможности</a>
+    <a href="#routing">Маршрутизация</a>
+    <a href="#download">Скачать</a>
+    <a href="#providers">Провайдерам</a>
+    <a href="#faq">Вопросы</a>
+  </nav>
 </header>
 
-<main style="overflow-x:clip">
-<div class="wrap hero">
-  <div>
-    <div class="badge"><b>Xray</b><b>sing-box</b> Android · Windows · открытый код</div>
-    <h1 id="title"><span class="w">Ваш</span> <span class="w">трафик.</span><br><span class="w grad">Ваши</span> <span class="w grad">правила.</span></h1>
-    <p class="lead"><b>FlowVeil</b> — прокси-клиент и маршрутизатор трафика на ядрах Xray и sing-box. Импортируйте подписку или конфигурацию, задайте правила — и FlowVeil сам решит, что пустить через прокси, что напрямую, а что заблокировать.</p>
-    <div class="cta">
-      <a class="btn primary magnet" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android.apk">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18a.5.5 0 10-.87-.5l-1.87 3.23A11.4 11.4 0 0012 8a11.4 11.4 0 00-4.7 1.03L5.43 5.8a.5.5 0 10-.87.5L6.4 9.48A10.5 10.5 0 001 18h22a10.5 10.5 0 00-5.4-8.52zM7 15.25a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm10 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg>
-        <span class="txt">Скачать для Android<span class="sub">APK · Android 7+</span></span>
-      </a>
-      <a class="btn magnet" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-Setup.exe">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.1l7.4-1v7.2H3zm0 13.8l7.4 1V12.7H3zM11.3 4l9.7-1.4v8.6h-9.7zm0 16l9.7 1.4v-8.6h-9.7z"/></svg>
-        <span class="txt">Скачать для Windows<span class="sub">Windows 10 / 11</span></span>
-      </a>
+<main id="main" style="overflow-x:clip">
+<div class="hero-wrap">
+  <canvas id="particles" aria-hidden="true"></canvas>
+  <div class="wrap hero">
+    <div>
+      <div class="badge"><b>Xray</b><b>sing-box</b> Android · Windows · открытый код</div>
+      <h1 id="title"><span class="w">Ваш</span> <span class="w">трафик.</span><br><span class="w grad">Ваши</span> <span class="w grad">правила.</span></h1>
+      <p class="lead"><b>FlowVeil</b> — прокси-клиент и маршрутизатор трафика на ядрах Xray и sing-box. Импортируйте подписку или конфигурацию, задайте правила — и FlowVeil сам решит, что пустить через прокси, что напрямую, а что заблокировать.</p>
+      <div class="cta">
+        <a class="btn primary" id="heroAndroid" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android.apk" rel="noopener">
+          <svg class="ico" aria-hidden="true"><use href="#i-android"/></svg>
+          <span class="txt">Скачать для Android<span class="sub">APK · Android 7+</span></span>
+        </a>
+        <a class="btn" id="heroWindows" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-Setup.exe" rel="noopener">
+          <svg class="ico" aria-hidden="true"><use href="#i-windows"/></svg>
+          <span class="txt">Скачать для Windows<span class="sub">Windows 10 / 11</span></span>
+        </a>
+      </div>
+      <p class="platform-note" id="platformNote" hidden>Пока только Android и Windows. Для вашего устройства приложения нет — но источник открыт.</p>
+      <p class="note">Бесплатно · без регистрации · без телеметрии · GPL-3.0</p>
     </div>
-    <p class="note">Бесплатно · без регистрации · без телеметрии · GPL-3.0</p>
-  </div>
 
-  <div class="router" id="router" aria-hidden="true">
-    <svg viewBox="0 0 560 570">
-      <defs>
-        <linearGradient id="gHub" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#62f2c8"/><stop offset="1" stop-color="#1FA37A"/></linearGradient>
-      </defs>
-      <!-- inputs → hub -->
-      <path class="path" id="pA" d="M110 90 C 200 90, 200 285, 280 285"/>
-      <path class="path" id="pB" d="M110 200 C 190 200, 210 285, 280 285"/>
-      <path class="path" id="pC" d="M110 370 C 190 370, 210 285, 280 285"/>
-      <path class="path" id="pD" d="M110 480 C 200 480, 200 285, 280 285"/>
-      <!-- hub → outputs -->
-      <path class="path" id="pP" d="M280 285 C 360 285, 360 120, 450 120"/>
-      <path class="path" id="pDi" d="M280 285 C 360 285, 370 285, 450 285"/>
-      <path class="path" id="pBl" d="M280 285 C 360 285, 360 450, 450 450"/>
-      <path class="flow" d="M280 285 C 360 285, 360 120, 450 120" stroke="#38BDF8"/>
-      <path class="flow" d="M280 285 C 360 285, 370 285, 450 285" stroke="#3BE0B0"/>
-      <path class="flow" d="M280 285 C 360 285, 360 450, 450 450" stroke="#EF4444" style="animation-duration:2.2s"/>
+    <div class="router" id="router" aria-hidden="true">
+      <svg viewBox="0 0 560 570">
+        <defs>
+          <linearGradient id="gHub" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#62f2c8"/><stop offset="1" stop-color="#1FA37A"/></linearGradient>
+          <clipPath id="hubClip"><circle cx="280" cy="285" r="30"/></clipPath>
+        </defs>
+        <path class="path" id="pA" d="M110 90 C 200 90, 200 285, 280 285"/>
+        <path class="path" id="pB" d="M110 200 C 190 200, 210 285, 280 285"/>
+        <path class="path" id="pC" d="M110 370 C 190 370, 210 285, 280 285"/>
+        <path class="path" id="pD" d="M110 480 C 200 480, 200 285, 280 285"/>
+        <path class="path" id="pP" d="M280 285 C 360 285, 360 120, 450 120"/>
+        <path class="path" id="pDi" d="M280 285 C 360 285, 370 285, 450 285"/>
+        <path class="path" id="pBl" d="M280 285 C 360 285, 360 450, 450 450"/>
+        <path class="flow" d="M280 285 C 360 285, 360 120, 450 120" stroke="#38BDF8"/>
+        <path class="flow" d="M280 285 C 360 285, 370 285, 450 285" stroke="#3BE0B0"/>
+        <path class="flow" d="M280 285 C 360 285, 360 450, 450 450" stroke="#EF4444" style="animation-duration:2.2s"/>
 
-      <g class="node"><rect x="10" y="66" width="104" height="48" rx="14"/><text x="30" y="95">🌐 Браузер</text></g>
-      <g class="node"><rect x="10" y="176" width="104" height="48" rx="14"/><text x="26" y="205">▶ YouTube</text></g>
-      <g class="node"><rect x="10" y="346" width="104" height="48" rx="14"/><text x="28" y="375">🏦 Банк</text></g>
-      <g class="node"><rect x="10" y="456" width="104" height="48" rx="14"/><text x="24" y="485">📊 Трекер</text></g>
+        <g class="node"><rect x="10" y="66" width="104" height="48" rx="14"/><text x="30" y="95">Браузер</text></g>
+        <g class="node"><rect x="10" y="176" width="104" height="48" rx="14"/><text x="30" y="205">Видео</text></g>
+        <g class="node"><rect x="10" y="346" width="104" height="48" rx="14"/><text x="34" y="375">Банк</text></g>
+        <g class="node"><rect x="10" y="456" width="104" height="48" rx="14"/><text x="26" y="485">Трекер</text></g>
 
-      <g class="hub">
-        <circle class="ring" cx="280" cy="285" r="62"/><circle class="ring r2" cx="280" cy="285" r="62"/>
-        <circle cx="280" cy="285" r="56" fill="url(#gHub)"/>
-        <image href="logo.png" x="250" y="255" width="60" height="60" style="clip-path:circle(24px at 30px 30px)"/>
-      </g>
-      <text x="238" y="372" class="small">routing</text>
+        <g class="hub">
+          <circle class="ring" cx="280" cy="285" r="62"/><circle class="ring r2" cx="280" cy="285" r="62"/>
+          <circle cx="280" cy="285" r="56" fill="url(#gHub)"/>
+          <image href="assets/logo-144.webp" x="250" y="255" width="60" height="60" clip-path="url(#hubClip)"/>
+        </g>
+        <text x="238" y="372" class="small">routing</text>
 
-      <g class="node"><rect x="436" y="92" width="124" height="56" rx="14" style="stroke:rgba(56,189,248,.5)"/><text x="450" y="116">Прокси</text><text x="450" y="134" class="small">VLESS · Reality</text></g>
-      <g class="node"><rect x="436" y="257" width="124" height="56" rx="14" style="stroke:rgba(59,224,176,.5)"/><text x="450" y="281">Напрямую</text><text x="450" y="299" class="small">geosite:ru</text></g>
-      <g class="node"><rect x="436" y="422" width="124" height="56" rx="14" style="stroke:rgba(239,68,68,.5)"/><text x="450" y="446">Блок</text><text x="450" y="464" class="small">ads · trackers</text></g>
-
-      <g id="packets"></g>
-    </svg>
-    <div class="rule-log" id="ruleLog">youtube.com → <b style="color:#38BDF8">proxy</b></div>
+        <g class="node"><rect x="436" y="92" width="124" height="56" rx="14" style="stroke:rgba(56,189,248,.5)"/><text x="450" y="116">Прокси</text><text x="450" y="134" class="small">VLESS · Reality</text></g>
+        <g class="node"><rect x="436" y="257" width="124" height="56" rx="14" style="stroke:rgba(59,224,176,.5)"/><text x="450" y="281">Напрямую</text><text x="450" y="299" class="small">geosite:ru</text></g>
+        <g class="node"><rect x="436" y="422" width="124" height="56" rx="14" style="stroke:rgba(239,68,68,.5)"/><text x="450" y="446">Блок</text><text x="450" y="464" class="small">ads · trackers</text></g>
+        <g id="packets"></g>
+      </svg>
+      <div class="rule-log" id="ruleLog">youtube.com → <b style="color:#38BDF8">proxy</b></div>
+    </div>
   </div>
 </div>
 
-<div class="marquee" aria-label="Поддерживаемые протоколы">
-  <div class="track">
-    <span>VLESS</span><span>Reality</span><span>XHTTP</span><span>VMess</span><span>Trojan</span><span>Hysteria2</span><span>Shadowsocks</span><span>WireGuard</span><span>TUIC</span><span>gRPC</span><span>WebSocket</span>
-    <span>VLESS</span><span>Reality</span><span>XHTTP</span><span>VMess</span><span>Trojan</span><span>Hysteria2</span><span>Shadowsocks</span><span>WireGuard</span><span>TUIC</span><span>gRPC</span><span>WebSocket</span>
+<div class="marquee" id="marquee" role="group" aria-label="Поддерживаемые протоколы">
+  <div class="mask">
+    <div class="track">
+      <ul><li>VLESS</li><li>Reality</li><li>XHTTP</li><li>VMess</li><li>Trojan</li><li>Hysteria2</li><li>Shadowsocks</li><li>WireGuard</li><li>TUIC</li><li>gRPC</li><li>WebSocket</li></ul>
+      <ul aria-hidden="true"><li>VLESS</li><li>Reality</li><li>XHTTP</li><li>VMess</li><li>Trojan</li><li>Hysteria2</li><li>Shadowsocks</li><li>WireGuard</li><li>TUIC</li><li>gRPC</li><li>WebSocket</li></ul>
+    </div>
   </div>
+  <button class="pause" id="marqueePause" type="button" aria-label="Остановить прокрутку" aria-pressed="false">
+    <svg class="ico pz" aria-hidden="true"><use href="#i-pause"/></svg><svg class="ico play" aria-hidden="true"><use href="#i-play"/></svg>
+  </button>
 </div>
 
-<section>
+<section id="about" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="head reveal center">
+      <span class="eyebrow">Что это и что вам нужно</span>
+      <h2>Клиент, а не сервис</h2>
+      <p class="subtitle">FlowVeil сам ничего не «раздаёт». Он подключается к тому, что вы получили от своего провайдера, и управляет тем, как идёт трафик.</p>
+    </div>
+    <div class="about">
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></div><h3>Это клиент, не сервис</h3><p>У FlowVeil нет своих серверов, подписок и платного доступа. Приложение только подключается к вашим серверам и распределяет по ним трафик.</p></div>
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></div><h3>Нужна подписка от провайдера</h3><p>Подписка — это ссылка вида <code>https://…</code>, которую выдаёт ваш провайдер или администратор. Скопируйте её и вставьте в FlowVeil: список серверов загрузится сам.</p></div>
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-devices"/></svg></div><h3>Android и Windows</h3><p>Приложения для Android 7+ и Windows 10 / 11 (x64). Версий для iPhone, macOS и Linux пока нет.</p></div>
+    </div>
+  </div>
+</section>
+
+<section aria-label="Цифры">
   <div class="wrap stats">
-    <div class="stat reveal"><b data-count="2">0</b><span>ядра: Xray и sing-box</span></div>
-    <div class="stat reveal"><b data-count="10" data-suffix="+">0</b><span>протоколов и транспортов</span></div>
-    <div class="stat reveal"><b data-count="5">0</b><span>форматов импорта</span></div>
-    <div class="stat reveal"><b data-count="0">0</b><span>телеметрии</span></div>
+    <div class="stat reveal" id="stBuild" hidden><b id="buildNum">—</b><span>текущая сборка</span></div>
+    <div class="stat reveal" id="stDownloads" hidden><b id="dlCount">—</b><span>скачиваний последних сборок</span></div>
+    <div class="stat reveal"><b data-count="17">0</b><span>цветовых тем</span></div>
+    <div class="stat reveal"><b data-count="79">0</b><span>доменов в списке «напрямую» (Android)</span></div>
+    <div class="stat reveal"><b data-count="0">0</b><span>трекеров и аналитики</span></div>
   </div>
 </section>
 
@@ -333,17 +530,17 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
       <p class="subtitle">Вся гибкость Xray и sing-box, но на экране — только нужное. Технические настройки открываются в режиме разработчика.</p>
     </div>
     <div class="bento">
-      <div class="card wide reveal"><div class="ic">📥</div><h3>Импорт чего угодно</h3><p>Подписки, отдельные ссылки, QR-коды и готовые конфигурации — формат определяется сам.</p>
+      <div class="card wide reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-import"/></svg></div><h3>Импорт популярных форматов</h3><p>Подписки, отдельные ссылки, QR-коды и готовые конфигурации — формат определяется сам.</p>
         <div class="chips"><i>share-ссылки</i><i>base64</i><i>Clash / Mihomo</i><i>sing-box JSON</i><i>Xray JSON</i></div></div>
-      <div class="card reveal"><div class="ic">🧭</div><h3>Правила маршрутизации</h3><p>По доменам, IP, geosite / geoip, портам и приложениям.</p></div>
-      <div class="card reveal"><div class="ic">⚡</div><h3>Лучший узел</h3><p>Реальная проверка задержки и выбор самого быстрого узла в один клик.</p></div>
-      <div class="card reveal"><div class="ic">🔁</div><h3>Автопереключение</h3><p>Узел перестал отвечать — FlowVeil переходит на рабочий без разрыва.</p></div>
-      <div class="card wide reveal"><div class="ic">🇷🇺</div><h3>Российские сервисы напрямую</h3><p>Готовый пресет: банки, маркетплейсы и госуслуги идут в обход прокси. Свои сайты и приложения — одним списком.</p>
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-compass"/></svg></div><h3>Правила маршрутизации</h3><p>По доменам, IP, geosite / geoip, портам и приложениям.</p></div>
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg></div><h3>Лучший сервер</h3><p>Реальная проверка задержки и выбор самого быстрого сервера в один клик.</p></div>
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-switch"/></svg></div><h3>Автопереключение</h3><p>На Android: сервер перестал отвечать — FlowVeil сам переходит на рабочий (проверка каждые 30 секунд) и присылает уведомление.</p></div>
+      <div class="card wide reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-globe"/></svg></div><h3>Российские сервисы напрямую</h3><p>Готовый пресет: банки, маркетплейсы и госуслуги идут напрямую, минуя прокси. Свои сайты и приложения добавляются одним списком.</p>
         <div class="chips"><i>geosite:category-ru</i><i>geoip:ru</i><i>ozon.ru</i><i>sberbank.ru</i><i>gosuslugi.ru</i></div></div>
-      <div class="card reveal"><div class="ic">📊</div><h3>Информация о подписке</h3><p>Трафик, срок, объявления и напоминания заранее.</p></div>
-      <div class="card reveal"><div class="ic">📶</div><h3>Тест скорости</h3><p>Скачивание, отдача и пинг через выбранный узел.</p></div>
-      <div class="card reveal"><div class="ic">🎨</div><h3>Темы и виджеты</h3><p>17 тем, свой код темы, виджеты на Android.</p></div>
-      <div class="card wide reveal"><div class="ic">✉️</div><h3>Deep-link импорт</h3><p><code>flowveil://add?url=…</code> — профиль в один тап.</p></div>
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-chart"/></svg></div><h3>Информация о подписке</h3><p>Трафик, срок и объявления провайдера. На Android — ещё и напоминания заранее.</p></div>
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-gauge"/></svg></div><h3>Тест скорости</h3><p>На Android: скачивание, отдача и пинг через выбранный сервер, в несколько потоков — как в обычных спидтестах.</p></div>
+      <div class="card reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg></div><h3>Темы и виджеты</h3><p>17 цветовых тем. На Android — свой код темы и виджеты.</p></div>
+      <div class="card wide reveal"><div class="ic"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg></div><h3>Ссылка-приглашение</h3><p><code>flowveil://add?url=…</code> — профиль добавляется в один тап на Android и Windows. Ссылку можно <a href="#providers">собрать здесь</a>.</p></div>
     </div>
   </div>
 </section>
@@ -353,7 +550,7 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
     <div class="reveal">
       <div class="term">
         <div class="bar"><i></i><i></i><i></i><span>routing.json</span></div>
-        <pre id="code"></pre>
+        <pre id="code" role="region" tabindex="0" aria-label="Пример правил маршрутизации"></pre>
       </div>
     </div>
     <div>
@@ -363,9 +560,9 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
         <p class="subtitle">Правила проверяются сверху вниз. Первое совпадение решает, куда пойдёт соединение.</p>
       </div>
       <div class="ruleitems">
-        <div class="ri reveal"><span class="tag direct">direct</span><div><h4>Локальная сеть и российские сервисы</h4><p>Роутер, принтер, банки и маркетплейсы — без прокси и без задержек.</p></div></div>
-        <div class="ri reveal"><span class="tag proxy">proxy</span><div><h4>Всё остальное — через узел</h4><p>Выбранный вручную, самый быстрый или по правилу балансировки.</p></div></div>
-        <div class="ri reveal"><span class="tag block">block</span><div><h4>Реклама и трекеры</h4><p>Блокируются на уровне маршрутизации, до установки соединения.</p></div></div>
+        <div class="ri reveal"><span class="tag direct">direct</span><div><h3>Локальная сеть и российские сервисы</h3><p>Роутер, принтер, банки и маркетплейсы — без прокси и без задержек.</p></div></div>
+        <div class="ri reveal"><span class="tag proxy">proxy</span><div><h3>Всё остальное — через сервер</h3><p>Выбранный вручную, самый быстрый или по правилу балансировки.</p></div></div>
+        <div class="ri reveal"><span class="tag block">block</span><div><h3>Реклама и трекеры</h3><p>Отсекаются на уровне маршрутизации, до установки соединения.</p></div></div>
       </div>
     </div>
   </div>
@@ -392,11 +589,26 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
       <h2>Три шага</h2>
     </div>
     <div class="steps" id="steps">
-      <div class="line"><i></i></div>
-      <div class="step"><div class="n">1</div><h3>Импортируйте профиль</h3><p>Ссылку на подписку, share-ссылку, QR-код или файл конфигурации.</p></div>
-      <div class="step"><div class="n">2</div><h3>Выберите узел</h3><p>Вручную или кнопкой «⚡ Лучший» — по реальной задержке.</p></div>
+      <div class="line" aria-hidden="true"><i></i></div>
+      <div class="step"><div class="n">1</div><h3>Добавьте подписку</h3><p>Скопируйте ссылку от провайдера и нажмите «Добавить». Подойдут и share-ссылка, QR-код или файл конфигурации.</p></div>
+      <div class="step"><div class="n">2</div><h3>Выберите сервер</h3><p>Вручную или кнопкой «Лучший» — по реальной задержке.</p></div>
       <div class="step"><div class="n">3</div><h3>Включите</h3><p>Правила по умолчанию уже настроены. Меняйте, когда понадобится.</p></div>
     </div>
+  </div>
+</section>
+
+<section id="shots" hidden>
+  <div class="wrap">
+    <div class="head reveal center">
+      <span class="eyebrow">Как выглядит</span>
+      <h2>Приложение изнутри</h2>
+    </div>
+    <div class="shots-tabs" role="tablist" aria-label="Платформа скриншотов">
+      <button class="tab" type="button" role="tab" id="tabAndroid" aria-selected="true" aria-controls="shotsAndroid" hidden>Android</button>
+      <button class="tab" type="button" role="tab" id="tabWindows" aria-selected="false" aria-controls="shotsWindows" hidden>Windows</button>
+    </div>
+    <div class="shots" id="shotsAndroid" role="tabpanel" aria-labelledby="tabAndroid" tabindex="0"></div>
+    <div class="shots win" id="shotsWindows" role="tabpanel" aria-labelledby="tabWindows" tabindex="0" hidden></div>
   </div>
 </section>
 
@@ -407,26 +619,83 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
       <h2>Android и Windows</h2>
     </div>
     <div class="plat">
-      <div class="pcard and reveal"><div class="glow"></div>
-        <div class="logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="#3DDC84"><path d="M17.6 9.48l1.84-3.18a.5.5 0 10-.87-.5l-1.87 3.23A11.4 11.4 0 0012 8a11.4 11.4 0 00-4.7 1.03L5.43 5.8a.5.5 0 10-.87.5L6.4 9.48A10.5 10.5 0 001 18h22a10.5 10.5 0 00-5.4-8.52zM7 15.25a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm10 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg></div>
+      <div class="pcard and reveal" id="cardAndroid"><span class="rec">Для вашего устройства</span>
+        <div class="logo"><svg class="ico fill" style="width:30px;height:30px;color:#3DDC84" aria-hidden="true"><use href="#i-android"/></svg></div>
         <h3>Android</h3><p>Android 7 и новее. Основан на v2rayNG.</p>
-        <ul><li>Ядро Xray, режим VpnService (TUN)</li><li>Прокси для отдельных приложений</li><li>Виджеты и плитка в шторке</li></ul>
+        <ul><li>Ядро Xray, системный туннель Android (TUN)</li><li>Прокси для отдельных приложений</li><li>Виджеты и плитка в шторке</li></ul>
         <div class="row">
-          <a class="btn primary magnet" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android.apk"><span class="txt">Скачать APK<span class="sub">universal</span></span></a>
-          <a class="btn magnet" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android-arm64.apk"><span class="txt">arm64-v8a<span class="sub">меньше размер</span></span></a>
+          <a class="btn primary" id="dlApk" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android.apk" rel="noopener"><span class="txt">Скачать APK<span class="sub" id="apkSub">universal</span></span></a>
+          <a class="btn" id="dlApk64" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android-arm64.apk" rel="noopener"><span class="txt">arm64-v8a<span class="sub" id="apk64Sub">меньше размер</span></span></a>
         </div>
+        <p class="sha" id="shaApk" hidden></p>
       </div>
-      <div class="pcard win reveal"><div class="glow"></div>
-        <div class="logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="#38BDF8"><path d="M3 5.1l7.4-1v7.2H3zm0 13.8l7.4 1V12.7H3zM11.3 4l9.7-1.4v8.6h-9.7zm0 16l9.7 1.4v-8.6h-9.7z"/></svg></div>
-        <h3>Windows</h3><p>Windows 10 и 11 x64. Основан на v2rayN.</p>
-        <ul><li>Ядра Xray и sing-box в комплекте</li><li>TUN, системный прокси, локальный порт</li><li>Меню в трее, обновления в один клик</li></ul>
+      <div class="pcard win reveal" id="cardWindows"><span class="rec">Для вашего устройства</span>
+        <div class="logo"><svg class="ico fill" style="width:28px;height:28px;color:#38BDF8" aria-hidden="true"><use href="#i-windows"/></svg></div>
+        <h3>Windows</h3><p>Windows 10 и 11, x64. Основан на v2rayN.</p>
+        <ul><li>Ядра Xray и sing-box в комплекте</li><li>TUN, системный прокси, локальный порт</li><li>Значок и меню в трее</li></ul>
         <div class="row">
-          <a class="btn primary magnet" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-Setup.exe"><span class="txt">Установщик<span class="sub">FlowVeil-Setup.exe</span></span></a>
-          <a class="btn magnet" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-windows-portable.zip"><span class="txt">Portable<span class="sub">zip, без установки</span></span></a>
+          <a class="btn primary" id="dlExe" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-Setup.exe" rel="noopener"><span class="txt">Установщик<span class="sub" id="exeSub">FlowVeil-Setup.exe</span></span></a>
+          <a class="btn" id="dlZip" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-windows-portable.zip" rel="noopener"><span class="txt">Portable<span class="sub" id="zipSub">zip, без установки</span></span></a>
         </div>
+        <p class="sha" id="shaExe" hidden></p>
       </div>
     </div>
-    <p class="warn">Windows может показать «неизвестный издатель» — нажмите «Подробнее» → «Выполнить в любом случае». <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases" style="color:var(--mint)">Все версии</a></p>
+
+    <div class="release" id="release" hidden>
+      <div class="meta"><b id="relBuild"></b> <span id="relDate"></span></div>
+      <button class="btn small" id="changelogBtn" type="button" aria-expanded="false" aria-controls="changelog">Что нового</button>
+    </div>
+    <div class="changelog" id="changelog" hidden></div>
+    <p class="fine" id="apiNote">Версия и размеры файлов берутся с GitHub: страница один раз запрашивает список релизов (GitHub видит ваш IP, как при любом заходе на github.com).</p>
+
+    <div class="install" style="margin-top:44px">
+      <div class="card reveal"><h3>Установка на Android</h3>
+        <ol>
+          <li><b>Скачайте APK</b> и откройте файл из уведомления или из «Загрузок».</li>
+          <li>Если телефон спросит, <b>разрешите установку из этого источника</b> для браузера или файлового менеджера (Настройки → Приложения → Особый доступ → Установка неизвестных приложений).</li>
+          <li>Нажмите <b>«Установить»</b>. Если Play Protect предупредит о неизвестном приложении, выберите «Всё равно установить».</li>
+          <li>Откройте FlowVeil, скопируйте ссылку на подписку и нажмите «Добавить».</li>
+        </ol></div>
+      <div class="card reveal"><h3>Установка на Windows</h3>
+        <ol>
+          <li><b>Скачайте FlowVeil-Setup.exe</b> и запустите его. Права администратора для установки не нужны.</li>
+          <li>Windows может показать «неизвестный издатель»: установщик пока не подписан сертификатом издателя. Нажмите <b>«Подробнее» → «Выполнить в любом случае»</b>.</li>
+          <li>Запустите FlowVeil и добавьте подписку: скопируйте ссылку и нажмите «Добавить».</li>
+          <li>Режим TUN один раз запросит подтверждение Windows (создаётся задача в Планировщике), дальше включается сам. Без установки работает <b>portable-архив</b>.</li>
+        </ol></div>
+    </div>
+    <p class="warn"><a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases" rel="noopener">Все версии на GitHub</a></p>
+  </div>
+</section>
+
+<section id="providers">
+  <div class="wrap">
+    <div class="head reveal center">
+      <span class="eyebrow">Для провайдеров и администраторов</span>
+      <h2>Ссылка-приглашение и QR-код</h2>
+      <p class="subtitle">Вставьте адрес подписки — получите ссылку <code>flowveil://add?url=…</code> и QR-код. Всё считается в вашем браузере, ничего никуда не отправляется.</p>
+    </div>
+    <form class="gen reveal" id="genForm" novalidate>
+      <label for="genUrl">Адрес подписки</label>
+      <div class="field">
+        <input id="genUrl" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://provider.example/sub/…" aria-describedby="genErr">
+        <button class="btn primary" type="submit">Создать</button>
+      </div>
+      <p class="err" id="genErr" role="alert"></p>
+      <span class="sr" id="genStatus" role="status"></span>
+      <div class="out" id="genOut" hidden>
+        <div>
+          <div class="link" id="genLink"></div>
+          <div class="acts">
+            <button class="btn small" type="button" id="genCopy"><svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg><span>Скопировать</span></button>
+            <button class="btn small" type="button" id="genSave"><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Сохранить QR</span></button>
+            <a class="btn small" id="genOpen" href="#providers">Открыть в FlowVeil</a>
+          </div>
+        </div>
+        <canvas id="genQr" width="180" height="180" role="img" aria-label="QR-код ссылки-приглашения"></canvas>
+      </div>
+      <p class="hint">Ссылка не проходит через какие-либо серверы: она собирается прямо на этой странице. Если ссылка длиннее ~2000 символов, она не поместится в QR-код.</p>
+    </form>
   </div>
 </section>
 
@@ -436,13 +705,18 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
       <span class="eyebrow">Вопросы</span>
       <h2>Частые вопросы</h2>
     </div>
-    <div class="faq">
-      <div class="q reveal"><button aria-expanded="false">Что такое FlowVeil?<span class="plus">+</span></button><div class="a"><div>Прокси-клиент и маршрутизатор трафика — как v2rayN, v2rayNG или Happ. Своих серверов у FlowVeil нет: вы подключаете свои узлы или подписку, а FlowVeil управляет тем, как идёт трафик.</div></div></div>
-      <div class="q reveal"><button aria-expanded="false">Какие форматы поддерживаются?<span class="plus">+</span></button><div class="a"><div>Share-ссылки (vless://, vmess://, trojan://, ss://, hysteria2://, tuic://, wireguard://), подписки в base64, Clash / Mihomo YAML, sing-box JSON и полные конфигурации Xray. Зашифрованные ссылки <code>happ://crypt…</code> открывает только приложение Happ.</div></div></div>
-      <div class="q reveal"><button aria-expanded="false">Зачем режиму TUN права администратора на Windows?<span class="plus">+</span></button><div class="a"><div>TUN создаёт виртуальный сетевой адаптер, а это Windows разрешает только администратору. FlowVeil спрашивает разрешение один раз — дальше включает TUN сам. Системный прокси и локальный порт работают без прав.</div></div></div>
-      <div class="q reveal"><button aria-expanded="false">Какие данные собирает приложение?<span class="plus">+</span></button><div class="a"><div>Никаких: нет аккаунтов, аналитики и телеметрии. Источнику подписки уходят только стандартные заголовки устройства (для лимита устройств) — на Android их можно отключить. <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md" style="color:var(--mint)">Политика конфиденциальности</a>.</div></div></div>
-      <div class="q reveal"><button aria-expanded="false">Как добавить профиль одной ссылкой?<span class="plus">+</span></button><div class="a"><div><code>flowveil://add?url=ССЫЛКА</code> открывает FlowVeil и сразу импортирует подписку или конфигурацию — на Android и Windows.</div></div></div>
-      <div class="q reveal"><button aria-expanded="false">Где исходный код?<span class="plus">+</span></button><div class="a"><div>На <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy" style="color:var(--mint)">GitHub</a>. FlowVeil основан на v2rayNG и v2rayN и распространяется по GPL-3.0; каждая сборка собирается автоматически из репозитория.</div></div></div>
+    <div class="faq" id="faqList">
+      <div class="q reveal"><h3><button type="button" id="q1b" aria-expanded="false" aria-controls="q1a">Что такое FlowVeil?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q1a" role="region" aria-labelledby="q1b"><div><p>Прокси-клиент и маршрутизатор трафика — как v2rayN и v2rayNG. Своих серверов у FlowVeil нет: вы подключаете свои серверы или подписку, а FlowVeil управляет тем, как идёт трафик.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q2b" aria-expanded="false" aria-controls="q2a">Что такое подписка и где её взять?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q2a" role="region" aria-labelledby="q2b"><div><p>Подписка — это адрес (<code>https://…</code>), по которому FlowVeil загружает список серверов и данные о вашем тарифе. Её выдаёт ваш провайдер или администратор. У FlowVeil собственных подписок нет.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q3b" aria-expanded="false" aria-controls="q3a">FlowVeil даёт серверы?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q3a" role="region" aria-labelledby="q3b"><div><p>Нет. FlowVeil — только приложение-клиент. Мы не продаём и не раздаём серверы, подписки или доступ: без ссылки от вашего провайдера приложению не к чему подключаться.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q4b" aria-expanded="false" aria-controls="q4a">Какие форматы поддерживаются?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q4a" role="region" aria-labelledby="q4b"><div><p>Share-ссылки (vless://, vmess://, trojan://, ss://, hysteria2://, tuic://, wireguard://), подписки в base64, Clash / Mihomo YAML, sing-box JSON и полные конфигурации Xray. Закрытые (зашифрованные) ссылки не поддерживаются — попросите у провайдера обычную ссылку на подписку.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q5b" aria-expanded="false" aria-controls="q5a">Как поставить APK на Android?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q5a" role="region" aria-labelledby="q5b"><div><ol><li>Скачайте APK и откройте его.</li><li>Разрешите установку из этого источника, когда телефон спросит.</li><li>Нажмите «Установить». Если Play Protect предупредит — «Всё равно установить».</li></ol><p>Подробнее — в блоке «Установка на Android» выше.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q6b" aria-expanded="false" aria-controls="q6a">Как проверить, что файл не подменён?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q6a" role="region" aria-labelledby="q6b"><div><p>Под кнопками скачивания показана контрольная сумма SHA-256 (её считает GitHub для каждого файла релиза). Посчитайте сумму скачанного файла и сравните: на Windows — <code>certutil -hashfile FlowVeil-Setup.exe SHA256</code>, на Linux и macOS — <code>sha256sum файл</code>. Если суммы нет, откройте страницу релиза на GitHub.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q7b" aria-expanded="false" aria-controls="q7a">Будет ли версия для iPhone, macOS или Linux?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q7a" role="region" aria-labelledby="q7b"><div><p>Сейчас нет: есть только Android и Windows. Исходный код открыт, но готовых сборок для других платформ у проекта нет, и обещать их мы не будем.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q8b" aria-expanded="false" aria-controls="q8a">Зачем режиму TUN права администратора на Windows?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q8a" role="region" aria-labelledby="q8b"><div><p>TUN создаёт виртуальный сетевой адаптер, а это Windows разрешает только администратору. Windows спросит подтверждение один раз: FlowVeil создаст задачу в Планировщике Windows и дальше перезапускается с нужными правами без запроса. Системный прокси и локальный порт работают без прав.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q9b" aria-expanded="false" aria-controls="q9a">Какие данные собирает приложение?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q9a" role="region" aria-labelledby="q9b"><div><p>Никаких: нет аккаунтов, аналитики и телеметрии. Источнику подписки уходят только стандартные заголовки устройства (для лимита устройств) — на Android их можно отключить. Эта страница не использует счётчиков и внешних шрифтов; единственный внешний запрос — список релизов с GitHub. <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md" rel="noopener">Политика конфиденциальности</a>.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q10b" aria-expanded="false" aria-controls="q10a">Как добавить профиль одной ссылкой?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q10a" role="region" aria-labelledby="q10b"><div><p><code>flowveil://add?url=ССЫЛКА</code> открывает FlowVeil и сразу импортирует подписку или конфигурацию — на Android и Windows. Такую ссылку и QR-код можно собрать <a href="#providers">в этом разделе</a>.</p></div></div></div>
+      <div class="q reveal"><h3><button type="button" id="q11b" aria-expanded="false" aria-controls="q11a">Где исходный код?<span class="plus" aria-hidden="true">+</span></button></h3><div class="a" id="q11a" role="region" aria-labelledby="q11b"><div><p>На <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy" rel="noopener">GitHub</a>. FlowVeil основан на v2rayNG и v2rayN и распространяется по GPL-3.0; каждая сборка собирается автоматически из репозитория.</p></div></div></div>
     </div>
   </div>
 </section>
@@ -453,8 +727,8 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
       <h2>Возьмите трафик под контроль</h2>
       <p class="subtitle" style="margin:0 auto">Бесплатно, с открытым кодом, для Android и Windows.</p>
       <div class="cta">
-        <a class="btn primary magnet" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-android.apk"><span class="txt">Скачать для Android</span></a>
-        <a class="btn magnet" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases/latest/download/FlowVeil-Setup.exe"><span class="txt">Скачать для Windows</span></a>
+        <a class="btn primary" href="#download"><span class="txt">Скачать FlowVeil</span></a>
+        <a class="btn" href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy" rel="noopener"><span class="txt">Исходный код</span></a>
       </div>
     </div>
   </div>
@@ -463,62 +737,289 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
 
 <footer>
   <div class="wrap foot">
-    <div>© FlowVeil · автор <a href="https://t.me/GxoyzoomG" style="color:var(--muted)">@GxoyzoomG</a><br>Основано на v2rayNG и v2rayN · Xray-core · sing-box · GPL-3.0</div>
-    <nav>
-      <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy">GitHub</a>
-      <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases">Все версии</a>
-      <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md">Политика конфиденциальности</a>
-      <a href="https://t.me/GxoyzoomG">Telegram</a>
+    <div>© <span id="year">2026</span> FlowVeil · автор <a href="https://t.me/GxoyzoomG" rel="noopener">@GxoyzoomG</a><br>Основано на v2rayNG и v2rayN · Xray-core · sing-box · GPL-3.0</div>
+    <nav aria-label="Ссылки">
+      <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy" rel="noopener">GitHub</a>
+      <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases" rel="noopener">Все версии</a>
+      <a href="https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md" rel="noopener">Политика конфиденциальности</a>
+      <a href="https://t.me/GxoyzoomG" rel="noopener">Telegram</a>
     </nav>
+    <p class="priv">Страница без аналитики, счётчиков и внешних шрифтов. Единственный внешний запрос — список релизов с api.github.com.</p>
   </div>
 </footer>
 
+<div class="sticky" id="sticky"><a class="btn primary" id="stickyBtn" href="#download"><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Скачать</span></a></div>
+
 <script>
+/* Minimal QR Code encoder: byte mode, error correction L/M, versions 1-40. */
+const QR = (() => {
+  const ECC_PER_BLOCK = {
+    L: [-1, 7, 10, 15, 20, 26, 18, 20, 24, 30, 18, 20, 24, 26, 30, 22, 24, 28, 30, 28, 28, 28, 28, 30, 30, 26, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+    M: [-1, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28],
+  };
+  const BLOCKS = {
+    L: [-1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 4, 4, 6, 6, 6, 6, 7, 8, 8, 9, 9, 10, 12, 12, 12, 13, 14, 15, 16, 17, 18, 19, 19, 20, 21, 22, 24, 25],
+    M: [-1, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9, 10, 10, 11, 13, 14, 16, 17, 17, 18, 20, 21, 23, 25, 26, 28, 29, 31, 33, 35, 37, 38, 40, 43, 45, 47, 49],
+  };
+  const FORMAT_BITS = { L: 1, M: 0 };
+
+  const rawModules = (v) => {
+    let r = (16 * v + 128) * v + 64;
+    if (v >= 2) { const n = Math.floor(v / 7) + 2; r -= (25 * n - 10) * n - 55; if (v >= 7) r -= 36; }
+    return r;
+  };
+  const dataCodewords = (v, e) => Math.floor(rawModules(v) / 8) - ECC_PER_BLOCK[e][v] * BLOCKS[e][v];
+
+  // Reed-Solomon over GF(256), polynomial 0x11D
+  const mul = (x, y) => { let z = 0; for (let i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11d); z ^= ((y >>> i) & 1) * x; } return z & 255; };
+  const rsDivisor = (deg) => {
+    const res = new Array(deg).fill(0); res[deg - 1] = 1; let root = 1;
+    for (let i = 0; i < deg; i++) { for (let j = 0; j < deg; j++) { res[j] = mul(res[j], root); if (j + 1 < deg) res[j] ^= res[j + 1]; } root = mul(root, 2); }
+    return res;
+  };
+  const rsRemainder = (data, div) => {
+    const res = new Array(div.length).fill(0);
+    for (const b of data) { const f = b ^ res.shift(); res.push(0); div.forEach((c, i) => { res[i] ^= mul(c, f); }); }
+    return res;
+  };
+
+  const utf8 = (s) => Array.from(new TextEncoder().encode(s));
+
+  function encode(text, ecl = 'M') {
+    const bytes = utf8(text);
+    let ver = 0, level = ecl;
+    const fits = (v, e) => { const cc = v < 10 ? 8 : 16; return 4 + cc + bytes.length * 8 <= dataCodewords(v, e) * 8 && (cc === 16 || bytes.length < 256); };
+    for (const e of ecl === 'M' ? ['M', 'L'] : ['L']) {
+      for (let v = 1; v <= 40 && !ver; v++) if (fits(v, e)) { ver = v; level = e; }
+      if (ver) break;
+    }
+    if (!ver) throw new RangeError('too long');
+
+    // bit buffer
+    const bits = [];
+    const put = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
+    put(4, 4); put(bytes.length, ver < 10 ? 8 : 16); bytes.forEach((b) => put(b, 8));
+    const cap = dataCodewords(ver, level) * 8;
+    put(0, Math.min(4, cap - bits.length));
+    put(0, (8 - (bits.length % 8)) % 8);
+    for (let pad = 0xec; bits.length < cap; pad ^= 0xec ^ 0x11) put(pad, 8);
+    const data = []; for (let i = 0; i < bits.length; i += 8) data.push(parseInt(bits.slice(i, i + 8).join(''), 2));
+
+    // blocks + ecc + interleave
+    const nb = BLOCKS[level][ver], eccLen = ECC_PER_BLOCK[level][ver], raw = Math.floor(rawModules(ver) / 8);
+    const short = nb - (raw % nb), shortLen = Math.floor(raw / nb), div = rsDivisor(eccLen);
+    const blocks = []; let k = 0;
+    for (let i = 0; i < nb; i++) {
+      const d = data.slice(k, k + shortLen - eccLen + (i < short ? 0 : 1)); k += d.length;
+      const ecc = rsRemainder(d, div);
+      if (i < short) d.push(0);
+      blocks.push(d.concat(ecc));
+    }
+    const all = [];
+    for (let i = 0; i < blocks[0].length; i++) blocks.forEach((b, j) => { if (i !== shortLen - eccLen || j >= short) all.push(b[i]); });
+
+    // matrix
+    const size = ver * 4 + 17;
+    const mod = Array.from({ length: size }, () => new Array(size).fill(false));
+    const fn = Array.from({ length: size }, () => new Array(size).fill(false));
+    const set = (x, y, v) => { mod[y][x] = v; fn[y][x] = true; };
+    for (let i = 0; i < size; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+    const finder = (cx, cy) => { for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) { const d = Math.max(Math.abs(dx), Math.abs(dy)), x = cx + dx, y = cy + dy; if (x >= 0 && x < size && y >= 0 && y < size) set(x, y, d !== 2 && d !== 4); } };
+    finder(3, 3); finder(size - 4, 3); finder(3, size - 4);
+    const nAlign = ver === 1 ? 0 : Math.floor(ver / 7) + 2;
+    const step = ver === 32 ? 26 : Math.ceil((ver * 4 + 4) / (nAlign * 2 - 2)) * 2;
+    const pos = [6]; for (let p = size - 7; pos.length < nAlign; p -= step) pos.splice(1, 0, p);
+    pos.forEach((cy, i) => pos.forEach((cx, j) => {
+      if ((i === 0 && j === 0) || (i === 0 && j === nAlign - 1) || (i === nAlign - 1 && j === 0)) return;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(cx + dx, cy + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+    }));
+    const drawFormat = (mask) => {
+      const d = (FORMAT_BITS[level] << 3) | mask; let r = d;
+      for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+      const b = ((d << 10) | r) ^ 0x5412, g = (i) => ((b >>> i) & 1) !== 0;
+      for (let i = 0; i <= 5; i++) set(8, i, g(i));
+      set(8, 7, g(6)); set(8, 8, g(7)); set(7, 8, g(8));
+      for (let i = 9; i < 15; i++) set(14 - i, 8, g(i));
+      for (let i = 0; i < 8; i++) set(size - 1 - i, 8, g(i));
+      for (let i = 8; i < 15; i++) set(8, size - 15 + i, g(i));
+      set(8, size - 8, true);
+    };
+    drawFormat(0);
+    if (ver >= 7) {
+      let r = ver; for (let i = 0; i < 12; i++) r = (r << 1) ^ ((r >>> 11) * 0x1f25);
+      const b = (ver << 12) | r;
+      for (let i = 0; i < 18; i++) { const v = ((b >>> i) & 1) !== 0, a = size - 11 + (i % 3), c = Math.floor(i / 3); set(a, c, v); set(c, a, v); }
+    }
+
+    // codewords, zigzag
+    let idx = 0;
+    for (let right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (let vert = 0; vert < size; vert++) for (let j = 0; j < 2; j++) {
+        const x = right - j, up = ((right + 1) & 2) === 0, y = up ? size - 1 - vert : vert;
+        if (!fn[y][x] && idx < all.length * 8) { mod[y][x] = ((all[idx >>> 3] >>> (7 - (idx & 7))) & 1) !== 0; idx++; }
+      }
+    }
+
+    const masks = [(x, y) => (x + y) % 2 === 0, (x, y) => y % 2 === 0, (x, y) => x % 3 === 0, (x, y) => (x + y) % 3 === 0,
+      (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0, (x, y) => ((x * y) % 2) + ((x * y) % 3) === 0,
+      (x, y) => (((x * y) % 2) + ((x * y) % 3)) % 2 === 0, (x, y) => (((x + y) % 2) + ((x * y) % 3)) % 2 === 0];
+    const applyMask = (m) => { for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!fn[y][x] && masks[m](x, y)) mod[y][x] = !mod[y][x]; };
+    const penalty = () => {
+      let p = 0;
+      const line = (get) => {
+        for (let a = 0; a < size; a++) {
+          let run = 1, hist = [];
+          for (let b = 1; b <= size; b++) {
+            if (b < size && get(a, b) === get(a, b - 1)) run++; else { if (run >= 5) p += run - 2; hist.push(run); run = 1; }
+          }
+          // finder-like 1:1:3:1:1 patterns
+          for (let i = 0; i + 4 < hist.length; i++) { const n = hist[i + 1]; if (n > 0 && hist[i + 2] === n * 3 && hist[i + 3] === n && hist[i + 4] === n) p += 40; }
+        }
+      };
+      line((a, b) => mod[a][b]); line((a, b) => mod[b][a]);
+      for (let y = 0; y < size - 1; y++) for (let x = 0; x < size - 1; x++) { const c = mod[y][x]; if (c === mod[y][x + 1] && c === mod[y + 1][x] && c === mod[y + 1][x + 1]) p += 3; }
+      let dark = 0; mod.forEach((r) => r.forEach((c) => { if (c) dark++; }));
+      p += Math.floor(Math.abs(dark * 20 - size * size * 10) / (size * size)) * 10;
+      return p;
+    };
+    let best = 0, bestP = Infinity;
+    for (let m = 0; m < 8; m++) { applyMask(m); drawFormat(m); const p = penalty(); if (p < bestP) { best = m; bestP = p; } applyMask(m); }
+    applyMask(best); drawFormat(best);
+    return { size, modules: mod, version: ver, level };
+  }
+
+  function draw(canvas, text, opts = {}) {
+    const q = encode(text, opts.ecl || 'M'), scale = opts.scale || 6, quiet = 4, dim = (q.size + quiet * 2) * scale;
+    canvas.width = canvas.height = dim;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, dim, dim); ctx.fillStyle = '#000';
+    q.modules.forEach((row, y) => row.forEach((on, x) => { if (on) ctx.fillRect((x + quiet) * scale, (y + quiet) * scale, scale, scale); }));
+    return q;
+  }
+  return { encode, draw };
+})();
+if (typeof module !== 'undefined') module.exports = QR;
+
 (() => {
+  'use strict';
+
+  /* ================================================================
+     0. Environment
+     ================================================================ */
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const REPO = 'xoyzoom-lgtm/FlowVeil-proxy';
+  const API = `https://api.github.com/repos/${REPO}/releases?per_page=10`;
+  const LATEST = `https://github.com/${REPO}/releases/latest/download/`;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(pointer: fine)').matches;
+  // Weak phones and old laptops get no particle field at all.
+  const lowPower = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+  const root = document.documentElement;
+  if (reduce) root.classList.add('reduce');
 
-  document.querySelectorAll('#title .w').forEach((w, i) => w.style.animationDelay = (0.12 + i * 0.1) + 's, 0s');
+  const ua = navigator.userAgent || '';
+  const platform = /Android/i.test(ua) ? 'android'
+    : (/Windows/i.test(ua) || (navigator.userAgentData && navigator.userAgentData.platform === 'Windows')) ? 'windows'
+    : 'other';
+  root.dataset.platform = platform;
 
-  const header = document.getElementById('top'), progress = document.getElementById('progress');
-  const links = [...document.querySelectorAll('.links a[href^="#"]')];
-  const onScroll = () => {
-    const y = scrollY, h = document.documentElement.scrollHeight - innerHeight;
-    header.classList.toggle('scrolled', y > 20);
-    progress.style.width = (h > 0 ? y / h * 100 : 0) + '%';
-    let cur = '';
-    links.forEach(a => { const s = document.querySelector(a.getAttribute('href')); if (s && s.getBoundingClientRect().top < innerHeight * .4) cur = a.getAttribute('href'); });
-    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === cur));
+  /** Runs `fn` when `el` enters/leaves the viewport; returns nothing. */
+  const watch = (el, fn, opts) => {
+    if (!el) return;
+    new IntersectionObserver((es) => es.forEach((e) => fn(e.isIntersecting, e)), opts).observe(el);
   };
-  addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
-  const io = new IntersectionObserver(entries => entries.forEach(e => {
+  /* ================================================================
+     1. Header: scroll state, progress, active section, mobile menu
+     ================================================================ */
+  const header = $('#top'), progress = $('#progress');
+  let scrollQueued = false, scrollable = 0;
+  // Page height is measured by a ResizeObserver (after layout), so scrolling never forces a reflow.
+  const measure = () => { scrollable = root.scrollHeight - innerHeight; paintScroll(); };
+  if ('ResizeObserver' in window) new ResizeObserver(measure).observe(root);
+  addEventListener('resize', () => requestAnimationFrame(measure), { passive: true });
+  const paintScroll = () => {
+    scrollQueued = false;
+    const y = scrollY, h = scrollable;
+    header.classList.toggle('scrolled', y > 20);
+    progress.style.transform = `scaleX(${h > 0 ? Math.min(1, y / h) : 0})`;
+  };
+  addEventListener('scroll', () => { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(paintScroll); } }, { passive: true });
+  if (!('ResizeObserver' in window)) measure();
+
+  const navLinks = $$('.links a[href^="#"]');
+  const spy = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    const id = '#' + e.target.id;
+    navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === id));
+  }), { rootMargin: '-40% 0px -55% 0px' });
+  navLinks.forEach((a) => { const s = $(a.getAttribute('href')); if (s) spy.observe(s); });
+
+  const menuBtn = $('#menuBtn'), menuPanel = $('#menuPanel');
+  const setMenu = (open, returnFocus) => {
+    menuPanel.hidden = !open;
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+    header.classList.toggle('menu-open', open);
+    if (open) menuPanel.querySelector('a').focus();
+    else if (returnFocus) menuBtn.focus();
+  };
+  menuBtn.addEventListener('click', () => setMenu(menuPanel.hidden));
+  menuPanel.addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('click', (e) => { if (!menuPanel.hidden && !header.contains(e.target)) setMenu(false); });
+  document.addEventListener('keydown', (e) => {
+    if (menuPanel.hidden) return;
+    if (e.key === 'Escape') { setMenu(false, true); return; }
+    if (e.key !== 'Tab') return;
+    // Focus trap: Tab cycles through the header while the menu is open.
+    const items = $$('a[href], button', header).filter((el) => el.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  matchMedia('(min-width: 861px)').addEventListener('change', (m) => { if (m.matches) setMenu(false); });
+
+  /* ================================================================
+     2. Reveal on scroll, counters, steps line
+     ================================================================ */
+  const revealIO = new IntersectionObserver((es) => es.forEach((e) => {
     if (!e.isIntersecting) return;
     const el = e.target;
-    const sibs = [...el.parentElement.children].filter(c => c.classList.contains('reveal'));
-    el.style.transitionDelay = Math.max(0, sibs.indexOf(el)) * 0.07 + 's';
+    const sibs = [...el.parentElement.children].filter((c) => c.classList.contains('reveal'));
+    el.style.transitionDelay = Math.max(0, sibs.indexOf(el)) * 0.06 + 's';
     el.classList.add('in');
-    setTimeout(() => el.style.transitionDelay = '', 1600);
-    io.unobserve(el);
-  }), { threshold: .12, rootMargin: '0px 0px -40px' });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    setTimeout(() => { el.style.transitionDelay = ''; }, 1400);
+    revealIO.unobserve(el);
+  }), { threshold: 0.12, rootMargin: '0px 0px -40px' });
+  $$('.reveal').forEach((el) => (reduce ? el.classList.add('in') : revealIO.observe(el)));
 
-  const steps = document.getElementById('steps');
-  new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { steps.classList.add('in'); o.disconnect(); } }), { threshold: .4 }).observe(steps);
+  const steps = $('#steps');
+  if (reduce) steps.classList.add('in');
+  else watch(steps, (on, e) => { if (on) steps.classList.add('in'); }, { threshold: 0.4 });
 
-  const cio = new IntersectionObserver(es => es.forEach(e => {
+  const countIO = new IntersectionObserver((es) => es.forEach((e) => {
     if (!e.isIntersecting) return;
-    const el = e.target, to = +el.dataset.count, suf = el.dataset.suffix || '';
-    cio.unobserve(el);
-    if (reduce || to === 0) { el.textContent = to + suf; return; }
-    const t0 = performance.now(), dur = 1400;
-    const tick = t => { const p = Math.min(1, (t - t0) / dur); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suf; if (p < 1) requestAnimationFrame(tick); };
+    const el = e.target, to = +el.dataset.count;
+    countIO.unobserve(el);
+    if (reduce || to === 0) { el.textContent = to; return; }
+    const t0 = performance.now(), dur = 1200;
+    const tick = (t) => {
+      const p = Math.min(1, (t - t0) / dur);
+      el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(tick);
+    };
     requestAnimationFrame(tick);
-  }), { threshold: .6 });
-  document.querySelectorAll('[data-count]').forEach(el => cio.observe(el));
+  }), { threshold: 0.6 });
+  $$('[data-count]').forEach((el) => countIO.observe(el));
 
-  // Routing diagram: packets travel from an app through the hub to their outbound.
-  const NS = 'http://www.w3.org/2000/svg', packets = document.getElementById('packets'), log = document.getElementById('ruleLog');
+  /* ================================================================
+     3. Hero: routing diagram, tilt, particles (one pointer handler, one visibility rule)
+     ================================================================ */
+  const heroWrap = $('.hero-wrap'), router = $('#router'), packets = $('#packets'), ruleLog = $('#ruleLog');
+  const NS = 'http://www.w3.org/2000/svg';
   const flows = [
     { from: 'pA', to: 'pP', color: '#38BDF8', text: 'google.com → <b style="color:#38BDF8">proxy</b>' },
     { from: 'pB', to: 'pP', color: '#38BDF8', text: 'youtube.com → <b style="color:#38BDF8">proxy</b>' },
@@ -532,16 +1033,16 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
     const a = document.getElementById(f.from), b = document.getElementById(f.to);
     const la = a.getTotalLength(), lb = b.getTotalLength();
     const dot = document.createElementNS(NS, 'circle');
-    dot.setAttribute('r', 5); dot.setAttribute('fill', '#E6FBFF'); dot.classList.add('pkt'); dot.style.color = f.color;
+    dot.setAttribute('r', 5); dot.setAttribute('fill', '#E6FBFF');
     packets.appendChild(dot);
     const t0 = performance.now(), d1 = 900, d2 = 900;
     let switched = false;
-    const step = t => {
+    const step = (t) => {
       const e = t - t0;
       let p;
       if (e < d1) p = a.getPointAtLength(la * (e / d1));
       else {
-        if (!switched) { switched = true; dot.setAttribute('fill', f.color); log.innerHTML = f.text; }
+        if (!switched) { switched = true; dot.setAttribute('fill', f.color); ruleLog.innerHTML = f.text; }
         p = b.getPointAtLength(lb * Math.min(1, (e - d1) / d2));
       }
       dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y);
@@ -549,88 +1050,35 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
     };
     requestAnimationFrame(step);
   };
-  let fi = 0;
-  if (!reduce) { send(flows[0]); setInterval(() => send(flows[++fi % flows.length]), 700); }
+  let flowIdx = 0, flowTimer = 0, routerOn = false, heroInView = true;
+  const syncRouter = () => {
+    const want = heroInView && !document.hidden;
+    if (want === routerOn) return;
+    routerOn = want;
+    router.classList.toggle('paused', !want);
+    clearInterval(flowTimer);
+    if (want && !reduce) {
+      send(flows[flowIdx++ % flows.length]);
+      flowTimer = setInterval(() => send(flows[flowIdx++ % flows.length]), 700);
+    }
+  };
+  watch(heroWrap, (on) => { heroInView = on; syncRouter(); syncParticles(); }, { threshold: 0 });
+  document.addEventListener('visibilitychange', () => { syncRouter(); syncParticles(); });
 
-  // Typing routing config
-  const codeEl = document.getElementById('code');
-  const code = [
-    ['c', '// первое совпадение решает'],
-    ['p', '"routing": {'],
-    ['p', '  "rules": ['],
-    ['r', '    { "ip": ["geoip:private"], "outboundTag": "direct" },'],
-    ['r', '    { "domain": ["geosite:category-ru"], "outboundTag": "direct" },'],
-    ['r', '    { "domain": ["domain:ozon.ru", "domain:sberbank.ru"], "outboundTag": "direct" },'],
-    ['r', '    { "domain": ["geosite:category-ads-all"], "outboundTag": "block" },'],
-    ['r', '    { "network": "tcp,udp", "outboundTag": "proxy" }'],
-    ['p', '  ]'],
-    ['p', '}'],
-  ];
-  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  const hl = s => esc(s)
-    .replace(/("(?:outboundTag|domain|ip|network|rules|routing)")/g, '<span class="k">$1</span>')
-    .replace(/: ?("(?:direct|proxy|block)")/g, ': <span class="o">$1</span>')
-    .replace(/("(?:geoip|geosite|domain):[^"]+")/g, '<span class="s">$1</span>');
-  const full = code.map(([t, s]) => t === 'c' ? `<span class="c">${esc(s)}</span>` : hl(s)).join('\n');
-  let typed = false;
-  new IntersectionObserver((es, o) => es.forEach(e => {
-    if (!e.isIntersecting || typed) return;
-    typed = true; o.disconnect();
-    if (reduce) { codeEl.innerHTML = full; return; }
-    const plain = code.map(([, s]) => s).join('\n');
-    let i = 0;
-    const tick = () => {
-      i = Math.min(plain.length, i + 3);
-      const lines = plain.slice(0, i).split('\n');
-      codeEl.innerHTML = lines.map((l, n) => code[n][0] === 'c' ? `<span class="c">${esc(l)}</span>` : hl(l)).join('\n') + '<span class="cursor"></span>';
-      if (i < plain.length) setTimeout(tick, 16);
-    };
-    tick();
-  }), { threshold: .35 }).observe(codeEl);
-
-  document.querySelectorAll('.card').forEach(c => c.addEventListener('pointermove', e => {
-    const r = c.getBoundingClientRect();
-    c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px');
-  }));
-
-  document.querySelectorAll('.btn').forEach(b => {
-    b.addEventListener('click', e => {
-      const r = b.getBoundingClientRect(), s = Math.max(r.width, r.height), sp = document.createElement('span');
-      sp.className = 'ripple'; sp.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s / 2}px;top:${e.clientY - r.top - s / 2}px`;
-      b.appendChild(sp); setTimeout(() => sp.remove(), 650);
-    });
-    if (!fine || reduce || !b.classList.contains('magnet')) return;
-    b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .15}px,${(e.clientY - r.top - r.height / 2) * .22}px)`; });
-    b.addEventListener('pointerleave', () => b.style.transform = '');
-  });
-
-  document.querySelectorAll('.q').forEach(q => {
-    const btn = q.querySelector('button'), a = q.querySelector('.a');
-    btn.addEventListener('click', () => {
-      const open = !q.classList.contains('open');
-      q.classList.toggle('open', open); btn.setAttribute('aria-expanded', open);
-      a.style.height = open ? a.scrollHeight + 'px' : '0px';
-    });
-  });
-
-  const router = document.getElementById('router');
-  if (fine && !reduce) addEventListener('pointermove', e => {
-    const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5;
-    router.style.transform = `perspective(1200px) rotateY(${x * 8}deg) rotateX(${-y * 6}deg)`;
-  });
-
-  const cv = document.getElementById('particles'), ctx = cv.getContext('2d');
-  let W, H, pts = [];
+  // Particles: desktop pointer, at most 40 dots, only while the hero is on screen.
+  const cv = $('#particles');
+  const particlesOn = fine && !reduce && !lowPower && cv.getContext;
   const mouse = { x: -999, y: -999 };
-  const resize = () => {
-    const dpr = Math.min(devicePixelRatio || 1, 2);
-    W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.min(90, Math.round(W * H / 18000));
+  let ctx, W = 0, H = 0, pts = [], particlesRunning = false;
+  const sizeParticles = () => {
+    const r = heroWrap.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    W = Math.max(1, r.width); H = Math.max(1, r.height);
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.min(40, Math.round(W * H / 24000));
     pts = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25, r: Math.random() * 1.6 + .4 }));
   };
-  addEventListener('resize', resize); resize();
-  addEventListener('pointermove', e => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
-  const draw = () => {
+  const drawParticles = () => {
+    if (!particlesRunning) return;
     ctx.clearRect(0, 0, W, H);
     for (const p of pts) {
       p.x += p.vx; p.y += p.vy;
@@ -644,10 +1092,328 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
       const a = pts[i], b = pts[j], d2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
       if (d2 < 12000) { ctx.strokeStyle = `rgba(59,224,176,${(1 - d2 / 12000) * .18})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
     }
-    requestAnimationFrame(draw);
+    requestAnimationFrame(drawParticles);
   };
-  if (!reduce) requestAnimationFrame(draw);
+  function syncParticles() {
+    if (!particlesOn) return;
+    const want = heroInView && !document.hidden;
+    if (want === particlesRunning) return;
+    particlesRunning = want;
+    if (want) requestAnimationFrame(drawParticles);
+  }
+  if (particlesOn) {
+    ctx = cv.getContext('2d');
+    sizeParticles();
+    let resizeQueued = false;
+    addEventListener('resize', () => { if (!resizeQueued) { resizeQueued = true; requestAnimationFrame(() => { resizeQueued = false; sizeParticles(); }); } });
+    syncParticles();
+  } else {
+    cv.remove();
+  }
+
+  // One pointer handler for the tilt, the particles and the glow on cards.
+  if (fine && !reduce) {
+    let px = 0, py = 0, cx = 0, cy = 0, card = null, queued = false;
+    const apply = () => {
+      queued = false;
+      if (heroInView) router.style.transform = `perspective(1200px) rotateY(${px * 8}deg) rotateX(${-py * 6}deg)`;
+      if (particlesOn && particlesRunning) { const r = cv.getBoundingClientRect(); mouse.x = cx - r.left; mouse.y = cy - r.top; }
+      if (card) { const r = card.getBoundingClientRect(); card.style.setProperty('--mx', (cx - r.left) + 'px'); card.style.setProperty('--my', (cy - r.top) + 'px'); }
+    };
+    addEventListener('pointermove', (e) => {
+      cx = e.clientX; cy = e.clientY; px = cx / innerWidth - .5; py = cy / innerHeight - .5;
+      card = e.target.closest ? e.target.closest('.card') : null;
+      if (!queued) { queued = true; requestAnimationFrame(apply); }
+    }, { passive: true });
+  }
+
+  /* ================================================================
+     4. Routing terminal (types once, when it scrolls into view)
+     ================================================================ */
+  const codeEl = $('#code');
+  const code = [
+    ['c', '// первое совпадение решает'],
+    ['p', '"routing": {'],
+    ['p', '  "rules": ['],
+    ['r', '    { "ip": ["geoip:private"], "outboundTag": "direct" },'],
+    ['r', '    { "domain": ["geosite:category-ru"], "outboundTag": "direct" },'],
+    ['r', '    { "domain": ["domain:ozon.ru", "domain:sberbank.ru"], "outboundTag": "direct" },'],
+    ['r', '    { "domain": ["geosite:category-ads-all"], "outboundTag": "block" },'],
+    ['r', '    { "network": "tcp,udp", "outboundTag": "proxy" }'],
+    ['p', '  ]'],
+    ['p', '}'],
+  ];
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const hl = (s) => esc(s)
+    .replace(/("(?:outboundTag|domain|ip|network|rules|routing)")/g, '<span class="k">$1</span>')
+    .replace(/: ?("(?:direct|proxy|block)")/g, ': <span class="o">$1</span>')
+    .replace(/("(?:geoip|geosite|domain):[^"]+")/g, '<span class="s">$1</span>');
+  const renderLine = (n, text) => (code[n][0] === 'c' ? `<span class="c">${esc(text)}</span>` : hl(text));
+  const fullCode = code.map(([, s], n) => renderLine(n, s)).join('\n');
+  let typed = false;
+  watch(codeEl, (on, e) => {
+    if (!on || typed) return;
+    typed = true;
+    if (reduce) return;
+    codeEl.style.minHeight = codeEl.offsetHeight + 'px'; // no layout shift while typing
+    const plain = code.map(([, s]) => s).join('\n');
+    let i = 0;
+    const tick = () => {
+      i = Math.min(plain.length, i + 3);
+      const lines = plain.slice(0, i).split('\n');
+      codeEl.innerHTML = lines.map((l, n) => renderLine(n, l)).join('\n') + '<span class="cursor"></span>';
+      if (i < plain.length) setTimeout(tick, 16);
+    };
+    tick();
+  }, { threshold: 0.35 });
+  codeEl.innerHTML = fullCode; // full text stays if typing never starts (no IO, reduced motion)
+
+  /* ================================================================
+     5. Buttons (ripple), marquee pause, FAQ, footer year
+     ================================================================ */
+  if (!reduce) {
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest ? e.target.closest('.btn') : null;
+      if (!b || e.detail === 0) return; // keyboard "clicks" get no ripple
+      const r = b.getBoundingClientRect(), s = Math.max(r.width, r.height), sp = document.createElement('span');
+      sp.className = 'ripple';
+      sp.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s / 2}px;top:${e.clientY - r.top - s / 2}px`;
+      b.appendChild(sp);
+      setTimeout(() => sp.remove(), 650);
+    });
+  }
+
+  const marquee = $('#marquee'), mBtn = $('#marqueePause');
+  mBtn.addEventListener('click', () => {
+    const paused = marquee.classList.toggle('paused');
+    mBtn.setAttribute('aria-pressed', String(paused));
+    mBtn.setAttribute('aria-label', paused ? 'Запустить прокрутку' : 'Остановить прокрутку');
+  });
+
+  $$('.q').forEach((q) => {
+    const btn = $('button', q);
+    btn.addEventListener('click', () => {
+      const open = !q.classList.contains('open');
+      q.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+    });
+  });
+
+  const yearEl = $('#year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  /* ================================================================
+     6. Platform-aware download buttons and the sticky button
+     ================================================================ */
+  const heroA = $('#heroAndroid'), heroW = $('#heroWindows'), stickyBtn = $('#stickyBtn');
+  const setSticky = (href, text) => { stickyBtn.href = href; $('span', stickyBtn).textContent = text; };
+  if (platform === 'windows') {
+    heroW.classList.add('primary'); heroA.classList.remove('primary');
+    heroW.parentNode.insertBefore(heroW, heroA);
+    $('#cardWindows').classList.add('recommended'); $('#cardWindows').style.order = '-1';
+    setSticky(heroW.href, 'Скачать для Windows');
+  } else if (platform === 'android') {
+    $('#cardAndroid').classList.add('recommended');
+    setSticky(heroA.href, 'Скачать для Android');
+  } else {
+    heroA.classList.remove('primary');
+    $('#platformNote').hidden = false;
+  }
+
+  const stickyState = { hero: true, download: false, foot: false };
+  const syncSticky = () => $('#sticky').classList.toggle('show', !stickyState.hero && !stickyState.download && !stickyState.foot);
+  watch(heroWrap, (on) => { stickyState.hero = on; syncSticky(); });
+  watch($('#download'), (on) => { stickyState.download = on; syncSticky(); });
+  watch($('footer'), (on) => { stickyState.foot = on; syncSticky(); });
+
+  /* ================================================================
+     7. Latest release from GitHub (highest build number, not the "latest" flag)
+     ================================================================ */
+  const CACHE_KEY = 'fv-release-v2', CACHE_TTL = 30 * 60 * 1000;
+  const buildOf = (r) => {
+    const m = /build[-\s]?(\d+)/i.exec(r.name || '') || /build[-\s]?(\d+)/i.exec(r.tag_name || '') || /^v?0*(\d+)$/.exec(r.tag_name || '');
+    return m ? +m[1] : 0;
+  };
+  const summarize = (list) => {
+    const rel = (Array.isArray(list) ? list : []).filter((r) => !r.draft && !r.prerelease);
+    if (!rel.length) return null;
+    const best = rel.reduce((a, b) => (buildOf(b) > buildOf(a) ? b : a));
+    const assets = {};
+    (best.assets || []).forEach((a) => { assets[a.name] = { url: a.browser_download_url, size: a.size, digest: a.digest || '' }; });
+    return {
+      build: buildOf(best), date: best.published_at, url: best.html_url, body: String(best.body || '').slice(0, 6000), assets,
+      downloads: list.reduce((s, r) => s + (r.assets || []).reduce((t, a) => t + (a.download_count || 0), 0), 0),
+    };
+  };
+  const loadRelease = async () => {
+    try {
+      const c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
+      if (c && Date.now() - c.t < CACHE_TTL) return c.d;
+    } catch (_) { /* storage may be blocked */ }
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 6000);
+    try {
+      const res = await fetch(API, { headers: { Accept: 'application/vnd.github+json' }, signal: ctl.signal });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = summarize(await res.json());
+      if (data) { try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), d: data })); } catch (_) { /* ignore */ } }
+      return data;
+    } finally { clearTimeout(timer); }
+  };
+
+  const mb = (n) => (n / 1048576).toFixed(n >= 10485760 ? 0 : 1).replace('.', ',') + ' МБ';
+  const isGithub = (u) => typeof u === 'string' && u.startsWith('https://github.com/');
+  // Words that never go on this page, even when they sit in the release notes.
+  // Release notes are written for the app's users; the site shows only the parts that fit what it presents.
+  const BANNED = /обх|бел\S*\s+спис|азблок|цензу[р]|whitel|bypa|v[p]n|в[п]н|ha[p]p|hu[p]p/i; // stems, so the page source itself stays free of these words
+  const clean = (s) => s.replace(/\*\*|`/g, '').trim();
+
+  const renderChangelog = (el, body) => {
+    el.textContent = '';
+    let list = null, count = 0, skipSection = false;
+    body.split(/\r?\n/).forEach((raw) => {
+      const line = raw.trim();
+      if (!line || count > 40) return;
+      const head = /^#{1,6}\s+(.*)$/.exec(line) || /^\*\*(.+?)\*\*$/.exec(line);
+      const item = /^[-*]\s+(.*)$/.exec(line);
+      const text = clean((head || item || [])[1] || '');
+      if (head) skipSection = BANNED.test(text); // a filtered heading drops its whole section
+      if (!text || skipSection || BANNED.test(text)) return;
+      count++;
+      if (head) { const h = document.createElement('h4'); h.textContent = text; el.appendChild(h); list = null; }
+      else if (item) {
+        if (!list) { list = document.createElement('ul'); el.appendChild(list); }
+        const li = document.createElement('li'); li.textContent = text; list.appendChild(li);
+      }
+    });
+    return count > 0;
+  };
+
+  const applyRelease = (d) => {
+    const A = d.assets;
+    const link = (id, name, sub, label) => {
+      const a = A[name];
+      if (!a) return;
+      if (isGithub(a.url)) $(id).href = a.url;
+      if (sub && a.size) $(sub).textContent = `${label} · ${mb(a.size)}`;
+    };
+    link('#dlApk', 'FlowVeil-android.apk', '#apkSub', 'universal');
+    link('#dlApk64', 'FlowVeil-android-arm64.apk', '#apk64Sub', 'arm64-v8a, меньше размер');
+    link('#dlExe', 'FlowVeil-Setup.exe', '#exeSub', 'FlowVeil-Setup.exe');
+    link('#dlZip', 'FlowVeil-windows-portable.zip', '#zipSub', 'zip, без установки');
+    if (A['FlowVeil-android.apk'] && isGithub(A['FlowVeil-android.apk'].url)) heroA.href = A['FlowVeil-android.apk'].url;
+    if (A['FlowVeil-Setup.exe'] && isGithub(A['FlowVeil-Setup.exe'].url)) heroW.href = A['FlowVeil-Setup.exe'].url;
+    if (platform === 'android') stickyBtn.href = heroA.href; else if (platform === 'windows') stickyBtn.href = heroW.href;
+
+    // SHA-256 as computed by GitHub for every release file, when the API gives it.
+    const sha = (id, names) => {
+      const lines = names.map((n) => (A[n] && /^sha256:[0-9a-f]{64}$/i.test(A[n].digest) ? `${n}\nSHA-256 ${A[n].digest.slice(7)}` : '')).filter(Boolean);
+      if (!lines.length) return;
+      const el = $(id); el.textContent = lines.join('\n'); el.hidden = false;
+    };
+    sha('#shaApk', ['FlowVeil-android.apk', 'FlowVeil-android-arm64.apk']);
+    sha('#shaExe', ['FlowVeil-Setup.exe', 'FlowVeil-windows-portable.zip']);
+
+    $('#relBuild').textContent = `Сборка build-${d.build}`;
+    const date = new Date(d.date);
+    $('#relDate').textContent = isNaN(date) ? '' : '· ' + date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    $('#release').hidden = false;
+    const cl = $('#changelog'), clBtn = $('#changelogBtn');
+    if (renderChangelog(cl, d.body)) {
+      clBtn.addEventListener('click', () => {
+        const open = cl.hidden;
+        cl.hidden = !open;
+        clBtn.setAttribute('aria-expanded', String(open));
+      });
+    } else {
+      clBtn.hidden = true;
+    }
+
+    $('#buildNum').textContent = 'build-' + d.build; $('#stBuild').hidden = false;
+    if (d.downloads > 0) { $('#dlCount').textContent = d.downloads.toLocaleString('ru-RU'); $('#stDownloads').hidden = false; }
+    $$('#stBuild, #stDownloads').forEach((el) => el.classList.add('in'));
+  };
+  loadRelease().then((d) => { if (d) applyRelease(d); }).catch(() => { /* offline or rate-limited: the static links keep working */ });
+
+  /* ================================================================
+     8. Screenshots: the section appears only when real files exist
+     ================================================================ */
+  const shotsSection = $('#shots');
+  // assets/shots/shots.json is always present ({"android":[],"windows":[]} until screenshots exist), so no probing 404s.
+  fetch('assets/shots/shots.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null).then((cfg) => {
+    if (!cfg) return;
+    const valid = (s) => s && /^[\w.-]+\.(webp|png|jpg)$/.test(s.file) && s.width > 0 && s.height > 0 && typeof s.caption === 'string';
+    const byPlat = { android: (cfg.android || []).filter(valid), windows: (cfg.windows || []).filter(valid) };
+    const plats = ['android', 'windows'].filter((p) => byPlat[p].length);
+    if (!plats.length) return;
+    const panels = { android: $('#shotsAndroid'), windows: $('#shotsWindows') };
+    const tabs = { android: $('#tabAndroid'), windows: $('#tabWindows') };
+    plats.forEach((p) => {
+      byPlat[p].forEach((s) => {
+        const fig = document.createElement('figure'), img = document.createElement('img'), cap = document.createElement('figcaption');
+        img.src = `assets/shots/${s.file}`; img.width = s.width; img.height = s.height; img.loading = 'lazy'; img.decoding = 'async';
+        img.alt = `${p === 'android' ? 'Android' : 'Windows'}: ${s.caption}`; cap.textContent = s.caption;
+        fig.append(img, cap); panels[p].appendChild(fig);
+      });
+      tabs[p].hidden = false;
+    });
+    const show = (p) => plats.forEach((q) => { panels[q].hidden = q !== p; tabs[q].setAttribute('aria-selected', String(q === p)); });
+    plats.forEach((p) => tabs[p].addEventListener('click', () => show(p)));
+    show(plats.includes(platform) ? platform : plats[0]);
+    shotsSection.hidden = false;
+  });
+
+  /* ================================================================
+     9. Invite link + QR generator (runs in the browser, sends nothing)
+     ================================================================ */
+  const form = $('#genForm'), urlInput = $('#genUrl'), errEl = $('#genErr'), outEl = $('#genOut');
+  const linkEl = $('#genLink'), qrCanvas = $('#genQr'), openEl = $('#genOpen');
+  const copyBtn = $('#genCopy'), saveBtn = $('#genSave'), statusEl = $('#genStatus');
+  let currentLink = '';
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    errEl.textContent = ''; outEl.hidden = true;
+    const value = urlInput.value.trim();
+    let u;
+    try { u = new URL(value); } catch (_) { errEl.textContent = 'Введите полный адрес, например https://provider.example/sub/…'; return; }
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') { errEl.textContent = 'Адрес должен начинаться с https://'; return; }
+    if (u.href.length > 2000) { errEl.textContent = 'Адрес слишком длинный (больше 2000 символов).'; return; }
+    currentLink = 'flowveil://add?url=' + encodeURIComponent(u.href);
+    linkEl.textContent = currentLink;
+    openEl.setAttribute('href', currentLink);
+    try {
+      QR.draw(qrCanvas, currentLink, { scale: 6 });
+      qrCanvas.hidden = false; saveBtn.hidden = false;
+    } catch (_) {
+      qrCanvas.hidden = true; saveBtn.hidden = true;
+      errEl.textContent = 'Ссылка получилась слишком длинной для QR-кода, но её можно скопировать.';
+    }
+    outEl.hidden = false;
+  });
+  const flash = (msg) => { statusEl.textContent = msg; setTimeout(() => { statusEl.textContent = ''; }, 2500); };
+  copyBtn.addEventListener('click', async () => {
+    if (!currentLink) return;
+    try {
+      await navigator.clipboard.writeText(currentLink);
+    } catch (_) {
+      const t = document.createElement('textarea');
+      t.value = currentLink; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+      document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); } catch (__) { /* nothing else to try */ }
+      t.remove();
+    }
+    flash('Ссылка скопирована');
+  });
+  saveBtn.addEventListener('click', () => {
+    qrCanvas.toBlob((blob) => {
+      if (!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'flowveil-invite.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+  });
 })();
+
 </script>
 </body>
 </html>

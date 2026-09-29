@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://xoyzoom-lgtm.github.io/FlowVeil-proxy/sitemap.xml
