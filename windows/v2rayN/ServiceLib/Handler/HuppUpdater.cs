@@ -35,7 +35,8 @@ public static class HuppUpdater
     {
         // Newest build by number, not GitHub's "latest" flag (parallel builds can mark an older one).
         var url = $"https://api.github.com/repos/{Repo}/releases?per_page=10";
-        var json = await GetAsync(url, null) ?? await GetAsync(url, LocalProxy());
+        // A cold connection often misses the first request: give each route time and retry.
+        var json = await GetAsync(url, null) ?? await GetAsync(url, LocalProxy()) ?? await GetAsync(url, null);
         if (json.IsNullOrEmpty())
         {
             return null;
@@ -148,7 +149,7 @@ public static class HuppUpdater
     {
         try
         {
-            using var client = MakeClient(proxy, TimeSpan.FromSeconds(10));
+            using var client = MakeClient(proxy, TimeSpan.FromSeconds(20));
             return await client.GetStringAsync(url);
         }
         catch (Exception ex)

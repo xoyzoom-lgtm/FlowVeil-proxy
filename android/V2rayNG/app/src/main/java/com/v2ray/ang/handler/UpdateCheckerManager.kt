@@ -19,26 +19,27 @@ object UpdateCheckerManager {
 
         val proxyUsername = SettingsManager.getSocksUsername()
         val proxyPassword = SettingsManager.getSocksPassword()
-
-        var response = HttpUtil.getUrlContent(
-            UrlContentRequest(
-                url = url,
-                timeout = 5000
-            )
+        val viaProxy = UrlContentRequest(
+            url = url,
+            timeout = 15000,
+            httpPort = SettingsManager.getHttpPort(),
+            proxyUsername = proxyUsername,
+            proxyPassword = proxyPassword
         )
-        if (response.isNullOrEmpty()) {
-            val httpPort = SettingsManager.getHttpPort()
-            response = HttpUtil.getUrlContent(
-                UrlContentRequest(
-                    url = url,
-                    timeout = 5000,
-                    httpPort = httpPort,
-                    proxyUsername = proxyUsername,
-                    proxyPassword = proxyPassword
-                )
-            )
-                ?: throw IllegalStateException("Failed to get response")
+        val direct = UrlContentRequest(url = url, timeout = 15000)
+        val directSecureDns = UrlContentRequest(url = url, timeout = 15000, secureDns = true)
+        // A cold mobile connection often misses the first request, so every route gets a real
+        // timeout and there are fallbacks: through the running VPN first, then direct, then
+        // direct with DNS-over-HTTPS.
+        // The VPN runs in another process; its "connected since" mark is shared through MMKV.
+        val vpnOn = MmkvManager.decodeSettingsLong(AppConfig.CACHE_CONNECTED_SINCE, 0L) > 0L
+        val attempts = if (vpnOn) listOf(viaProxy, direct, directSecureDns) else listOf(direct, directSecureDns, direct)
+        var response: String? = null
+        for (request in attempts) {
+            response = runCatching { HttpUtil.getUrlContent(request) }.getOrNull()
+            if (!response.isNullOrEmpty()) break
         }
+        if (response.isNullOrEmpty()) throw IllegalStateException("Failed to get response")
 
         val latestRelease = JsonUtil.fromJsonSafe(response, Array<GitHubRelease>::class.java)
             ?.filter { !it.prerelease && it.assets.isNotEmpty() }
