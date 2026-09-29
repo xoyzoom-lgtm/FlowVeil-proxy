@@ -1,3 +1,5 @@
+using System.Net.Sockets;
+using System.Text.Json.Nodes;
 using ServiceLib.UdpTest;
 
 namespace ServiceLib.Services;
@@ -89,9 +91,25 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
     {
         var lstSelected = await GetClearItem(actionType, selecteds);
         var completedIds = new ConcurrentDictionary<string, byte>();
+        // FlowVeil: full JSON (custom) profiles are tested on their own, the batch code skips them.
+        var customs = actionType is ESpeedActionType.Realping or ESpeedActionType.Mixedtest or ESpeedActionType.Speedtest
+            ? selecteds.Where(it => it.ConfigType == EConfigType.Custom && it.IndexId.IsNotEmpty()).ToList()
+            : [];
 
         try
         {
+            if (customs.Count > 0)
+            {
+                foreach (var it in customs)
+                {
+                    await UpdateFunc(it.IndexId, ResUI.Speedtesting);
+                }
+                await RunCustomRealPingAsync(customs, completedIds, ct);
+            }
+            if (lstSelected.Count == 0)
+            {
+                return;
+            }
             switch (actionType)
             {
                 case ESpeedActionType.Tcping:
@@ -487,6 +505,130 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
         });
     }
 
+    /// <summary>
+    /// Real ping for custom JSON profiles: only their outbounds (main proxy first) are started
+    /// behind a local SOCKS inbound on a free port, a few profiles at a time.
+    /// </summary>
+    private async Task RunCustomRealPingAsync(List<ProfileItem> customs, ConcurrentDictionary<string, byte> completedIds, CancellationToken ct)
+    {
+        var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct };
+        await Parallel.ForEachAsync(customs, parallelOptions, async (item, innerCt) =>
+        {
+            ProcessService? process = null;
+            string? fileName = null;
+            try
+            {
+                var profile = await AppManager.Instance.GetProfileItem(item.IndexId) ?? item;
+                var port = FreeLocalPort();
+                var (json, coreType) = BuildCustomSpeedtestConfig(profile, port);
+                if (json == null)
+                {
+                    await UpdateFunc(item.IndexId, ResUI.SpeedtestingSkip);
+                    return;
+                }
+                fileName = string.Format(Global.CoreSpeedtestConfigFileName, Utils.GetGuid(false));
+                await File.WriteAllTextAsync(Utils.GetBinConfigPath(fileName), json, innerCt);
+                process = await CoreManager.Instance.RunSpeedtestConfigFile(fileName, coreType);
+                if (process == null)
+                {
+                    await UpdateFunc(item.IndexId, ResUI.FailedToRunCore);
+                    return;
+                }
+                await Task.Delay(1000, innerCt);
+                await DoRealPing(new ServerTestItem { IndexId = item.IndexId, Port = port, ConfigType = EConfigType.Custom, AllowTest = true, Profile = profile, CoreType = coreType }, completedIds, innerCt);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(_tag, ex);
+                await UpdateFunc(item.IndexId, "-1");
+            }
+            finally
+            {
+                if (process != null)
+                {
+                    await process.StopAsync();
+                }
+                if (fileName != null)
+                {
+                    try { File.Delete(Utils.GetBinConfigPath(fileName)); } catch { }
+                }
+            }
+        });
+    }
+
+    private static int FreeLocalPort()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
+    }
+
+    /// <summary>Xray or sing-box config with the profile's outbounds and a SOCKS inbound on <paramref name="port"/>.</summary>
+    private static (string? Json, ECoreType CoreType) BuildCustomSpeedtestConfig(ProfileItem profile, int port)
+    {
+        var path = profile.Address;
+        if (path.IsNullOrEmpty())
+        {
+            return (null, ECoreType.Xray);
+        }
+        if (!File.Exists(path))
+        {
+            path = Utils.GetConfigPath(path);
+        }
+        if (!File.Exists(path) || JsonNode.Parse(File.ReadAllText(path)) is not JsonObject root || root["outbounds"] is not JsonArray outbounds)
+        {
+            return (null, ECoreType.Xray);
+        }
+        var all = outbounds.OfType<JsonObject>().ToList();
+        var isSingBox = all.Any(o => o["type"] != null) && !all.Any(o => o["protocol"] != null);
+        string Kind(JsonObject o) => (o[isSingBox ? "type" : "protocol"]?.GetValue<string>() ?? "").ToLowerInvariant();
+        var service = new HashSet<string> { "freedom", "blackhole", "dns", "loopback", "direct", "block", "selector", "urltest" };
+        var proxies = all.Where(o => !service.Contains(Kind(o))).ToList();
+        var main = proxies.FirstOrDefault(o => o["tag"]?.GetValue<string>() == "proxy") ?? proxies.FirstOrDefault();
+        if (main == null)
+        {
+            return (null, ECoreType.Xray);
+        }
+        var ordered = new JsonArray(main.DeepClone());
+        foreach (var o in all.Where(o => !ReferenceEquals(o, main)))
+        {
+            ordered.Add(o.DeepClone());
+        }
+        JsonObject config;
+        if (isSingBox)
+        {
+            config = new JsonObject
+            {
+                ["log"] = new JsonObject { ["disabled"] = true },
+                ["inbounds"] = new JsonArray(new JsonObject { ["type"] = "socks", ["tag"] = "socks-in", ["listen"] = "127.0.0.1", ["listen_port"] = port }),
+                ["outbounds"] = ordered,
+            };
+        }
+        else
+        {
+            config = new JsonObject
+            {
+                ["log"] = new JsonObject { ["loglevel"] = "none" },
+                ["inbounds"] = new JsonArray(new JsonObject
+                {
+                    ["tag"] = "socks-in",
+                    ["listen"] = "127.0.0.1",
+                    ["port"] = port,
+                    ["protocol"] = "socks",
+                    ["settings"] = new JsonObject { ["udp"] = true },
+                }),
+                ["outbounds"] = ordered,
+            };
+        }
+        return (config.ToJsonString(), isSingBox ? ECoreType.sing_box : ECoreType.Xray);
+    }
+
     private async Task<int> DoRealPing(ServerTestItem it,
         ConcurrentDictionary<string, byte> completedIds, CancellationToken ct = default)
     {
@@ -587,6 +729,11 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
     private List<List<ServerTestItem>> GetTestBatchItem(List<ServerTestItem> lstSelected, int pageSize)
     {
         List<List<ServerTestItem>> lstTest = [];
+        // An empty list gives pageSize 0, and 0/0 -> NaN -> (int) threw OverflowException.
+        if (pageSize <= 0 || lstSelected.Count == 0)
+        {
+            return lstTest;
+        }
         var lst1 = lstSelected.Where(t => t.CoreType == ECoreType.Xray).ToList();
         var lst2 = lstSelected.Where(t => t.CoreType == ECoreType.sing_box).ToList();
 

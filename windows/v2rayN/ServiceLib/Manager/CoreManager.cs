@@ -122,6 +122,13 @@ public class CoreManager
         return await RunProcess(coreInfo, fileName, true, false);
     }
 
+    /// <summary>Starts a core with a ready speed-test config file from the bin config folder.</summary>
+    public async Task<ProcessService?> RunSpeedtestConfigFile(string fileName, ECoreType coreType)
+    {
+        var coreInfo = CoreInfoManager.Instance.GetCoreInfo(coreType);
+        return await RunProcess(coreInfo, fileName, true, false);
+    }
+
     public async Task<ProcessService?> LoadCoreConfigSpeedtest(ServerTestItem testItem)
     {
         var node = await AppManager.Instance.GetProfileItem(testItem.IndexId);

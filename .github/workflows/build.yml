@@ -144,6 +144,17 @@ jobs:
           Expand-Archive wintun.zip wintun
           Copy-Item wintun/wintun/bin/amd64/wintun.dll FlowVeil/bin/xray/
 
+      - name: Add country flags
+        # Windows cannot draw flag emoji; bundled PNGs work offline and right after start.
+        continue-on-error: true
+        shell: pwsh
+        working-directory: windows
+        run: |
+          Invoke-WebRequest https://flagcdn.com/w80.zip -OutFile flags.zip -MaximumRetryCount 5 -RetryIntervalSec 10
+          New-Item -ItemType Directory -Force FlowVeil/flags | Out-Null
+          Expand-Archive flags.zip -DestinationPath FlowVeil/flags -Force
+          Write-Host ("flags: " + (Get-ChildItem FlowVeil/flags -Filter *.png).Count)
+
       - name: Build installer
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"

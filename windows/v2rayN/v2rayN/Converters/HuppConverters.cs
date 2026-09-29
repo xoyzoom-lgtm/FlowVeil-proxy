@@ -59,12 +59,24 @@ public sealed class FlagImageConverter : IValueConverter
         }
         try
         {
+            // Flags shipped next to the app (added by the build) work offline and right after start;
+            // the web copy is only a fallback, and a failed download is retried next time.
+            var local = Path.Combine(Utils.StartupPath(), "flags", code.ToLowerInvariant() + ".png");
+            var fromDisk = File.Exists(local);
             var image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = new Uri($"https://flagcdn.com/w80/{code.ToLowerInvariant()}.png");
+            image.UriSource = fromDisk ? new Uri(local, UriKind.Absolute) : new Uri($"https://flagcdn.com/w80/{code.ToLowerInvariant()}.png");
             image.CacheOption = BitmapCacheOption.OnLoad;
             image.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
             image.EndInit();
+            if (!fromDisk)
+            {
+                image.DownloadFailed += (_, _) => _cache.Remove(code);
+            }
+            if (image.CanFreeze && fromDisk)
+            {
+                image.Freeze();
+            }
             _cache[code] = image;
             return image;
         }

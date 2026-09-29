@@ -492,13 +492,13 @@ public sealed class HuppHomeViewModel : HuppObservable
         var progress = 0d;
         if (info.Total > 0)
         {
-            traffic = $"{Utils.HumanFy(info.Used)} из {Utils.HumanFy(info.Total)}";
-            trafficDetail = $"осталось {Utils.HumanFy(Math.Max(0, info.Total - info.Used))}";
+            traffic = $"{Utils.HumanFy(info.Used / 1024)} из {Utils.HumanFy(info.Total / 1024)}";
+            trafficDetail = $"осталось {Utils.HumanFy(Math.Max(0, info.Total - info.Used) / 1024)}";
             progress = Math.Clamp((info.Total - info.Used) * 100d / info.Total, 0, 100);
         }
         else if (info.Used > 0 || info.Expire > 0)
         {
-            traffic = $"{Utils.HumanFy(info.Used)} из ∞";
+            traffic = $"{Utils.HumanFy(info.Used / 1024)} из ∞";
             trafficDetail = "безлимит";
         }
         var left = string.Empty;
