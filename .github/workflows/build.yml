@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# One build at a time, so releases are published in order.
+concurrency:
+  group: build
+  cancel-in-progress: false
+
 jobs:
   android:
     runs-on: ubuntu-latest

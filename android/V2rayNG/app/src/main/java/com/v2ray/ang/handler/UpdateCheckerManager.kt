@@ -6,7 +6,6 @@ import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.dto.CheckUpdateResult
 import com.v2ray.ang.dto.GitHubRelease
 import com.v2ray.ang.dto.UrlContentRequest
-import com.v2ray.ang.extension.concatUrl
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
@@ -15,7 +14,8 @@ import kotlinx.coroutines.withContext
 
 object UpdateCheckerManager {
     suspend fun checkForUpdate(includePreRelease: Boolean = false): CheckUpdateResult = withContext(Dispatchers.IO) {
-        val url = AppConfig.APP_API_URL.concatUrl("latest")
+        // Newest build by number, not GitHub's "latest" flag (parallel builds can mark an older one).
+        val url = AppConfig.APP_API_URL + "?per_page=10"
 
         val proxyUsername = SettingsManager.getSocksUsername()
         val proxyPassword = SettingsManager.getSocksPassword()
@@ -40,7 +40,9 @@ object UpdateCheckerManager {
                 ?: throw IllegalStateException("Failed to get response")
         }
 
-        val latestRelease = JsonUtil.fromJsonSafe(response, GitHubRelease::class.java)
+        val latestRelease = JsonUtil.fromJsonSafe(response, Array<GitHubRelease>::class.java)
+            ?.filter { !it.prerelease && it.assets.isNotEmpty() }
+            ?.maxByOrNull { release -> release.tagName.filter { it.isDigit() }.toIntOrNull() ?: 0 }
         if (latestRelease == null) {
             return@withContext CheckUpdateResult(hasUpdate = false)
         }

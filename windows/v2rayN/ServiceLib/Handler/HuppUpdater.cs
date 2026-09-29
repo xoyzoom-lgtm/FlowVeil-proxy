@@ -33,7 +33,8 @@ public static class HuppUpdater
     /// <summary>Returns null when GitHub cannot be reached (directly or through the running core).</summary>
     public static async Task<HuppUpdateInfo?> CheckAsync()
     {
-        var url = $"https://api.github.com/repos/{Repo}/releases/latest";
+        // Newest build by number, not GitHub's "latest" flag (parallel builds can mark an older one).
+        var url = $"https://api.github.com/repos/{Repo}/releases?per_page=10";
         var json = await GetAsync(url, null) ?? await GetAsync(url, LocalProxy());
         if (json.IsNullOrEmpty())
         {
@@ -43,7 +44,25 @@ public static class HuppUpdater
         try
         {
             using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
+            JsonElement? best = null;
+            var bestBuild = -1;
+            foreach (var release in doc.RootElement.EnumerateArray())
+            {
+                if (release.TryGetProperty("prerelease", out var pre) && pre.GetBoolean())
+                {
+                    continue;
+                }
+                var n = ParseBuild(release.GetProperty("tag_name").GetString());
+                if (n > bestBuild)
+                {
+                    bestBuild = n;
+                    best = release;
+                }
+            }
+            if (best is not { } root)
+            {
+                return null;
+            }
             var tag = root.GetProperty("tag_name").GetString() ?? string.Empty;
             var notes = root.TryGetProperty("body", out var b) ? b.GetString() ?? string.Empty : string.Empty;
             string? setup = null;
