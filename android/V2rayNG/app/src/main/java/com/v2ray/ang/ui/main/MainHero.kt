@@ -450,8 +450,8 @@ internal fun ConnectionHero(
             Text(
                 text = stringResource(
                     R.string.live_speed,
-                    formatBitRate(speed.second, stringResource(R.string.unit_mbit), stringResource(R.string.unit_kbit)),
-                    formatBitRate(speed.first, stringResource(R.string.unit_mbit), stringResource(R.string.unit_kbit)),
+                    formatBitRate(speed.second, stringResource(R.string.unit_mbit), stringResource(R.string.unit_gbit)),
+                    formatBitRate(speed.first, stringResource(R.string.unit_mbit), stringResource(R.string.unit_gbit)),
                 ),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -497,13 +497,15 @@ internal fun ConnectionHero(
     }
 }
 
-/** Bytes per second as Mbit/s (one decimal) or Kbit/s. */
-internal fun formatBitRate(bytesPerSecond: Long, mbit: String, kbit: String): String {
-    val bits = bytesPerSecond * 8.0
-    return if (bits >= 1_000_000) {
-        String.format(java.util.Locale.getDefault(), "%.1f %s", bits / 1_000_000, mbit)
-    } else {
-        String.format(java.util.Locale.getDefault(), "%.0f %s", bits / 1_000, kbit)
+/** Bytes per second in Mbit/s, or Gbit/s from 1000 Mbit/s up. */
+internal fun formatBitRate(bytesPerSecond: Long, mbit: String, gbit: String): String {
+    val mbps = bytesPerSecond * 8.0 / 1_000_000
+    val locale = java.util.Locale.getDefault()
+    return when {
+        mbps >= 1000 -> String.format(locale, "%.2f %s", mbps / 1000, gbit)
+        mbps >= 10 -> String.format(locale, "%.0f %s", mbps, mbit)
+        mbps >= 1 -> String.format(locale, "%.1f %s", mbps, mbit)
+        else -> String.format(locale, "%.2f %s", mbps, mbit)
     }
 }
 

@@ -261,7 +261,10 @@ class MainViewModel(
         viewModelScope.launch {
             val mbps = withContext(ioDispatcher) { ProxySpeedTest.run() }
             val text = if (mbps != null) {
-                dataSource.getString(R.string.speed_test_result, String.format(java.util.Locale.US, "%.1f", mbps))
+                dataSource.getString(
+                    R.string.speed_test_result,
+                    formatBitRate((mbps * 1_000_000 / 8).toLong(), dataSource.getString(R.string.unit_mbit), dataSource.getString(R.string.unit_gbit))
+                )
             } else {
                 dataSource.getString(R.string.speed_test_failed)
             }

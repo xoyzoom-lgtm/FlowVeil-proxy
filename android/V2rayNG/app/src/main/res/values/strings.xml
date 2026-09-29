@@ -662,7 +662,7 @@
     <string name="speed_test_title">Speed test</string>
     <string name="speed_test_connect_first">Connect first, then run the speed test</string>
     <string name="speed_test_running">Measuring speed…</string>
-    <string name="speed_test_result">Speed: %1$s Mbit/s</string>
+    <string name="speed_test_result">Speed: %1$s</string>
     <string name="speed_test_failed">Speed test failed</string>
     <string name="sub_error_not_link">this is not a subscription link</string>
     <string name="sub_error_unreachable">the subscription server is unreachable: %1$s</string>
@@ -685,5 +685,5 @@
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
     <string name="live_speed">Now: ↓ %1$s   ↑ %2$s</string>
     <string name="unit_mbit">Mbit/s</string>
-    <string name="unit_kbit">Kbit/s</string>
+    <string name="unit_gbit">Gbit/s</string>
 </resources>
