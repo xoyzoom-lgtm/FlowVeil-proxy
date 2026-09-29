@@ -7,9 +7,9 @@
     <string name="widget_state_off">Disconnected</string>
     <string name="widget_no_server">No server selected</string>
     <string name="widget_toggle">Connect or disconnect</string>
-    <string name="widget_switch_description">One-tap VPN button</string>
-    <string name="widget_card_description">Connection state, server and a VPN button</string>
-    <string name="notification_label_vpn">VPN</string>
+    <string name="widget_switch_description">One-tap connect button</string>
+    <string name="widget_card_description">Connection state, server and a connect button</string>
+    <string name="notification_label_vpn">Proxy</string>
     <string name="notification_label_direct">Direct</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">Add a profile in the app before using this feature.</string>
@@ -646,7 +646,7 @@
     <string name="failover_switched">Server stopped responding, switched to %1$s</string>
     <string name="settings_section_connection">Connection</string>
     <string name="title_pref_ru_direct">Russian sites directly</string>
-    <string name="summary_pref_ru_direct">Russian sites and banks bypass the VPN, everything else goes through it</string>
+    <string name="summary_pref_ru_direct">Russian sites and banks open directly, everything else goes through the server</string>
     <string name="title_pref_auto_failover">Switch server automatically</string>
     <string name="summary_pref_auto_failover">If the server stops responding, move to the next working one without disconnecting</string>
     <string name="title_pref_sub_reminders">Subscription reminders</string>

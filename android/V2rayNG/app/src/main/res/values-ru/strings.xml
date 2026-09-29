@@ -7,9 +7,9 @@
     <string name="widget_state_off">Отключено</string>
     <string name="widget_no_server">Сервер не выбран</string>
     <string name="widget_toggle">Подключить или отключить</string>
-    <string name="widget_switch_description">Кнопка VPN в одно касание</string>
-    <string name="widget_card_description">Статус, сервер и кнопка VPN</string>
-    <string name="notification_label_vpn">VPN</string>
+    <string name="widget_switch_description">Кнопка подключения в одно касание</string>
+    <string name="widget_card_description">Статус, сервер и кнопка подключения</string>
+    <string name="notification_label_vpn">Прокси</string>
     <string name="notification_label_direct">Напрямую</string>
     <string name="app_tile_name">FlowVeil</string>
     <string name="app_tile_first_use">Добавьте профиль в приложении перед использованием этой функции.</string>
@@ -650,7 +650,7 @@
     <string name="failover_switched">Сервер перестал отвечать, переключились на %1$s</string>
     <string name="settings_section_connection">Подключение</string>
     <string name="title_pref_ru_direct">Российские сайты напрямую</string>
-    <string name="summary_pref_ru_direct">Российские сайты и банки открываются без VPN, остальное — через VPN</string>
+    <string name="summary_pref_ru_direct">Российские сайты и банки открываются напрямую, остальное — через сервер</string>
     <string name="title_pref_auto_failover">Автопереключение сервера</string>
     <string name="summary_pref_auto_failover">Если сервер перестал отвечать — перейти на следующий рабочий, не отключаясь</string>
     <string name="title_pref_sub_reminders">Напоминания о подписке</string>

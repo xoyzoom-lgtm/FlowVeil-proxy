@@ -274,7 +274,7 @@
                     HorizontalAlignment="Center"
                     FontSize="14"
                     Style="{StaticResource SubText}"
-                    Text="1. Скопируйте ссылку на подписку от вашего VPN (начинается с https://)&#10;2. Нажмите «Вставить ссылку» — серверы загрузятся сами"
+                    Text="1. Скопируйте ссылку на подписку от вашего провайдера (начинается с https://)&#10;2. Нажмите «Вставить ссылку» — серверы загрузятся сами"
                     TextAlignment="Center"
                     TextWrapping="Wrap" />
                 <Button

@@ -159,7 +159,7 @@ public sealed class HuppHomeViewModel : HuppObservable
     {
         HintText = !_hasServer
             ? "Сначала добавьте подписку — кнопка «Добавить» слева"
-            : IsConnected ? string.Empty : "Нажмите на кнопку, чтобы включить VPN";
+            : IsConnected ? string.Empty : "Нажмите на кнопку, чтобы подключиться";
     }
 
     private string _pingText = string.Empty;

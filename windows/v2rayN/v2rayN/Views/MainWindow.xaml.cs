@@ -403,7 +403,7 @@ public partial class MainWindow
         Row(main, PackIconKind.QrcodeScan, "Сканировать QR-код с экрана", "Если провайдер дал QR-код", () => Exec(vm.AddServerViaScanCmd));
 
         var connection = Section("Подключение");
-        Row(connection, PackIconKind.Directions, "Маршрутизация", "Какие сайты открывать через VPN, а какие напрямую", () => Exec(vm.RoutingSettingCmd));
+        Row(connection, PackIconKind.Directions, "Маршрутизация", "Какие сайты открывать через сервер, а какие напрямую", () => Exec(vm.RoutingSettingCmd));
         Row(connection, PackIconKind.Dns, "DNS", "Серверы для поиска адресов сайтов", () => Exec(vm.DNSSettingCmd));
         Row(connection, PackIconKind.ShieldAccount, "Запустить от администратора", "Нужно для режима TUN (весь трафик)", () => Exec(vm.RebootAsAdminCmd));
 
