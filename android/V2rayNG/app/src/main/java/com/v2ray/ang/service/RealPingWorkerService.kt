@@ -66,7 +66,9 @@ class RealPingWorkerService(
     private val totalCount = AtomicInteger(0)
 
     fun start() {
-        val jobs = guids.map { guid ->
+        // Ordinary servers first: the slow one-by-one JSON checks must not hold up the quick ones.
+        val ordered = if (onlyTcp) guids else guids.sortedBy { SpeedtestConfig.limiterType(it) == EConfigType.CUSTOM }
+        val jobs = ordered.map { guid ->
             totalCount.incrementAndGet()
             scope.launch {
                 runningCount.incrementAndGet()
