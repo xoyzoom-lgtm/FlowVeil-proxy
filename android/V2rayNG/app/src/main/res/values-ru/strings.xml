@@ -677,13 +677,12 @@
     <string name="whats_new_title">Что нового</string>
     <string name="whats_new_ok">Понятно</string>
     <string-array name="whats_new_items">
-        <item>Кнопка «Лучший»: находит самый быстрый сервер и подключается</item>
-        <item>Если сервер перестал отвечать, FlowVeil сам переключится на рабочий</item>
-        <item>Подписки обновляются каждые 6 часов, напоминания перед окончанием</item>
-        <item>«Российские сайты напрямую» в Настройки → Подключение</item>
-        <item>Избранные серверы (★) всегда наверху списка</item>
-        <item>Текущий трафик под кнопкой, а максимальную скорость измеряет «Тест скорости» в меню ⋮</item>
-        <item>Ссылки-приглашения flowveil://add?url=… добавляют подписку в одно касание</item>
+        <item>Автообновление подписок: выберите, как часто — в Настройки → Подключение</item>
+        <item>Если сервер перестал отвечать, FlowVeil за полминуты сам переключится на рабочий и пришлёт уведомление</item>
+        <item>Кнопка «Лучший»: находит самый быстрый сервер (без серверов в России)</item>
+        <item>Тест скорости в меню ⋮ меряет как настоящие спидтесты: скачивание, отдача, пинг</item>
+        <item>Меньше лишних кнопок: технические настройки теперь в «Режиме разработчика»</item>
+        <item>Избранные серверы (★), напоминания об окончании подписки, «Российские сайты напрямую»</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>
@@ -693,4 +692,16 @@
     <string name="settings_section_developer">Для разработчиков</string>
     <string name="title_pref_dev_mode">Режим разработчика</string>
     <string name="summary_pref_dev_mode">Показать технические настройки и инструменты: ручное добавление серверов, маршрутизацию, DNS, настройки ядра, логи, массовые действия</string>
+    <string name="title_pref_sub_update_interval">Автообновление подписок</string>
+    <string name="notification_channel_switch">Переключение сервера</string>
+    <string name="failover_notification_title">Переключились на рабочий сервер</string>
+    <string name="failover_notification_text">%1$s перестал отвечать, теперь используется %2$s</string>
+    <string-array name="sub_update_interval_entries">
+        <item>Выключено</item>
+        <item>Каждый час</item>
+        <item>Каждые 3 часа</item>
+        <item>Каждые 6 часов</item>
+        <item>Каждые 12 часов</item>
+        <item>Раз в день</item>
+    </string-array>
 </resources>

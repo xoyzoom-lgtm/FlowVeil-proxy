@@ -673,13 +673,12 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
-        <item>“Best” button: finds the fastest server and connects to it</item>
-        <item>If a server stops responding, FlowVeil switches to the next working one by itself</item>
-        <item>Subscriptions refresh every 6 hours; reminders before they run out</item>
-        <item>“Russian sites directly” in Settings → Connection</item>
-        <item>Favorite servers (★) stay at the top of the list</item>
-        <item>Current traffic under the power button; “Speed test” in the ⋮ menu measures the maximum speed</item>
-        <item>Invite links flowveil://add?url=… add a subscription in one tap</item>
+        <item>Automatic subscription updates: choose how often in Settings → Connection</item>
+        <item>If a server stops responding, FlowVeil switches to a working one within half a minute and notifies you</item>
+        <item>“Best” button finds the fastest server (servers in Russia are skipped)</item>
+        <item>Speed test in the ⋮ menu measures like real speed tests: download, upload, ping</item>
+        <item>Fewer confusing buttons: technical settings moved to “Developer mode”</item>
+        <item>Favorite servers (★), subscription reminders, “Russian sites directly”</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
@@ -689,4 +688,24 @@
     <string name="settings_section_developer">For developers</string>
     <string name="title_pref_dev_mode">Developer mode</string>
     <string name="summary_pref_dev_mode">Show technical settings and tools: manual server editors, routing, DNS, core options, logs, bulk actions</string>
+    <string name="title_pref_sub_update_interval">Update subscriptions automatically</string>
+    <string name="notification_channel_switch">Server switching</string>
+    <string name="failover_notification_title">Switched to a working server</string>
+    <string name="failover_notification_text">%1$s stopped responding, now using %2$s</string>
+    <string-array name="sub_update_interval_entries">
+        <item>Off</item>
+        <item>Every hour</item>
+        <item>Every 3 hours</item>
+        <item>Every 6 hours</item>
+        <item>Every 12 hours</item>
+        <item>Once a day</item>
+    </string-array>
+    <string-array name="sub_update_interval_values" translatable="false">
+        <item>0</item>
+        <item>60</item>
+        <item>180</item>
+        <item>360</item>
+        <item>720</item>
+        <item>1440</item>
+    </string-array>
 </resources>

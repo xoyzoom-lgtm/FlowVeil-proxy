@@ -58,6 +58,26 @@ object SubscriptionUpdater {
     }
 
     /**
+     * Applies one refresh interval to every subscription with a link ("0" minutes turns
+     * automatic updates off) and reschedules their tasks.
+     */
+    fun applyIntervalToAll(context: Context = AngApplication.application, minutes: Long) {
+        MmkvManager.decodeSubscriptions().forEach { sub ->
+            val item = sub.subscription
+            if (item.url.isBlank()) return@forEach
+            item.autoUpdate = minutes > 0
+            if (minutes > 0) item.updateInterval = maxOf(minutes, AppConfig.SUBSCRIPTION_MIN_INTERVAL_MINUTES)
+            MmkvManager.encodeSubscription(sub.guid, item)
+            if (minutes > 0) syncOne(context, sub.guid) else cancelOne(context, sub.guid)
+        }
+    }
+
+    /** Interval chosen in settings for new subscriptions, in minutes; 0 = no automatic updates. */
+    fun defaultIntervalMinutes(): Long =
+        MmkvManager.decodeSettingsString(AppConfig.PREF_SUB_UPDATE_INTERVAL)?.toLongOrNull()
+            ?: AppConfig.SUB_DEFAULT_UPDATE_MINUTES
+
+    /**
      * Sync a single subscription's task.
      * Call from: SubEditActivity after saving, after a manual update (to reset the timer).
      */

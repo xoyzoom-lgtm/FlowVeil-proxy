@@ -70,6 +70,7 @@ import com.v2ray.ang.ui.compose.ThemeManager
 import com.v2ray.ang.ui.compose.verticalScrollbar
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.enums.RoutingType
 import androidx.compose.ui.platform.LocalContext
 import com.v2ray.ang.util.LogUtil
@@ -214,6 +215,9 @@ fun SettingsScreen(
     var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
     var showBestButton by rememberMmkvBool(AppConfig.PREF_SHOW_BEST_BUTTON, true)
     var devMode by rememberMmkvBool(AppConfig.PREF_DEV_MODE, false)
+    var subUpdateInterval by rememberMmkvString(AppConfig.PREF_SUB_UPDATE_INTERVAL, AppConfig.SUB_DEFAULT_UPDATE_MINUTES.toString())
+    val subUpdateEntries = stringArrayResource(R.array.sub_update_interval_entries).toList()
+    val subUpdateValues = stringArrayResource(R.array.sub_update_interval_values).toList()
     val settingsContext = LocalContext.current
     val deviceHwid = remember { DeviceIdentity.hwid() }
     var confirmRemove by rememberMmkvBool(AppConfig.PREF_CONFIRM_REMOVE, false)
@@ -332,6 +336,16 @@ fun SettingsScreen(
                     summary = stringResource(R.string.summary_pref_auto_failover),
                     checked = autoFailover,
                     onCheckedChange = { autoFailover = it }
+                )
+                SettingsListItem(
+                    title = stringResource(R.string.title_pref_sub_update_interval),
+                    entries = subUpdateEntries,
+                    values = subUpdateValues,
+                    selectedValue = subUpdateInterval,
+                    onSelected = {
+                        subUpdateInterval = it
+                        SubscriptionUpdater.applyIntervalToAll(settingsContext, it.toLongOrNull() ?: 0L)
+                    }
                 )
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_sub_reminders),

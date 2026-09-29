@@ -16,27 +16,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.MmkvManager
 
 /** "What's new" shown once after the app was updated (not on a fresh install). */
 internal object WhatsNew {
-    private const val KEY = "whats_new_seen_build"
+    private const val KEY = "whats_new_seen_version"
+    private const val LEGACY_KEY = "whats_new_seen_build"
+
+    /** Bump when the whats_new_items list changes; the dialog shows once per version. */
+    private const val CONTENT_VERSION = 2
 
     fun shouldShow(): Boolean {
         val seen = MmkvManager.decodeSettingsString(KEY)?.toIntOrNull()
         if (seen == null) {
-            // Builds before this dialog stored nothing: someone with subscriptions is updating,
-            // an empty app is a fresh install with nothing to announce.
-            val updating = MmkvManager.decodeSubscriptions().any { it.subscription.url.isNotBlank() }
+            // Someone with subscriptions (or who saw an older dialog) is updating; an empty app
+            // is a fresh install with nothing to announce.
+            val updating = MmkvManager.decodeSettingsString(LEGACY_KEY) != null ||
+                MmkvManager.decodeSubscriptions().any { it.subscription.url.isNotBlank() }
             if (!updating) markSeen()
             return updating
         }
-        return seen < BuildConfig.HUPP_BUILD
+        return seen < CONTENT_VERSION
     }
 
-    fun markSeen() = MmkvManager.encodeSettings(KEY, BuildConfig.HUPP_BUILD.toString())
+    fun markSeen() = MmkvManager.encodeSettings(KEY, CONTENT_VERSION.toString())
 }
 
 @Composable

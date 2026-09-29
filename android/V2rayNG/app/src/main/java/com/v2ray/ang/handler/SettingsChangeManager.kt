@@ -28,6 +28,7 @@ object SettingsChangeManager {
         AppConfig.PREF_SUB_REMINDERS,
         AppConfig.PREF_SHOW_BEST_BUTTON,
         AppConfig.PREF_DEV_MODE,
+        AppConfig.PREF_SUB_UPDATE_INTERVAL,
     )
 
     /**

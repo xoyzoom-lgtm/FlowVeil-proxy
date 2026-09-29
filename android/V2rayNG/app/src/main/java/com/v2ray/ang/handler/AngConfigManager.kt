@@ -672,8 +672,10 @@ object AngConfigManager {
         val subItem = SubscriptionItem()
         subItem.remarks = uri.fragment ?: uri.host ?: "import sub"
         subItem.url = url
-        subItem.autoUpdate = true
-        subItem.updateInterval = AppConfig.SUB_DEFAULT_UPDATE_MINUTES
+        // New subscriptions follow the interval chosen in settings (every 6 h unless changed).
+        val interval = SubscriptionUpdater.defaultIntervalMinutes()
+        subItem.autoUpdate = interval > 0
+        if (interval > 0) subItem.updateInterval = interval
         MmkvManager.encodeSubscription("", subItem)
         return 1
     }

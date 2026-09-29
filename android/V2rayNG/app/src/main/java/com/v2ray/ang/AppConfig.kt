@@ -67,6 +67,8 @@ object AppConfig {
     const val PREF_RU_DIRECT = "pref_ru_direct"
     const val PREF_SHOW_BEST_BUTTON = "pref_show_best_button"
     const val PREF_DEV_MODE = "pref_dev_mode"
+    /** Minutes between automatic subscription updates for all subscriptions, "0" = off. */
+    const val PREF_SUB_UPDATE_INTERVAL = "pref_sub_update_interval"
     const val PREF_IPV6_ENABLED = "pref_ipv6_enabled"
     const val PREF_PREFER_IPV6 = "pref_prefer_ipv6"
     const val PREF_PROXY_SHARING = "pref_proxy_sharing_enabled"

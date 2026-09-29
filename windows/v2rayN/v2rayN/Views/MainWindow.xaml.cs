@@ -401,6 +401,7 @@ public partial class MainWindow
         Row(main, PackIconKind.ContentPaste, "Добавить подписку или сервер", "Скопируйте ссылку и нажмите сюда (Ctrl+V)", () => Exec(vm.AddServerViaClipboardCmd));
         Row(main, PackIconKind.Refresh, "Обновить все подписки", "Скачать свежий список серверов", () => Exec(vm.SubUpdateCmd));
         Row(main, PackIconKind.QrcodeScan, "Сканировать QR-код с экрана", "Если провайдер дал QR-код", () => Exec(vm.AddServerViaScanCmd));
+        Row(main, PackIconKind.Autorenew, "Автообновление подписок", SubAutoUpdate.Title(SubAutoUpdate.Get()), () => OpenSubUpdateMenu(vm));
 
         var connection = Section("Подключение");
         Row(connection, PackIconKind.ShieldAccount, "Запустить от администратора", "Нужно для режима TUN (весь трафик)", () => Exec(vm.RebootAsAdminCmd));
@@ -446,6 +447,24 @@ public partial class MainWindow
         Row(expert, PackIconKind.CodeJson, "Шаблон конфигурации", "", () => Exec(vm.FullConfigTemplateCmd));
         Row(expert, PackIconKind.RestartAlert, "Перезапустить ядро", "F5", () => Exec(vm.ReloadCmd));
         Row(expert, PackIconKind.FolderOpen, "Открыть папку программы", "", () => Exec(vm.OpenTheFileLocationCmd));
+    }
+
+    private void OpenSubUpdateMenu(MainWindowViewModel vm)
+    {
+        var current = SubAutoUpdate.Get();
+        var menu = new ContextMenu();
+        foreach (var (minutes, title) in SubAutoUpdate.Options)
+        {
+            var item = new MenuItem { Header = title, IsCheckable = true, IsChecked = minutes == current };
+            item.Click += async (_, _) =>
+            {
+                await SubAutoUpdate.SetAsync(minutes);
+                NoticeManager.Instance.Enqueue(minutes > 0 ? $"Подписки будут обновляться: {title.ToLowerInvariant()}" : "Автообновление подписок выключено");
+                BuildSettingsPage(vm);
+            };
+            menu.Items.Add(item);
+        }
+        menu.IsOpen = true;
     }
 
     private static string DevModeFile => Utils.GetConfigPath("dev_mode");
@@ -524,6 +543,7 @@ public partial class MainWindow
         }
         RestoreUI();
         _ = ImportPendingLinkAsync();
+        _ = SubAutoUpdate.EnsureDefaultAsync();
     }
 
     /// <summary>Adds the subscription from a flowveil:// link that opened the app.</summary>

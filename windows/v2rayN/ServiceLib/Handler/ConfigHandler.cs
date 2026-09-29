@@ -2172,7 +2172,9 @@ public static class ConfigHandler
         SubItem subItem = new()
         {
             Id = string.Empty,
-            Url = url
+            Url = url,
+            // FlowVeil: new subscriptions refresh themselves at the interval chosen in settings.
+            AutoUpdateInterval = SubAutoUpdate.Get(),
         };
 
         var uri = Utils.TryUri(url);
