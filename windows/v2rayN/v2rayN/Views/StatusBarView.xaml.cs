@@ -1,4 +1,6 @@
+using MaterialDesignThemes.Wpf;
 using System.Windows.Controls;
+using System.Windows.Media;
 using v2rayN.Manager;
 using v2rayN.ViewModels;
 
@@ -67,7 +69,7 @@ public partial class StatusBarView
         var vm = ViewModel;
         var home = (Application.Current?.MainWindow as MainWindow)?.HomeViewModel;
 
-        MenuItem Item(string header, Action? onClick = null, bool isChecked = false, bool enabled = true)
+        MenuItem Item(string header, Action? onClick = null, bool isChecked = false, bool enabled = true, PackIconKind? icon = null)
         {
             var item = new MenuItem
             {
@@ -75,8 +77,16 @@ public partial class StatusBarView
                 IsCheckable = false,
                 IsChecked = isChecked,
                 IsEnabled = enabled,
-                Height = double.NaN,
+                Height = 38,
+                Padding = new Thickness(12, 0, 12, 0),
+                FontSize = 13.5,
             };
+            if (icon is { } kind)
+            {
+                var packIcon = new PackIcon { Kind = kind, Width = 18, Height = 18 };
+                packIcon.SetResourceReference(ForegroundProperty, "MaterialDesign.Brush.Primary");
+                item.Icon = packIcon;
+            }
             if (onClick != null)
             {
                 item.Click += (_, _) => onClick();
@@ -84,15 +94,41 @@ public partial class StatusBarView
             return item;
         }
 
+        Separator Divider() => new() { Margin = new Thickness(12, 4, 12, 4), Opacity = 0.5 };
+
         var connected = home?.IsConnected == true;
         var server = home?.ServerName ?? string.Empty;
-        trayMenu.Items.Add(Item(connected ? $"Подключено · {server}" : "Отключено", enabled: false));
-        trayMenu.Items.Add(Item(connected ? "Отключиться" : "Подключиться", () => _ = home?.ToggleAsync()));
-        trayMenu.Items.Add(new Separator());
+
+        // Status header: coloured dot, state and server; not clickable but not greyed out.
+        var dot = new System.Windows.Shapes.Ellipse
+        {
+            Width = 10,
+            Height = 10,
+            Margin = new Thickness(2, 0, 12, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Fill = new SolidColorBrush(connected ? Color.FromRgb(0x3B, 0xE0, 0xB0) : Color.FromRgb(0x8A, 0x94, 0xA6)),
+        };
+        var state = new TextBlock { Text = connected ? "Подключено" : "Отключено", FontWeight = FontWeights.SemiBold, FontSize = 14 };
+        state.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.Foreground");
+        var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        texts.Children.Add(state);
+        if (server.IsNotEmpty())
+        {
+            var serverText = new TextBlock { Text = server, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 220 };
+            serverText.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.ForegroundLight");
+            texts.Children.Add(serverText);
+        }
+        var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(10, 8, 10, 8) };
+        headerPanel.Children.Add(dot);
+        headerPanel.Children.Add(texts);
+        trayMenu.Items.Add(new MenuItem { Header = headerPanel, IsHitTestVisible = false, Focusable = false, Height = double.NaN, Padding = new Thickness(0) });
+
+        trayMenu.Items.Add(Item(connected ? "Отключиться" : "Подключиться", () => _ = home?.ToggleAsync(), icon: PackIconKind.Power));
+        trayMenu.Items.Add(Divider());
 
         if (vm != null)
         {
-            var servers = Item("Сменить сервер");
+            var servers = Item("Сменить сервер", icon: PackIconKind.Earth);
             if (vm.BlServers && vm.Servers.Count > 0)
             {
                 foreach (var it in vm.Servers)
@@ -108,7 +144,7 @@ public partial class StatusBarView
             }
             trayMenu.Items.Add(servers);
 
-            var mode = Item("Режим транспорта");
+            var mode = Item("Режим подключения", icon: PackIconKind.SwapHorizontal);
             if (home != null)
             {
                 foreach (var (id, group, title) in HuppHomeViewModel.Modes)
@@ -126,7 +162,7 @@ public partial class StatusBarView
 
             if (vm.RoutingItems.Count > 0)
             {
-                var routing = Item("Маршрутизация");
+                var routing = Item("Маршрутизация", icon: PackIconKind.Directions);
                 foreach (var it in vm.RoutingItems)
                 {
                     var target = it;
@@ -135,14 +171,13 @@ public partial class StatusBarView
                 trayMenu.Items.Add(routing);
             }
 
-            trayMenu.Items.Add(new Separator());
-            trayMenu.Items.Add(Item("Импорт из буфера обмена", () => ((ICommand)vm.AddServerViaClipboardCmd).Execute(null)));
-            trayMenu.Items.Add(Item("Обновить подписки", () => ((ICommand)vm.SubUpdateCmd).Execute(null)));
-            trayMenu.Items.Add(Item("Скопировать команду прокси", () => ((ICommand)vm.CopyProxyCmdToClipboardCmd).Execute(null)));
-            trayMenu.Items.Add(new Separator());
-            trayMenu.Items.Add(Item("Показать окно", () => ((ICommand)vm.ShowWindowCmd).Execute(null)));
+            trayMenu.Items.Add(Divider());
+            trayMenu.Items.Add(Item("Вставить подписку из буфера", () => ((ICommand)vm.AddServerViaClipboardCmd).Execute(null), icon: PackIconKind.ContentPaste));
+            trayMenu.Items.Add(Item("Обновить подписки", () => ((ICommand)vm.SubUpdateCmd).Execute(null), icon: PackIconKind.Refresh));
+            trayMenu.Items.Add(Divider());
+            trayMenu.Items.Add(Item("Открыть FlowVeil", () => ((ICommand)vm.ShowWindowCmd).Execute(null), icon: PackIconKind.WindowMaximize));
         }
-        trayMenu.Items.Add(Item("Выйти", () => menuExit_Click(this, new RoutedEventArgs())));
+        trayMenu.Items.Add(Item("Выйти", () => menuExit_Click(this, new RoutedEventArgs()), icon: PackIconKind.ExitToApp));
     }
 
     /// <summary>"[VLESS] 🇩🇪 Germany(1.2.3.4:443)" → "Germany".</summary>

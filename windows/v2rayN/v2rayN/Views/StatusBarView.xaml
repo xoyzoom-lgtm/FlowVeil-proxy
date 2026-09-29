@@ -110,7 +110,7 @@
             ToolTipText="FlowVeil">
             <tb:TaskbarIcon.ContextMenu>
                 <!--  Items are rebuilt each time the menu opens (see StatusBarView.xaml.cs)  -->
-                <ContextMenu x:Name="trayMenu" Style="{StaticResource DefContextMenu}" />
+                <ContextMenu x:Name="trayMenu" Style="{StaticResource TrayContextMenu}" />
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
     </Grid>
