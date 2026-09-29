@@ -324,7 +324,16 @@ public class DownloadService
             using var response = await client.GetAsync(url, linkedCts.Token);
             if (!response.IsSuccessStatusCode)
             {
-                LastError = $"сервер подписки ответил {(int)response.StatusCode} {response.ReasonPhrase}";
+                var code = (int)response.StatusCode;
+                // Plain words for the usual provider answers (the prefix keeps it from being overwritten below).
+                LastError = "сервер подписки ответил " + code switch
+                {
+                    404 or 410 => $"{code}: провайдер больше не знает эту ссылку — скорее всего, ключ сброшен или превышен лимит устройств. Возьмите у провайдера новую ссылку",
+                    401 or 403 => $"{code}: доступ закрыт — подписка отключена или превышен лимит устройств",
+                    429 => $"{code}: слишком много запросов, попробуйте через пару минут",
+                    >= 500 => $"{code}: сбой на сервере провайдера, попробуйте позже",
+                    _ => $"{code} {response.ReasonPhrase}",
+                };
             }
             response.EnsureSuccessStatusCode();
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

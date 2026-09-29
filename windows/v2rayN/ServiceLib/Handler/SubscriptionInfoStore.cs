@@ -16,7 +16,11 @@ public sealed class SubscriptionInfo
     public int UpdateIntervalHours { get; set; }
     public long UpdatedAt { get; set; }
 
-    public long Used => Upload + Download;
+    // Saturating: some panels send absurd numbers, and the build throws on overflow.
+    public long Used => Upload > long.MaxValue - Download ? long.MaxValue : Upload + Download;
+
+    /// <summary>Expiry as unix seconds; panels that send milliseconds are converted.</summary>
+    public long ExpireSeconds => Expire > 100_000_000_000L ? Expire / 1000 : Expire;
 }
 
 /// <summary>Stores <see cref="SubscriptionInfo"/> per subscription id in guiConfigs/sub_info.json.</summary>
@@ -127,11 +131,13 @@ public static class SubscriptionInfoStore
             foreach (var part in userInfo.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
                 var kv = part.Split('=', 2, StringSplitOptions.TrimEntries);
-                if (kv.Length != 2 || !double.TryParse(kv[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
+                if (kv.Length != 2 || !double.TryParse(kv[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
+                    || double.IsNaN(number) || number < 0)
                 {
                     continue;
                 }
-                var value = (long)number;
+                // "Unlimited" is sometimes sent as a huge number; a plain cast overflows (checked build).
+                var value = number >= 9.2e18 ? long.MaxValue / 4 : (long)number;
                 switch (kv[0].ToLowerInvariant())
                 {
                     case "upload": info.Upload = value; break;

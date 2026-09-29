@@ -1,0 +1,142 @@
+# FlowVeil — handoff for Claude
+
+Read this fully before touching anything. It is the memory of the project so far.
+
+## What FlowVeil is
+- A **proxy client / traffic router** in the spirit of Happ, v2rayN, v2rayNG — **not a VPN
+  service**. It has no servers; users bring a subscription or configs from their provider.
+  Never call it a "VPN" in user-facing marketing text (advertising VPNs is illegal in Russia).
+  Technical Android names like "VPN mode", "VPN MTU" stay as they are.
+- Two apps in one repo:
+  - `android/` — fork of **2dust/v2rayNG** (Kotlin, Jetpack Compose, MMKV, Xray core via libv2ray).
+  - `windows/` — fork of **2dust/v2rayN** (C#/.NET 10, WPF, MaterialDesignThemes, ReactiveUI).
+    The shared logic lives in `windows/v2rayN/ServiceLib`, the WPF UI in `windows/v2rayN/v2rayN`.
+    `v2rayN.Desktop` (Avalonia) is upstream only and **not** built or maintained.
+- Owner: Telegram **@GxoyzoomG** (https://t.me/GxoyzoomG). Talks Russian, wants **short answers
+  in Russian**, casual tone. Is promoting the app publicly, so quality matters.
+- Old name was "Hupp"; many internal identifiers still say `Hupp*`/`Happ*` (e.g. `HuppHomeView`,
+  `HappTheme`, `HUPP_BUILD`, secrets `HUPP_KEYSTORE_*`). That is fine internally; users must never
+  see "Hupp" or "Happ" as our branding.
+
+## Repositories
+- Main: **https://github.com/xoyzoom-lgtm/FlowVeil-proxy** (branch `main`, pushes go straight
+  to `main`; every push builds and publishes a release). Renamed from `hupp-proxy`.
+- `xoyzoom-lgtm/drugavto` — only a scratch/session repo (branch
+  `claude/happ-themes-pc-android-sz6gnv` holds `flowveil-site.zip`). Not the product.
+
+## Hard rules (from the owner, keep them)
+- Do not embed the owner's own subscription URL anywhere.
+- No Happ branding, logo, name look-alikes; no spoofing Happ (User-Agent etc.).
+- Do not decrypt `happ://crypt…` links — tell the user only Happ opens them.
+- Do not copy another app's HWID to bypass device limits.
+- Never commit keystores or passwords. Signing uses repo secrets `HUPP_KEYSTORE_BASE64`
+  (alias `hupp`) and `HUPP_KEYSTORE_PASSWORD`; they already exist.
+- Keep GPL-3.0 credit: "Основано на v2rayNG/v2rayN".
+- Every user-visible change goes into **`CHANGES.md`** (Russian, plain words). CI puts it at
+  the top of the release notes. Replace its content when starting a new batch of changes
+  (it describes the *next* build), don't let it grow forever.
+
+## Versions and releases
+- Build number = GitHub Actions `run_number`. Tags `v%04d` (e.g. `v0060`), title
+  `FlowVeil build-N`. Android `versionCode = 749 + N` (`-PhuppBuild=N`, `BuildConfig.HUPP_BUILD`);
+  Windows shows `InformationalVersion=build-N` in the title.
+- `.github/workflows/build.yml`: jobs `android`, `windows`, `release` (release only if both
+  succeed). `concurrency: build`, `cancel-in-progress: false` → a newer push cancels a *pending*
+  run; only the newest pending one survives. Publishing retries 4× (GitHub sometimes gives 403).
+- Release assets: `FlowVeil-android.apk` (universal), `FlowVeil-android-arm64.apk`,
+  `FlowVeil-Setup.exe`, `FlowVeil-windows-portable.zip`, `Hupp-Setup.exe` (copy for very old
+  updaters).
+- In-app updaters (Android `UpdateCheckerManager`, Windows `HuppUpdater`) list
+  `releases?per_page=10` and take the **highest build number**, not GitHub's "latest" flag.
+- Windows CI bundles: Xray core, sing-box ≤ 1.14, wintun.dll, country flags from flagcdn
+  (`FlowVeil/flags/*.png`), then Inno Setup (`windows/FlowVeil.iss`, AppId GUID must stay).
+  A self-test (`windows/selftest/HuppSelfTest`) imports sample subscriptions (continue-on-error).
+
+## Android specifics
+- `applicationId = com.flowveil.app` (changed from `com.v2ray.ang` so it can live next to
+  v2rayNG). Kotlin package/namespace is still `com.v2ray.ang` — do not rename packages.
+- Processes: UI (default), `:daemon` (VPN/core, widgets), `:tasks`. MMKV is MULTI_PROCESS.
+  `CoreServiceManager` lives in the core process — do not reference it from the UI process
+  (use MMKV `CACHE_CONNECTED_SINCE` to know if connected).
+- Key FlowVeil files (all under `android/V2rayNG/app/src/main/java/com/v2ray/ang/`):
+  - `handler/SubscriptionFormats.kt` — loose base64, Clash YAML and sing-box JSON → share links.
+  - `handler/AngConfigManager.kt` — subscription download (proxy → direct → DoH, UA retries),
+    error reasons (`SubscriptionErrors`), import, new subs auto-update interval.
+  - `handler/DeviceIdentity.kt` — `x-hwid` = SHA-256("flowveil:"+ANDROID_ID) first 8 bytes,
+    cached in MMKV; headers x-hwid/x-device-os/x-ver-os/x-device-model.
+  - `core/ConnectionWatchdog.kt` — auto failover: check every 30 s (screen on), recheck after
+    5 s, online check via ya.ru/vk.com/mail.ru, parallel candidate tests, notification.
+  - `service/SpeedtestConfig.kt` — one real test; custom JSON profiles are slimmed to their
+    outbounds so they can run in parallel.
+  - `service/RealPingWorkerService.kt` — list check, max 8 parallel, always reports a result.
+  - `handler/ProxySpeedTest.kt` — 6-stream download/upload/ping through local proxy.
+  - `handler/SubscriptionReminders.kt`, `SubscriptionUpdater.kt` (interval for all subs),
+    `DirectSites.kt` (user + ~80 default Russian domains as one locked routing rule),
+    `FavoriteServers.kt`, `ServerCountry.kt` (skip Russian servers for "Best"/failover),
+    `DevMode.kt` (hides technical UI), `ui/main/WhatsNewDialog.kt` (bump `CONTENT_VERSION`
+    when the `whats_new_items` list changes).
+  - Widgets: `receiver/WidgetProvider.kt` (1×1) + `WidgetCardProvider.kt` (4×1).
+  - Deep links: `ui/UrlSchemeActivity.kt` → `MainActivity.EXTRA_IMPORT_TEXT`
+    (`flowveil://add?url=…`, `v2rayng://install-sub?url=…`).
+  - Strings: English in `res/values/strings.xml`, Russian in `res/values-ru/strings.xml`.
+    Every new string must be added to both.
+- Settings → "Подключение": Russian sites directly, my sites directly, apps directly,
+  best button, auto failover, subscription auto-update interval, reminders.
+  Settings → "Для разработчиков": developer mode (off by default).
+
+## Windows specifics
+- `Directory.Build.props` has **`CheckForOverflowUnderflow=true`** and
+  **`UseSystemResourceKeys=true`**: any integer overflow throws, and exception messages show
+  resource keys like `Arg_OverflowException`. Be careful with casts (`(int)double`), division
+  by zero in doubles, `Sum()` etc.
+- `Utils.HumanFy(x)` expects **kilobytes** (divide bytes by 1024 first).
+- Key FlowVeil files:
+  - `v2rayN/Views/HuppHomeView.xaml(.cs)` + `v2rayN/ViewModels/HuppHomeViewModel.cs` — home
+    screen, modes Proxy / TUN (sing-box, gVisor, Xray) / Local, subscription card, "Connect to
+    the best" (skips Russian servers).
+  - `v2rayN/Views/MainWindow.xaml(.cs)` — nav rail, settings page built in code
+    (`BuildSettingsPage`), developer mode (file `guiConfigs/dev_mode`), deep link import.
+  - `v2rayN/Views/StatusBarView.xaml.cs` — tray menu (style `TrayContextMenu` in `App.xaml`).
+  - `ServiceLib/Handler/HuppUpdater.cs` + `v2rayN/Views/HuppUpdateView` — in-app update.
+  - `ServiceLib/Handler/SubscriptionInfoStore.cs` — provider headers (traffic, expire, announce).
+  - `ServiceLib/Handler/DeviceIdentity.cs` — HWID from MachineGuid hash, `guiConfigs/hwid.txt`.
+  - `ServiceLib/Services/SecureDns.cs` — DoH fallback for subscription download.
+  - `ServiceLib/Handler/SubAutoUpdate.cs` — one interval for all subs (`guiConfigs/sub_update_interval`).
+  - `ServiceLib/Common/ElevatedTask.cs` — TUN admin rights once: first elevated start registers
+    Task Scheduler task "FlowVeil (TUN)" (HighestAvailable), later restarts use it silently;
+    `guiConfigs/tun_pending` carries a TUN request over the restart.
+  - `ServiceLib/Services/SpeedtestService.cs` — FlowVeil adds `RunCustomRealPingAsync` (custom
+    JSON profiles tested with their outbounds behind a SOCKS inbound) and an empty-batch guard.
+  - `v2rayN/Common/DeepLink.cs` — `flowveil://` (installer registers the scheme in HKCU).
+  - `v2rayN/Converters/HuppConverters.cs` — flags (local `flags/` first), ping text/colours.
+  - `ServiceLib/Common/HappThemes.cs` — 17 colour themes (legacy "Happ · " prefix migrated).
+- UI text on Windows is hard-coded Russian (not localized).
+
+## Website
+- `docs/index.html` (+ `logo.png`, `banner.png`) — single-file animated landing page
+  (routing diagram hero, rules, modes, download, FAQ). Positioned as a traffic router on
+  Xray/sing-box. GitHub Pages not enabled yet (owner must: Settings → Pages → main /docs), owner
+  may host it on his own domain.
+
+## Building locally
+- Android: JDK 21, Android SDK platform 37 + build-tools 37.0.0, NDK 29.0.14206865. Before
+  gradle: build `libhev-socks5-tunnel` (`android/compile-hevtun.sh`, hev-socks5-tunnel commit
+  64cc609f…) into `V2rayNG/app/libs`, and download
+  `https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.9.9/libv2ray.aar` to
+  `V2rayNG/app/libs/`. Then `cd android/V2rayNG && ./gradlew assemblePlaystoreRelease
+  -PhuppBuild=<N>` with the `android.injected.signing.*` properties (see the `android` job in
+  `build.yml`). A different signing key cannot update an installed APK — for real releases
+  always let CI sign with the repo secrets.
+- Windows: .NET 10 SDK, `windows/BUILD-FlowVeil.bat` or
+  `dotnet publish windows/v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -o FlowVeil`,
+  then copy cores as in `build.yml`, installer via Inno Setup 6 `windows/FlowVeil.iss`.
+- Check CI after every push: `https://github.com/xoyzoom-lgtm/FlowVeil-proxy/actions`.
+
+## Known open issues / ideas (as of build-60)
+- Windows needs a real device check of: custom JSON ping, TUN elevation task, tray menu,
+  flags, subscription card traffic. Owner reported many Windows bugs; test there first.
+- Windows right panel has a large empty gap between the mode selector and the server card.
+- HWID changed once for the owner when he reinstalled (random → ANDROID_ID based); should be
+  stable now.
+- Windows UI not localized; no macOS/Linux build of the FlowVeil UI.
+- Installer is not code-signed ("unknown publisher" warning).

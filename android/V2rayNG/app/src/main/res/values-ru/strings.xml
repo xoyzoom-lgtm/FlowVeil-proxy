@@ -710,4 +710,8 @@
     <string name="toast_direct_sites_saved">Сайтов напрямую: %1$d</string>
     <string name="summary_direct_sites">Сайтов: %1$d · нажмите, чтобы изменить</string>
     <string name="hint_direct_sites">По одному сайту в строке, например ozon.ru</string>
+    <string name="sub_error_http_404">провайдер больше не знает эту ссылку (404) — скорее всего, ключ сброшен или превышен лимит устройств. Возьмите у провайдера новую ссылку</string>
+    <string name="sub_error_http_403">провайдер закрыл доступ (403) — подписка отключена или превышен лимит устройств</string>
+    <string name="sub_error_http_429">провайдер просит подождать (429) — слишком много запросов, попробуйте через пару минут</string>
+    <string name="sub_error_http_5xx">сбой на сервере провайдера (%1$d) — попробуйте позже</string>
 </resources>

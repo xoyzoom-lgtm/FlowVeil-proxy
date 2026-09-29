@@ -714,4 +714,8 @@
     <string name="toast_direct_sites_saved">Sites that open directly: %1$d</string>
     <string name="summary_direct_sites">Sites: %1$d · tap to edit</string>
     <string name="hint_direct_sites">One site per line, e.g. ozon.ru</string>
+    <string name="sub_error_http_404">the provider does not know this link any more (404) - the key was probably reset or the device limit is reached. Get a new link from your provider</string>
+    <string name="sub_error_http_403">the provider refused access (403) - the subscription may be disabled or the device limit is reached</string>
+    <string name="sub_error_http_429">the provider asks to wait (429) - too many requests, try again in a few minutes</string>
+    <string name="sub_error_http_5xx">the provider\'s server has a problem (%1$d) - try again later</string>
 </resources>

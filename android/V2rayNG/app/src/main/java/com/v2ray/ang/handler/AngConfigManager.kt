@@ -545,7 +545,16 @@ object AngConfigManager {
                 useSecureDns = configText.isNotEmpty()
             }
             if (configText.isEmpty()) {
-                SubscriptionErrors.record(it.guid, str(R.string.sub_error_unreachable, lastNetworkError ?: str(R.string.sub_error_empty_response)))
+                // The provider answered with an error code: say what it usually means.
+                val code = Regex("status code (\\d{3})").find(lastNetworkError.orEmpty())?.groupValues?.get(1)?.toIntOrNull()
+                val reason = when (code) {
+                    404, 410 -> str(R.string.sub_error_http_404)
+                    401, 403 -> str(R.string.sub_error_http_403)
+                    429 -> str(R.string.sub_error_http_429)
+                    in 500..599 -> str(R.string.sub_error_http_5xx, code!!)
+                    else -> str(R.string.sub_error_unreachable, lastNetworkError ?: str(R.string.sub_error_empty_response))
+                }
+                SubscriptionErrors.record(it.guid, reason)
                 return SubscriptionUpdateResult(failureCount = 1)
             }
 

@@ -40,9 +40,12 @@ object SubscriptionInfoParser {
         if (fields.isEmpty()) return null
         val upload = fields["upload"]
         val download = fields["download"]
-        val used = if (upload == null && download == null) null else (upload ?: 0L) + (download ?: 0L)
-        val total = fields["total"]?.takeIf { it > 0L }
-        val expireAt = fields["expire"]?.takeIf { it > 0L }?.times(1000L)
+        val used = if (upload == null && download == null) null
+        else (upload ?: 0L).coerceAtLeast(0L).let { u -> val d = (download ?: 0L).coerceAtLeast(0L); if (u > Long.MAX_VALUE - d) Long.MAX_VALUE else u + d }
+        // A total beyond ~1 PB is a panel's way of saying "unlimited".
+        val total = fields["total"]?.takeIf { it in 1L until (1L shl 50) }
+        // Unix seconds normally; some panels send milliseconds already.
+        val expireAt = fields["expire"]?.takeIf { it > 0L }?.let { if (it > 100_000_000_000L) it else it * 1000L }
         return UserInfo(used, total, expireAt)
     }
 

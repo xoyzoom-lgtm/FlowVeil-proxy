@@ -46,6 +46,11 @@ public static class SubscriptionHandler
                 {
                     successCount++;
                 }
+                else if (LastError.IsNotEmpty() && !LastError!.StartsWith('«'))
+                {
+                    // Name it, so with several subscriptions the user knows which one failed.
+                    LastError = $"«{item.Remarks}»: {LastError}";
+                }
 
                 await updateFunc?.Invoke(false, "-------------------------------------------------------");
             }

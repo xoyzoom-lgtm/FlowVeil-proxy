@@ -490,7 +490,8 @@ public sealed class HuppHomeViewModel : HuppObservable
         var traffic = string.Empty;
         var trafficDetail = string.Empty;
         var progress = 0d;
-        if (info.Total > 0)
+        // A "total" beyond ~1 PB is a panel's way of saying unlimited.
+        if (info.Total > 0 && info.Total < 1L << 50)
         {
             traffic = $"{Utils.HumanFy(info.Used / 1024)} из {Utils.HumanFy(info.Total / 1024)}";
             trafficDetail = $"осталось {Utils.HumanFy(Math.Max(0, info.Total - info.Used) / 1024)}";
@@ -505,11 +506,12 @@ public sealed class HuppHomeViewModel : HuppObservable
 
         var expire = string.Empty;
         var expireDetail = string.Empty;
-        if (info.Expire > 0)
+        if (info.ExpireSeconds is > 0 and < 253_402_300_799L)
         {
-            var date = DateTimeOffset.FromUnixTimeSeconds(info.Expire).LocalDateTime;
+            var date = DateTimeOffset.FromUnixTimeSeconds(info.ExpireSeconds).LocalDateTime;
             expire = $"до {date:d MMM}";
-            expireDetail = $"осталось {Math.Max(0, (int)(date - DateTime.Now).TotalDays)} дн.";
+            var days = (date - DateTime.Now).TotalDays;
+            expireDetail = $"осталось {(days <= 0 ? 0 : days > 36500 ? 36500 : (int)days)} дн.";
         }
 
         return new HuppSubCard
@@ -524,7 +526,7 @@ public sealed class HuppHomeViewModel : HuppObservable
             Announce = info.Announce ?? string.Empty,
             SupportUrl = info.SupportUrl ?? string.Empty,
             Progress = progress,
-            HasProgress = info.Total > 0,
+            HasProgress = info.Total > 0 && info.Total < 1L << 50,
         };
     }
 

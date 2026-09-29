@@ -71,9 +71,16 @@ public partial class HuppHomeView : UserControl
         NoticeManager.Instance.Enqueue("Обновляю подписки…");
         await Run(() => _main.UpdateSubscriptionProcess(subId, false));
         var servers = await AppManager.Instance.ProfileItems(subId);
+        // Old servers stay after a failed update, so the error must win over the server count.
+        var error = SubscriptionHandler.LastError;
+        if (error.IsNotEmpty())
+        {
+            NoticeManager.Instance.Enqueue($"Не удалось обновить: {error}");
+            return;
+        }
         NoticeManager.Instance.Enqueue(servers is { Count: > 0 }
             ? $"Готово! Серверов: {servers.Count}"
-            : $"Не удалось загрузить серверы: {SubscriptionHandler.LastError ?? "неизвестная ошибка"}");
+            : "Не удалось загрузить серверы: неизвестная ошибка");
     }
 
     private async Task PasteAsync()
