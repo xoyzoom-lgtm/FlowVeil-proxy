@@ -346,12 +346,13 @@ internal fun CircleIconButton(
     size: Dp = 40.dp,
     tint: Color = MaterialTheme.colorScheme.onSurface,
     enabled: Boolean = true,
+    background: Color? = null,
 ) {
     Box(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(serverCardColor(selected = false))
+            .background(background ?: serverCardColor(selected = false))
             .semantics {
                 role = Role.Button
                 this.contentDescription = contentDescription

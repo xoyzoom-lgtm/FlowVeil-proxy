@@ -111,7 +111,7 @@ internal fun SubscriptionCard(
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(serverCardColor(selected = false))
-            .padding(start = 14.dp, end = 4.dp, top = 2.dp, bottom = 10.dp)
+            .padding(start = 14.dp, end = 4.dp, top = 8.dp, bottom = 10.dp)
     ) {
         // Title with small actions
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -129,32 +129,40 @@ internal fun SubscriptionCard(
                     iconRes = R.drawable.ic_telegram_24dp,
                     contentDescription = stringResource(R.string.sub_action_support),
                     onClick = { onOpenSupport(subscription.supportUrl!!) },
-                    size = 32.dp,
-                    tint = accent
+                    size = 42.dp,
+                    tint = accent,
+                    background = accent.copy(alpha = 0.14f),
+                    modifier = Modifier.padding(start = 6.dp)
                 )
             }
             CircleIconButton(
                 iconRes = R.drawable.ic_speed_24dp,
                 contentDescription = stringResource(R.string.sub_action_check),
                 onClick = onTestAll,
-                size = 32.dp,
+                size = 42.dp,
                 tint = accent,
-                enabled = !isTesting
+                enabled = !isTesting,
+                background = accent.copy(alpha = 0.14f),
+                modifier = Modifier.padding(start = 6.dp)
             )
             CircleIconButton(
                 iconRes = R.drawable.ic_refresh_24dp,
                 contentDescription = stringResource(R.string.sub_action_update),
                 onClick = onRefresh,
-                size = 32.dp,
-                tint = accent
+                size = 42.dp,
+                tint = accent,
+                background = accent.copy(alpha = 0.14f),
+                modifier = Modifier.padding(start = 6.dp)
             )
             Box {
                 CircleIconButton(
                     iconRes = R.drawable.ic_more_vert_24dp,
                     contentDescription = stringResource(R.string.main_sub_menu),
                     onClick = { showMenu = true },
-                    size = 32.dp,
-                    tint = subtle
+                    size = 42.dp,
+                    tint = subtle,
+                    background = subtle.copy(alpha = 0.12f),
+                    modifier = Modifier.padding(start = 6.dp, end = 6.dp)
                 )
                 DropdownMenu(
                     expanded = showMenu,
@@ -181,7 +189,7 @@ internal fun SubscriptionCard(
 
         // Two framed facts, each a label + big value + small detail, nothing truncated
         if (used != null || expireAt != null) {
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             Row(
                 Modifier.fillMaxWidth().padding(end = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -225,7 +233,7 @@ internal fun SubscriptionCard(
             Spacer(Modifier.height(6.dp))
             Text(
                 text = subscription.announce!!,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = subtle,
                 modifier = Modifier.fillMaxWidth().padding(end = 10.dp)
             )
@@ -245,13 +253,13 @@ private fun InfoFrame(
     val subtle = MaterialTheme.colorScheme.onSurfaceVariant
     Column(
         modifier = modifier
-            .border(1.dp, color.copy(alpha = 0.40f), RoundedCornerShape(14.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .border(1.dp, color.copy(alpha = 0.40f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 10.dp, vertical = 5.dp)
     ) {
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = subtle, maxLines = 1)
         Text(
             text = value,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             color = color,
             maxLines = 1,
