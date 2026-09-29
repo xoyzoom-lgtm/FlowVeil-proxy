@@ -105,7 +105,7 @@ jobs:
 
       - name: Add Xray core
         run: |
-          Invoke-WebRequest https://github.com/XTLS/Xray-core/releases/latest/download/Xray-windows-64.zip -OutFile xray.zip
+          Invoke-WebRequest https://github.com/XTLS/Xray-core/releases/latest/download/Xray-windows-64.zip -OutFile xray.zip -MaximumRetryCount 5 -RetryIntervalSec 10
           Expand-Archive xray.zip xray
           New-Item -ItemType Directory -Force Hupp/bin/xray | Out-Null
           Copy-Item xray/xray.exe Hupp/bin/xray/
@@ -117,16 +117,20 @@ jobs:
         run: |
           # sing-box runs the TUN device by default; Hupp supports sing-box up to 1.14.x.
           $headers = @{ Authorization = "Bearer $env:GH_TOKEN" }
-          $releases = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=100"
+          # GitHub API occasionally times out: retry a few times before failing the build.
+          for ($i = 1; $i -le 5; $i++) {
+            try { $releases = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=40"; break }
+            catch { if ($i -eq 5) { throw }; Start-Sleep -Seconds (10 * $i) }
+          }
           $rel = $releases | Where-Object { -not $_.prerelease -and $_.tag_name -match '^v1\.(1[0-4])\.\d+$' } | Select-Object -First 1
           $ver = $rel.tag_name.TrimStart('v')
           Write-Host "sing-box $ver"
-          Invoke-WebRequest "https://github.com/SagerNet/sing-box/releases/download/v$ver/sing-box-$ver-windows-amd64.zip" -OutFile singbox.zip
+          Invoke-WebRequest "https://github.com/SagerNet/sing-box/releases/download/v$ver/sing-box-$ver-windows-amd64.zip" -OutFile singbox.zip -MaximumRetryCount 5 -RetryIntervalSec 10
           Expand-Archive singbox.zip singbox
           New-Item -ItemType Directory -Force Hupp/bin/sing_box | Out-Null
           Copy-Item singbox/*/* Hupp/bin/sing_box/ -Recurse -Force
           # Xray's own TUN needs wintun.dll next to xray.exe.
-          Invoke-WebRequest https://www.wintun.net/builds/wintun-0.14.1.zip -OutFile wintun.zip
+          Invoke-WebRequest https://www.wintun.net/builds/wintun-0.14.1.zip -OutFile wintun.zip -MaximumRetryCount 5 -RetryIntervalSec 10
           Expand-Archive wintun.zip wintun
           Copy-Item wintun/wintun/bin/amd64/wintun.dll Hupp/bin/xray/
 
@@ -149,7 +153,7 @@ jobs:
 
   release:
     needs: [android, windows]
-    if: ${{ !cancelled() && (needs.android.result == 'success' || needs.windows.result == 'success') }}
+    if: ${{ !cancelled() && needs.android.result == 'success' && needs.windows.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8
