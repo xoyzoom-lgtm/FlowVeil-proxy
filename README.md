@@ -29,3 +29,7 @@ VPN-клиент для Android и Windows с темами в стиле Happ (1
 Без настройки каждая сборка APK подписывается новым ключом, и перед установкой новой версии старую надо удалить.
 Чтобы обновления ставились поверх, добавьте в Settings → Secrets → Actions:
 `HUPP_KEYSTORE_BASE64` (keystore в base64, alias `hupp`) и `HUPP_KEYSTORE_PASSWORD`.
+
+## Политика конфиденциальности
+
+[PRIVACY.md](PRIVACY.md) · Автор: Telegram [@GxoyzoomG](https://t.me/GxoyzoomG)

@@ -64,7 +64,7 @@ fun AboutScreen(
     var showOssDialog by remember { mutableStateOf(false) }
 
     val libVersion = CoreNativeManager.getLibVersion()
-    val versionText = "v${BuildConfig.VERSION_NAME} ($libVersion)"
+    val versionText = "Hupp build ${BuildConfig.HUPP_BUILD} ($libVersion)"
     val appIdText = BuildConfig.APPLICATION_ID
 
     Scaffold(
@@ -82,35 +82,29 @@ fun AboutScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingsMenuItem(
-                icon = painterResource(R.drawable.ic_source_code_24dp),
-                title = stringResource(R.string.title_source_code),
-                onClick = { Utils.openUri(context, AppConfig.APP_URL) }
-            )
-            SettingsMenuItem(
-                icon = painterResource(R.drawable.license_24px),
-                title = stringResource(R.string.title_oss_license),
-                onClick = { showOssDialog = true }
-            )
-            SettingsMenuItem(
-                icon = painterResource(R.drawable.ic_translate_24dp),
-                title = stringResource(R.string.title_translators),
-                onClick = onTranslatorsClick
-            )
-            SettingsMenuItem(
-                icon = painterResource(R.drawable.ic_feedback_24dp),
-                title = stringResource(R.string.title_pref_feedback),
-                onClick = { Utils.openUri(context, AppConfig.APP_ISSUES_URL) }
-            )
+            // Hupp author first; upstream credit is kept as the GPL-3.0 licence requires.
             SettingsMenuItem(
                 icon = painterResource(R.drawable.ic_telegram_24dp),
-                title = stringResource(R.string.title_tg_channel),
-                onClick = { Utils.openUri(context, AppConfig.TG_CHANNEL_URL) }
+                title = stringResource(R.string.about_author),
+                subtitle = "@GxoyzoomG",
+                onClick = { Utils.openUri(context, AppConfig.AUTHOR_TG_URL) }
             )
             SettingsMenuItem(
                 icon = painterResource(R.drawable.ic_privacy_24dp),
                 title = stringResource(R.string.title_privacy_policy),
                 onClick = { Utils.openUri(context, AppConfig.APP_PRIVACY_POLICY) }
+            )
+            SettingsMenuItem(
+                icon = painterResource(R.drawable.ic_source_code_24dp),
+                title = stringResource(R.string.title_source_code),
+                subtitle = "github.com/xoyzoom-lgtm/hupp-proxy",
+                onClick = { Utils.openUri(context, AppConfig.APP_URL) }
+            )
+            SettingsMenuItem(
+                icon = painterResource(R.drawable.license_24px),
+                title = stringResource(R.string.title_oss_license),
+                subtitle = stringResource(R.string.about_based_on),
+                onClick = { showOssDialog = true }
             )
             VersionInfoBlock(
                 versionText = versionText,

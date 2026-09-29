@@ -417,6 +417,12 @@ public partial class MainWindow
         Row(app, PackIconKind.BackupRestore, "Резервная копия", "Сохранить или восстановить настройки и подписки", () => MenuBackupAndRestore_Click(this, new RoutedEventArgs()));
         Row(app, PackIconKind.TrayArrowDown, "Свернуть в трей", "Hupp продолжит работать у часов", () => MenuClose_Click(this, new RoutedEventArgs()));
 
+        var about = Section("О приложении");
+        Row(about, PackIconKind.Send, "Автор", "Telegram @GxoyzoomG", () => ProcUtils.ProcessStart("https://t.me/GxoyzoomG"));
+        Row(about, PackIconKind.ShieldLockOutline, "Политика конфиденциальности", "Какие данные есть у приложения и куда уходят", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/hupp-proxy/blob/main/PRIVACY.md"));
+        Row(about, PackIconKind.Github, "Исходный код", "github.com/xoyzoom-lgtm/hupp-proxy", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/hupp-proxy"));
+        Row(about, PackIconKind.ScaleBalance, "Лицензия", "Основано на v2rayN (GPL-3.0)", () => ProcUtils.ProcessStart("https://github.com/2dust/v2rayN"));
+
         var expert = Section("Для опытных");
         Row(expert, PackIconKind.Tune, "Параметры ядра и портов", "Порты, автозапуск, TUN, звук и прочее", () => Exec(vm.OptionSettingCmd));
         Row(expert, PackIconKind.ServerPlus, "Добавить сервер вручную", "VLESS, VMess, Trojan, Shadowsocks, JSON…", () => OpenAddServerMenu(vm));

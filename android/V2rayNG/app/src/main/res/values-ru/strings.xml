@@ -630,4 +630,6 @@
     <string name="update_downloading">Скачиваю обновление… %1$s</string>
     <string name="update_download_failed">Не удалось скачать обновление. Проверьте интернет и попробуйте ещё раз.</string>
     <string name="update_allow_install">Разрешите Hupp устанавливать обновления и вернитесь назад</string>
+    <string name="about_author">Автор</string>
+    <string name="about_based_on">Основано на v2rayNG (GPL-3.0)</string>
 </resources>

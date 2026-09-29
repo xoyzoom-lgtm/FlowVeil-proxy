@@ -626,4 +626,6 @@
     <string name="update_downloading">Downloading update… %1$s</string>
     <string name="update_download_failed">Could not download the update. Check the internet and try again.</string>
     <string name="update_allow_install">Allow Hupp to install updates, then come back</string>
+    <string name="about_author">Author</string>
+    <string name="about_based_on">Based on v2rayNG (GPL-3.0)</string>
 </resources>
