@@ -318,6 +318,50 @@ public partial class MainWindow
     /// Settings as grouped rows (icon, title, hint, chevron) like Happ: everyday items on top,
     /// technical ones in "Для опытных".
     /// </summary>
+    /// <summary>QR of one of our subscriptions (a plain link, so any app's scanner takes it); a menu when there are several.</summary>
+    private async void ShowSubscriptionQr()
+    {
+        try
+        {
+            var subs = (await AppManager.Instance.SubItems() ?? [])
+                .Where(s => s.Url?.StartsWith("http", StringComparison.OrdinalIgnoreCase) == true)
+                .ToList();
+            if (subs.Count == 0)
+            {
+                NoticeManager.Instance.Enqueue("Нет подписок, чтобы показать QR-код");
+                return;
+            }
+            if (subs.Count == 1)
+            {
+                await ShowQr(subs[0].Url);
+                return;
+            }
+            var menu = new ContextMenu();
+            foreach (var sub in subs)
+            {
+                var item = new MenuItem { Header = sub.Remarks.IsNullOrEmpty() ? sub.Url : sub.Remarks };
+                var url = sub.Url;
+                item.Click += async (_, _) => await ShowQr(url);
+                menu.Items.Add(item);
+            }
+            menu.IsOpen = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("Migration", ex);
+        }
+    }
+
+    private static async Task ShowQr(string url)
+    {
+        var dialog = new QrcodeView()
+        {
+            imgQrcode = { Source = QRCodeWindowsUtils.GetQRCode(url) },
+            txtContent = { Text = url },
+        };
+        await DialogHost.Show(dialog, "RootDialog");
+    }
+
     private async void RunMigration(MainWindowViewModel vm, string? dbPath)
     {
         try
@@ -436,6 +480,7 @@ public partial class MainWindow
                 RunMigration(vm, fileName);
             }
         });
+        Row(migrate, PackIconKind.Qrcode, "Показать QR-код моей подписки", "Чтобы отсканировать её на телефоне или другом устройстве", () => ShowSubscriptionQr());
         Row(migrate, PackIconKind.ContentPaste, "Из Happ и других приложений", "Скопируйте ссылку подписки там и нажмите сюда. Зашифрованные ссылки открыть нельзя", () => Exec(vm.AddServerViaClipboardCmd));
 
         var noiseOn = AppManager.Instance.Config.CoreBasicItem.EnableNoise;

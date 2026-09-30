@@ -8,7 +8,18 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.v2ray.ang.extension.toastError
+import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.ui.compose.QRCodeDialog
+import com.v2ray.ang.ui.compose.SelectListDialog
+import com.v2ray.ang.util.QRCodeDecoder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -18,10 +29,35 @@ import com.v2ray.ang.R
 @Composable
 fun MigrationDialog(
     onClipboard: () -> Unit,
-    onQr: () -> Unit,
     onBackup: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val context = LocalContext.current
+    var choose by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
+    var qr by remember { mutableStateOf<Bitmap?>(null) }
+
+    // The QR shows one of OUR subscriptions, to be scanned by another device (or another app).
+    fun showQr() {
+        val subs = MmkvManager.decodeSubscriptions()
+            .filter { it.subscription.url.startsWith("http", ignoreCase = true) }
+            .map { (it.subscription.profileTitle?.takeIf { t -> t.isNotBlank() } ?: it.subscription.remarks) to it.subscription.url }
+        when {
+            subs.isEmpty() -> context.toastError(R.string.migrate_no_subs)
+            subs.size == 1 -> qr = QRCodeDecoder.createQRCode(subs[0].second)
+            else -> choose = subs
+        }
+    }
+    choose?.let { list ->
+        SelectListDialog(
+            options = list,
+            optionText = { it.first },
+            onSelected = { qr = QRCodeDecoder.createQRCode(it.second); choose = null },
+            onDismiss = { choose = null },
+            title = stringResource(R.string.migrate_qr),
+        )
+    }
+    if (qr != null) QRCodeDialog(bitmap = qr, onDismiss = { qr = null })
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.migrate_title)) },
@@ -31,7 +67,7 @@ fun MigrationDialog(
                 OutlinedButton(onClick = { onDismiss(); onClipboard() }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                     Text(stringResource(R.string.migrate_clipboard))
                 }
-                OutlinedButton(onClick = { onDismiss(); onQr() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                OutlinedButton(onClick = { showQr() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     Text(stringResource(R.string.migrate_qr))
                 }
                 OutlinedButton(onClick = { onDismiss(); onBackup() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {

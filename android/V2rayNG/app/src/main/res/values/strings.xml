@@ -650,9 +650,10 @@
     <string name="summary_pref_ru_direct">Russian sites and banks open directly, everything else goes through the server</string>
     <string name="menu_item_migrate">Move from another app</string>
     <string name="migrate_title">Move from another app</string>
-    <string name="migrate_hint">A subscription cannot be taken out of another app automatically. Copy its link there (or show its QR code) and bring it here in one tap.</string>
+    <string name="migrate_hint">A subscription cannot be taken out of another app automatically. Copy its link there and paste it here. To move a subscription from here to another device, show its QR code and scan it there.</string>
     <string name="migrate_clipboard">Paste the link from the clipboard</string>
-    <string name="migrate_qr">Scan a QR code</string>
+    <string name="migrate_qr">Show my subscription QR code</string>
+    <string name="migrate_no_subs">There are no subscriptions to show</string>
     <string name="migrate_backup">From a v2rayNG backup file</string>
     <string name="migrate_note">A v2rayNG backup (Settings → Backup there) is only read for subscription links; nothing of yours here is replaced. Encrypted links from other apps cannot be opened.</string>
     <string name="migrate_backup_none">No subscription links found in this file</string>

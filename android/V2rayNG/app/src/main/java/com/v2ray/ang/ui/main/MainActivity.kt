@@ -132,7 +132,6 @@ class MainActivity : HelperBaseComponentActivity() {
         if (showMigration) {
             MigrationDialog(
                 onClipboard = { importClipboard() },
-                onQr = { importQRcode() },
                 onBackup = { importV2rayNgBackup() },
                 onDismiss = { showMigration = false },
             )
