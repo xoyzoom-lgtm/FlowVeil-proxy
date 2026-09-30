@@ -27,28 +27,45 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Popupbox.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-            <Style x:Key="HuppRailButton" TargetType="RadioButton">
-                <Setter Property="Height" Value="60" />
-                <Setter Property="Margin" Value="8,4" />
+            <!--  Navigation item: accent bar on the left, icon in a fixed 56 px column, label after it  -->
+            <Style x:Key="FlowNavItem" TargetType="RadioButton">
+                <Setter Property="Height" Value="44" />
+                <Setter Property="Margin" Value="8,2" />
                 <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
-                            <Grid>
+                            <Grid SnapsToDevicePixels="True">
                                 <Border
                                     x:Name="bg"
                                     Background="{DynamicResource MaterialDesign.Brush.Primary}"
-                                    CornerRadius="14"
+                                    CornerRadius="12"
                                     Opacity="0" />
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Border
+                                    x:Name="accent"
+                                    Width="3"
+                                    Height="22"
+                                    Margin="-8,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                                    CornerRadius="2"
+                                    Visibility="Collapsed" />
+                                <ContentPresenter VerticalAlignment="Center" />
                             </Grid>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="bg" Property="Opacity" Value="0.15" />
-                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
-                                </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Opacity" Value="0.08" />
+                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="bg" Property="Opacity" Value="0.1" />
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="bg" Property="Opacity" Value="0.16" />
+                                    <Setter TargetName="accent" Property="Visibility" Value="Visible" />
                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
@@ -67,90 +84,182 @@
         Style="{StaticResource MaterialDesignEmbeddedDialogHost}">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="76" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!--  FlowVeil navigation rail  -->
-            <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
-                <DockPanel Margin="0,12">
-                    <StackPanel DockPanel.Dock="Top">
+            <!--  FlowVeil navigation panel: expanded (icons + names) or collapsed (icons only)  -->
+            <Border
+                x:Name="navPanel"
+                Grid.Column="0"
+                Width="200"
+                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                ClipToBounds="True">
+                <DockPanel Margin="0,10">
+                    <Button
+                        x:Name="btnNavToggle"
+                        Height="44"
+                        Margin="8,0,8,0"
+                        Padding="0"
+                        HorizontalContentAlignment="Left"
+                        DockPanel.Dock="Top"
+                        FocusVisualStyle="{x:Null}"
+                        Style="{StaticResource MaterialDesignFlatButton}">
+                        <materialDesign:PackIcon
+                            x:Name="navToggleIcon"
+                            Width="22"
+                            Height="22"
+                            Margin="17,0,0,0"
+                            Kind="ArrowLeft" />
+                    </Button>
+                    <StackPanel
+                        Margin="8,6,8,14"
+                        DockPanel.Dock="Top"
+                        Orientation="Horizontal">
                         <Image
                             Width="40"
                             Height="40"
-                            Margin="0,0,0,16"
-                            Source="/Resources/v2rayN.ico" />
+                            Margin="8,0,10,0"
+                            RenderOptions.BitmapScalingMode="HighQuality"
+                            SnapsToDevicePixels="True"
+                            Source="/Resources/logo.png"
+                            UseLayoutRounding="True" />
+                        <TextBlock
+                            x:Name="navBrand"
+                            VerticalAlignment="Center"
+                            FontSize="18"
+                            FontWeight="Bold"
+                            Text="FlowVeil" />
+                    </StackPanel>
+                    <Button
+                        x:Name="btnNewUpdate"
+                        Height="44"
+                        DockPanel.Dock="Bottom"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        ToolTip="{x:Static resx:ResUI.menuNewUpdate}"
+                        Visibility="Hidden">
+                        <materialDesign:PackIcon
+                            Width="24"
+                            Height="24"
+                            Foreground="OrangeRed"
+                            Kind="ArrowUpBoldCircle" />
+                    </Button>
+                    <StackPanel>
+                        <RadioButton
+                            x:Name="navAdd"
+                            GroupName="nav"
+                            Style="{StaticResource FlowNavItem}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="22"
+                                    Height="22"
+                                    Margin="17,0,17,0"
+                                    Kind="PlusBoxOutline" />
+                                <TextBlock
+                                    x:Name="navAddLabel"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Text="Добавить" />
+                            </StackPanel>
+                        </RadioButton>
                         <RadioButton
                             x:Name="navHome"
                             GroupName="nav"
-                            IsChecked="True"
-                            Style="{StaticResource HuppRailButton}"
-                            ToolTip="Серверы">
-                            <StackPanel>
+                            Style="{StaticResource FlowNavItem}">
+                            <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon
-                                    Width="24"
-                                    Height="24"
-                                    HorizontalAlignment="Center"
-                                    Kind="Home" />
+                                    Width="22"
+                                    Height="22"
+                                    Margin="17,0,17,0"
+                                    Kind="Web" />
                                 <TextBlock
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
-                                    Text="Главная" />
+                                    x:Name="navHomeLabel"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Text="Серверы" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="navSettings"
+                            GroupName="nav"
+                            Style="{StaticResource FlowNavItem}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="22"
+                                    Height="22"
+                                    Margin="17,0,17,0"
+                                    Kind="CogOutline" />
+                                <TextBlock
+                                    x:Name="navSettingsLabel"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Text="Настройки" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="navStats"
+                            GroupName="nav"
+                            Style="{StaticResource FlowNavItem}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="22"
+                                    Height="22"
+                                    Margin="17,0,17,0"
+                                    Kind="ChartLine" />
+                                <TextBlock
+                                    x:Name="navStatsLabel"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Text="Статистика" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="navLogs"
+                            GroupName="nav"
+                            Style="{StaticResource FlowNavItem}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="22"
+                                    Height="22"
+                                    Margin="17,0,17,0"
+                                    Kind="TextBoxOutline" />
+                                <TextBlock
+                                    x:Name="navLogsLabel"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Text="Логи" />
                             </StackPanel>
                         </RadioButton>
                         <RadioButton
                             x:Name="navAdvanced"
                             GroupName="nav"
-                            Style="{StaticResource HuppRailButton}"
-                            Visibility="Collapsed"
-                            ToolTip="Расширенный режим (как v2rayN)">
-                            <StackPanel>
+                            Style="{StaticResource FlowNavItem}" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon
-                                    Width="24"
-                                    Height="24"
-                                    HorizontalAlignment="Center"
+                                    Width="22"
+                                    Height="22"
+                                    Margin="17,0,17,0"
                                     Kind="ViewList" />
                                 <TextBlock
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
+                                    x:Name="navAdvancedLabel"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
                                     Text="Детально" />
                             </StackPanel>
                         </RadioButton>
                     </StackPanel>
-                    <StackPanel VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
-                        <RadioButton
-                            x:Name="navSettings"
-                            GroupName="nav"
-                            Style="{StaticResource HuppRailButton}"
-                            ToolTip="Настройки">
-                            <StackPanel>
-                                <materialDesign:PackIcon
-                                    Width="24"
-                                    Height="24"
-                                    HorizontalAlignment="Center"
-                                    Kind="Cog" />
-                                <TextBlock
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
-                                    Text="Настройки" />
-                            </StackPanel>
-                        </RadioButton>
-                        <Button
-                            x:Name="btnNewUpdate"
-                            Height="48"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            ToolTip="{x:Static resx:ResUI.menuNewUpdate}"
-                            Visibility="Hidden">
-                            <materialDesign:PackIcon
-                                Width="24"
-                                Height="24"
-                                Foreground="OrangeRed"
-                                Kind="ArrowUpBoldCircle" />
-                        </Button>
-                    </StackPanel>
                 </DockPanel>
             </Border>
 
+            <ContentControl x:Name="addPage" Grid.Column="1" Visibility="Hidden" />
+            <ContentControl x:Name="statsPage" Grid.Column="1" Visibility="Hidden" />
+            <ContentControl x:Name="logsPage" Grid.Column="1" Visibility="Hidden" />
             <view:HuppHomeView x:Name="homeView" Grid.Column="1" />
 
             <!--  Happ-style settings page: grouped rows, built in MainWindow.xaml.cs  -->

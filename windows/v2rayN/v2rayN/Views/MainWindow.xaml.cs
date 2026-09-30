@@ -30,10 +30,8 @@ public partial class MainWindow
 
         pbTheme.Content ??= new ThemeSettingView();
 
-        navHome.Checked += (_, _) => ShowPage(homeView);
-        navAdvanced.Checked += (_, _) => ShowPage(advancedPanel);
-        navSettings.Checked += (_, _) => ShowPage(settingsPage);
-        navHome.Checked += (_, _) => navAdvanced.Visibility = Visibility.Collapsed;
+        InitNav();
+        navHome.IsChecked = true;
 
         this.WhenActivated(disposables =>
         {
@@ -236,6 +234,14 @@ public partial class MainWindow
                 case Key.S:
                     ScanScreenTaskAsync().ContinueWith(_ => { });
                     break;
+
+                case >= Key.D1 and <= Key.D5:
+                    e.Handled = NavigateByIndex(e.Key - Key.D0);
+                    break;
+
+                case >= Key.NumPad1 and <= Key.NumPad5:
+                    e.Handled = NavigateByIndex(e.Key - Key.NumPad0);
+                    break;
             }
         }
         else
@@ -320,15 +326,6 @@ public partial class MainWindow
     }
 
     public ViewModels.HuppHomeViewModel? HomeViewModel => homeView.HomeViewModel;
-
-    private void ShowPage(FrameworkElement page)
-    {
-        // Hidden (not Collapsed) keeps the classic views loaded so their bindings stay active.
-        foreach (var candidate in new FrameworkElement[] { homeView, advancedPanel, settingsPage })
-        {
-            candidate.Visibility = candidate == page ? Visibility.Visible : Visibility.Hidden;
-        }
-    }
 
     /// <summary>
     /// Settings as grouped rows (icon, title, hint, chevron) like Happ: everyday items on top,
