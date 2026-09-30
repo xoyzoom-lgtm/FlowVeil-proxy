@@ -22,3 +22,26 @@ public class ServerTagsTests
         await TextSanitizer.ForWpf(null).Should().BeEqualTo(string.Empty);
     }
 }
+
+public class ThemeDefaultsTests
+{
+    [Test]
+    public async Task DefaultThemes_AreValid_AndPickByMode()
+    {
+        foreach (var theme in new[] { HappThemes.FlowVeilDark, HappThemes.FlowVeilLight })
+        {
+            foreach (var color in new[] { theme.Background, theme.Card, theme.Accent, theme.OnAccent, theme.Text, theme.SubText })
+            {
+                await (HappTheme.Parse(color) != null).Should().BeTrue();
+            }
+        }
+        await HappThemes.FlowVeilDark.IsLight.Should().BeFalse();
+        await HappThemes.FlowVeilLight.IsLight.Should().BeTrue();
+        await HappThemes.Resolve("Dark", true)!.IsLight.Should().BeFalse();
+        await HappThemes.Resolve("Light", false)!.IsLight.Should().BeTrue();
+        await HappThemes.Resolve("FollowSystem", true)!.IsLight.Should().BeTrue();
+        await HappThemes.Resolve(null, false)!.IsLight.Should().BeFalse();
+        await HappThemes.Resolve("Apple Pro Black", true)!.Name.Should().BeEqualTo("Apple Pro Black");
+        await (HappThemes.Resolve("Aquatic", false) == null).Should().BeTrue();
+    }
+}

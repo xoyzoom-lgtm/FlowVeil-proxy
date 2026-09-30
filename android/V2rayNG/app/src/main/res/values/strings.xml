@@ -710,7 +710,7 @@
     <string name="tuic_engine_missing">TUIC needs the sing-box engine, which this build does not include for your device. Use a VLESS, Hysteria 2 or other server, or install the full FlowVeil build.</string>
     <string name="tuic_engine_failed">The TUIC engine could not start. Check the server address, UUID and password.</string>
     <string name="title_whitelist_bypass">Auto bypass of mobile whitelists</string>
-    <string name="summary_whitelist_bypass">Mobile data only. If the operator lets only whitelisted sites through and the server stops working, FlowVeil finds a server that gets through and switches to it</string>
+    <string name="summary_whitelist_bypass">Mobile data only. If the operator lets only whitelisted sites through and the server stops working, FlowVeil finds a server that gets through and switches to it Fragmentation of the first packets is turned on together with it (and off again when you turn this off).</string>
     <string name="title_whitelist_bypass_mode">Bypass servers</string>
     <string name="whitelist_bypass_mode_auto">Automatic (may be wrong; better pick the servers yourself)</string>
     <string name="whitelist_bypass_mode_manual">Only the ones I choose</string>

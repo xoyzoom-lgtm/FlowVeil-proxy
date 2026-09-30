@@ -85,4 +85,30 @@ public static class HappThemes
 
     public static HappTheme? Find(string? name) =>
         name.IsNullOrEmpty() ? null : All.FirstOrDefault(t => t.Name == Normalize(name!));
+
+    /// <summary>The plain dark look, for people who just want "dark": calm blue-black surfaces, one clear blue accent.</summary>
+    public static readonly HappTheme FlowVeilDark = new("FlowVeil Тёмная", "#0E1117FF", "#171B24FF", "#4C8DFFFF", "#FFFFFFFF", "#F3F5F9FF", "#8B93A7FF", "#4C8DFFFF");
+
+    /// <summary>The plain light look: soft grey page, white cards, the same blue accent.</summary>
+    public static readonly HappTheme FlowVeilLight = new("FlowVeil Светлая", "#F1F4F9FF", "#FFFFFFFF", "#2F6BFFFF", "#FFFFFFFF", "#141821FF", "#6B7385FF", "#2F6BFFFF");
+
+    /// <summary>
+    /// The palette for a saved theme name: one of the named themes, or (for "follow the system", "Dark" and "Light", which used to be
+    /// the flat grey Material defaults) our own dark / light palette. Null for anything else.
+    /// </summary>
+    public static HappTheme? Resolve(string? name, bool systemUsesLight)
+    {
+        var named = Find(name);
+        if (named != null)
+        {
+            return named;
+        }
+        return name switch
+        {
+            nameof(ETheme.Dark) => FlowVeilDark,
+            nameof(ETheme.Light) => FlowVeilLight,
+            null or "" or nameof(ETheme.FollowSystem) => systemUsesLight ? FlowVeilLight : FlowVeilDark,
+            _ => null,
+        };
+    }
 }

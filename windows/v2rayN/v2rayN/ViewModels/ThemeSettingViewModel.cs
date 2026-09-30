@@ -112,6 +112,20 @@ public partial class ThemeSettingViewModel : MyReactiveObject
             });
     }
 
+    /// <summary>Windows "app mode" is light. Read when the theme is applied, so "follow the system" picks the right palette at start and after a change in settings.</summary>
+    private static bool SystemUsesLightTheme()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            return key?.GetValue("AppsUseLightTheme") is int value && value == 1;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static readonly string[] HappBrushKeys =
     [
         "MaterialDesign.Brush.Background",
@@ -126,7 +140,7 @@ public partial class ThemeSettingViewModel : MyReactiveObject
 
     public void ModifyTheme()
     {
-        var happ = HappThemes.Find(CurrentTheme);
+        var happ = HappThemes.Resolve(CurrentTheme, SystemUsesLightTheme());
         var baseTheme = happ != null
             ? (happ.IsLight ? BaseTheme.Light : BaseTheme.Dark)
             : CurrentTheme switch

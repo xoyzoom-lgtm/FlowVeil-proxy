@@ -714,7 +714,7 @@
     <string name="tuic_engine_missing">Для TUIC нужен движок sing-box, а в этой сборке его нет для вашего устройства. Возьмите сервер VLESS, Hysteria 2 или другой либо поставьте полную сборку FlowVeil.</string>
     <string name="tuic_engine_failed">Движок TUIC не запустился. Проверьте адрес сервера, UUID и пароль.</string>
     <string name="title_whitelist_bypass">Авто-обход белых списков</string>
-    <string name="summary_whitelist_bypass">Только на мобильной сети. Если оператор пускает лишь на сайты из белого списка и сервер перестал работать, FlowVeil найдёт сервер, который проходит, и переключится на него</string>
+    <string name="summary_whitelist_bypass">Только на мобильной сети. Если оператор пускает лишь на сайты из белого списка и сервер перестал работать, FlowVeil найдёт сервер, который проходит, и переключится на него Вместе с ним включается фрагментирование первых пакетов (и выключается, когда вы выключите это).</string>
     <string name="title_whitelist_bypass_mode">Серверы обхода</string>
     <string name="whitelist_bypass_mode_auto">Автоматически (возможны ошибки; лучше выберите серверы сами)</string>
     <string name="whitelist_bypass_mode_manual">Только выбранные мной</string>

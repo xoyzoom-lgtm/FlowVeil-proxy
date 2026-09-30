@@ -157,6 +157,9 @@ private val SettingsSections = listOf(
 private val DevOnlySections = setOf(MainDestination.Routing, MainDestination.UserAssets, MainDestination.Logcat)
 
 @OptIn(ExperimentalMaterial3Api::class)
+/** Set when fragmentation was switched on by the bypass switch (not by hand). */
+private const val FRAGMENT_BY_BYPASS = "fragment_enabled_by_bypass"
+
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
@@ -430,7 +433,18 @@ fun SettingsScreen(
                     checked = whitelistBypass,
                     onCheckedChange = {
                         whitelistBypass = it
-                        if (it && !batteryAllowed) showBatteryDialog = true
+                        if (it) {
+                            // Fragmenting the first packets helps the servers that pass a restricted network: turn it on together
+                            // with the bypass and remember that we did, so turning the bypass off puts it back.
+                            if (!fragment) {
+                                fragment = true
+                                MmkvManager.encodeSettings(FRAGMENT_BY_BYPASS, true)
+                            }
+                            if (!batteryAllowed) showBatteryDialog = true
+                        } else if (MmkvManager.decodeSettingsBool(FRAGMENT_BY_BYPASS, false)) {
+                            fragment = false
+                            MmkvManager.encodeSettings(FRAGMENT_BY_BYPASS, false)
+                        }
                     }
                 )
                 if (whitelistBypass) {
@@ -938,7 +952,11 @@ fun SettingsScreen(
                     SettingsSwitchItem(
                         title = stringResource(R.string.title_pref_fragment_enabled),
                         checked = fragment,
-                        onCheckedChange = { fragment = it }
+                        onCheckedChange = {
+                            fragment = it
+                            // The user decided by hand: turning the bypass off must not undo it.
+                            MmkvManager.encodeSettings(FRAGMENT_BY_BYPASS, false)
+                        }
                     )
                     SettingsListItem(
                         title = stringResource(R.string.title_pref_fragment_packets),
