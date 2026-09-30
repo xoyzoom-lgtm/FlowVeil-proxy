@@ -68,8 +68,8 @@ public class TaskManager
                 }
             }
 
-            //Execute once 24 hour
-            if (numOfExecuted % 1440 == 1)
+            //Execute once at the start (after a minute) and then every 6 hours; the notifier itself throttles and stays silent on failure
+            if (numOfExecuted % 360 == 1)
             {
                 try
                 {
@@ -130,12 +130,9 @@ public class TaskManager
 
     private async Task UpdateTaskRunCheckUpdate()
     {
-        Logging.SaveLog("Execute check update");
-
-        var info = await HuppUpdater.CheckAsync();
-        if (info?.HasUpdate == true)
+        var candidate = await UpdateNotifier.CheckIfDueAsync();
+        if (candidate != null && UpdateNotifier.BannerCandidate() != null)
         {
-            NoticeManager.Instance.Enqueue($"Доступно обновление FlowVeil ({info.Tag}). Настройки → Проверить обновления");
             AppEvents.HasUpdateNotified.Publish(true);
         }
     }

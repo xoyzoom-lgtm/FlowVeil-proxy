@@ -88,6 +88,39 @@
 
         <!--  Servers  -->
         <DockPanel Grid.Column="0" Margin="20,16,10,16">
+            <Border
+                x:Name="updateBanner"
+                Margin="4,0,0,12"
+                Padding="14,10"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Primary}"
+                BorderThickness="1"
+                CornerRadius="16"
+                DockPanel.Dock="Top"
+                Style="{StaticResource HuppCard}"
+                Visibility="Collapsed">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <Button
+                            x:Name="btnUpdateInfo"
+                            Content="Что нового"
+                            Style="{StaticResource MaterialDesignFlatButton}" />
+                        <Button
+                            x:Name="btnUpdateLater"
+                            Content="Позже"
+                            Style="{StaticResource MaterialDesignFlatButton}" />
+                        <Button
+                            x:Name="btnUpdateNow"
+                            Content="Обновить"
+                            Style="{StaticResource MaterialDesignFlatButton}" />
+                    </StackPanel>
+                    <TextBlock
+                        x:Name="txtUpdateBanner"
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </Border>
             <DockPanel Margin="4,0,0,12" DockPanel.Dock="Top">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button

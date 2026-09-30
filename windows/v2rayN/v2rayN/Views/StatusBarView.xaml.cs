@@ -56,6 +56,18 @@ public partial class StatusBarView
         _ = RefreshIcon();
     }
 
+    /// <summary>A tray balloon (Windows shows it as a toast); no packaging or app id needed. [onClick] runs when the user clicks it.</summary>
+    public void ShowBalloon(string title, string text, Action? onClick)
+    {
+        void Handler(object? sender, RoutedEventArgs e)
+        {
+            tbNotify.TrayBalloonTipClicked -= Handler;
+            onClick?.Invoke();
+        }
+        tbNotify.TrayBalloonTipClicked += Handler;
+        tbNotify.ShowNotification(title, text, H.NotifyIcon.Core.NotificationIcon.Info);
+    }
+
     private async Task RefreshIcon()
     {
         tbNotify.Icon = await WindowsManager.Instance.GetNotifyIcon(_config);

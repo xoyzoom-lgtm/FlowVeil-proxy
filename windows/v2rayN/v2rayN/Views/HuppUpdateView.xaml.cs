@@ -11,7 +11,23 @@ public partial class HuppUpdateView : UserControl
     public HuppUpdateView()
     {
         InitializeComponent();
-        btnClose.Click += (_, _) => DialogHost.Close("RootDialog");
+        // "Later" (the close button) puts the reminder off for 3 days when an update was on offer.
+        btnClose.Click += (_, _) =>
+        {
+            if (_info is { HasUpdate: true })
+            {
+                UpdateNotifier.Later();
+            }
+            DialogHost.Close("RootDialog");
+        };
+        btnSkip.Click += (_, _) =>
+        {
+            if (_info is { HasUpdate: true })
+            {
+                UpdateNotifier.Skip(_info.Build);
+            }
+            DialogHost.Close("RootDialog");
+        };
         btnInstall.Click += async (_, _) => await InstallAsync();
         Loaded += async (_, _) => await CheckAsync();
     }
@@ -19,6 +35,9 @@ public partial class HuppUpdateView : UserControl
     private async Task CheckAsync()
     {
         btnInstall.Visibility = Visibility.Collapsed;
+        btnSkip.Visibility = Visibility.Collapsed;
+        notesScroll.Visibility = Visibility.Collapsed;
+        btnClose.Content = "Закрыть";
         progress.IsIndeterminate = true;
         txtStatus.Text = "Проверяю обновления…";
         txtVersion.Text = $"Сейчас установлена сборка {HuppUpdater.CurrentBuild()}";
@@ -32,8 +51,22 @@ public partial class HuppUpdateView : UserControl
         }
         else if (_info.HasUpdate)
         {
-            txtStatus.Text = $"Есть новая версия ({_info.Tag}). Нажмите кнопку — FlowVeil скачает её и обновится сам, настройки сохранятся.";
+            txtNotes.Text = _info.Notes;
+            notesScroll.Visibility = _info.Notes.IsNullOrEmpty() ? Visibility.Collapsed : Visibility.Visible;
+            btnSkip.Visibility = Visibility.Visible;
+            if (_info.Portable)
+            {
+                // The portable copy has no installer to update it in place: the release page has the new archive.
+                txtStatus.Text = $"Есть новая версия ({_info.Tag}). У вас портативная версия: скачайте архив на странице релиза и распакуйте поверх.";
+                btnInstall.Content = "Открыть страницу релиза";
+            }
+            else
+            {
+                txtStatus.Text = $"Есть новая версия ({_info.Tag}). Нажмите кнопку — FlowVeil скачает её и обновится сам, настройки сохранятся.";
+                btnInstall.Content = "Скачать и установить";
+            }
             btnInstall.Visibility = Visibility.Visible;
+            btnClose.Content = "Позже";
         }
         else
         {
@@ -47,6 +80,11 @@ public partial class HuppUpdateView : UserControl
         {
             return;
         }
+        if (_info.Portable)
+        {
+            ProcUtils.ProcessStart(_info.ReleaseUrl ?? "https://github.com/xoyzoom-lgtm/FlowVeil-proxy/releases");
+            return;
+        }
         btnInstall.IsEnabled = false;
         btnClose.IsEnabled = false;
         txtStatus.Text = "Скачиваю обновление…";
@@ -55,6 +93,23 @@ public partial class HuppUpdateView : UserControl
         if (path == null)
         {
             txtStatus.Text = "Не удалось скачать обновление. Попробуйте ещё раз.";
+            btnInstall.IsEnabled = true;
+            btnClose.IsEnabled = true;
+            return;
+        }
+
+        // false = the file differs from the published sum: never run it. null = no sums published: do not block.
+        if (await HuppUpdater.VerifyAsync(path, _info.AssetName, _info.SumsUrl) == false)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch
+            {
+                // a leftover temp file is harmless
+            }
+            txtStatus.Text = "Файл обновления повреждён или изменён, установка отменена. Попробуйте ещё раз позже.";
             btnInstall.IsEnabled = true;
             btnClose.IsEnabled = true;
             return;

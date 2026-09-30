@@ -33,6 +33,8 @@ public partial class MainWindow
         pbTheme.Content ??= new ThemeSettingView();
 
         InitNav();
+        UpdateNotifier.Changed += () => Dispatcher.BeginInvoke(new Action(RefreshUpdateIndicators));
+        UpdateNotifier.NotifyRequested += candidate => Dispatcher.BeginInvoke(new Action(() => ShowUpdateBalloon(candidate)));
         navHome.IsChecked = true;
 
         this.WhenActivated(disposables =>
@@ -46,6 +48,7 @@ public partial class MainWindow
                 statsPage.Content = new StatsPageView(ViewModel);
                 logsPage.Content = new LogsPageView();
                 _ = OpenStartPageAsync();
+                UpdateDot();
             }
 
             //servers
@@ -279,6 +282,32 @@ public partial class MainWindow
         {
             _addPage?.Prefill(prefill);
         }
+    }
+
+    /// <summary>The update dialog (notes, update, later, skip); the same one the manual check opens.</summary>
+    public void ShowUpdate() => MenuCheckUpdate_Click(this, new RoutedEventArgs());
+
+    private void UpdateDot() =>
+        navSettingsDot.Visibility = UpdateNotifier.BannerCandidate() != null ? Visibility.Visible : Visibility.Collapsed;
+
+    private void RefreshUpdateIndicators()
+    {
+        UpdateDot();
+        if (ViewModel != null)
+        {
+            BuildSettingsPage(ViewModel);
+        }
+    }
+
+    /// <summary>One tray notification per version (and one reminder); clicking it opens the update dialog. Never installs anything.</summary>
+    private void ShowUpdateBalloon(UpdateCandidate candidate)
+    {
+        var first = ReleaseNotes.Plain(candidate.Notes, 140).Split('\n').Select(l => l.Trim('•', ' ')).FirstOrDefault(l => l.Length > 0) ?? "Нажмите, чтобы посмотреть, что нового";
+        (contentStatusBarView.Content as StatusBarView)?.ShowBalloon($"Вышла версия build-{candidate.Build}", first, () =>
+        {
+            ShowHideWindow(true);
+            ShowUpdate();
+        });
     }
 
     /// <summary>The "Почему не работает?" dialog; also reachable from the settings page.</summary>
@@ -520,7 +549,22 @@ public partial class MainWindow
         }
 
         var app = Section("Приложение");
-        Row(app, PackIconKind.Update, "Проверить обновления", $"Сейчас: build {HuppUpdater.CurrentBuild()}", () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));
+        var pendingUpdate = UpdateNotifier.BannerCandidate();
+        Row(app, PackIconKind.Update, "Проверить обновления",
+            pendingUpdate == null ? $"Сейчас: build {HuppUpdater.CurrentBuild()}" : $"Доступна новая версия build-{pendingUpdate.Build}",
+            () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));
+        var notifyOn = UpdateNotifier.IsEnabled;
+        Row(app, PackIconKind.BellOutline, $"Сообщать о новых версиях: {(notifyOn ? "включено" : "выключено")}",
+            "Проверяет GitHub примерно раз в 6 часов. Это единственный запрос, который приложение делает само, без идентификаторов устройства и аккаунта. Ничего не ставится без вашего подтверждения",
+            () =>
+            {
+                UpdateNotifier.SetEnabled(!notifyOn);
+                BuildSettingsPage(vm);
+            });
+        if (pendingUpdate != null)
+        {
+            Row(app, PackIconKind.SkipNextOutline, "Пропустить эту версию", $"build-{pendingUpdate.Build}: не напоминать, пока не выйдет следующая", () => UpdateNotifier.Skip(pendingUpdate.Build));
+        }
         Row(app, PackIconKind.BackupRestore, "Резервная копия", "Сохранить или восстановить настройки и подписки", () => MenuBackupAndRestore_Click(this, new RoutedEventArgs()));
         Row(app, PackIconKind.TrayArrowDown, "Свернуть в трей", "FlowVeil продолжит работать у часов", () => MenuClose_Click(this, new RoutedEventArgs()));
         Row(app, PackIconKind.Restore, "Сбросить настройки", "Вернёт настройки к исходным. Подписки и серверы останутся", () => ResetSettings());

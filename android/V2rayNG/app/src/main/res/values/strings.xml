@@ -691,10 +691,9 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
-        <item>New “Why does it not work?” button on the main screen: checks the network, phone clock, subscription and server and says in plain words what to do; the report can be copied without links or keys</item>
-        <item>Clear messages when a subscription has expired, the traffic ended or the provider\'s device limit was reached</item>
+        <item>FlowVeil now tells you about a new version: a quiet card above the list and one notification per version (switch: update screen). Nothing is installed without your “Update”</item>
+        <item>The “Why does it not work?” button on the main screen checks the network, phone clock, subscription and server and says what to do</item>
         <item>Send a subscription to your computer: scan the QR code that FlowVeil shows on the PC (menu → Move from another app)</item>
-        <item>Share a link from any app and choose “Send to computer”</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>

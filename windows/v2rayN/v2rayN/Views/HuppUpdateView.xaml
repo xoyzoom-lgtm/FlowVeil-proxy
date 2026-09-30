@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-    Width="400">
+    Width="440">
     <StackPanel Margin="28">
         <TextBlock
             FontSize="20"
@@ -22,6 +22,18 @@
             Margin="0,4,0,0"
             FontSize="12"
             Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
+        <ScrollViewer
+            x:Name="notesScroll"
+            MaxHeight="180"
+            Margin="0,12,0,0"
+            VerticalScrollBarVisibility="Auto"
+            Visibility="Collapsed">
+            <TextBlock
+                x:Name="txtNotes"
+                FontSize="13"
+                Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                TextWrapping="Wrap" />
+        </ScrollViewer>
         <ProgressBar
             x:Name="progress"
             Height="6"
@@ -32,6 +44,13 @@
             Margin="0,24,0,0"
             HorizontalAlignment="Right"
             Orientation="Horizontal">
+            <Button
+                x:Name="btnSkip"
+                Margin="0,0,4,0"
+                materialDesign:ButtonAssist.CornerRadius="18"
+                Content="Пропустить эту версию"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                Visibility="Collapsed" />
             <Button
                 x:Name="btnClose"
                 Margin="0,0,8,0"

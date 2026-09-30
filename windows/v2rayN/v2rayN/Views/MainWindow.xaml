@@ -190,7 +190,19 @@
                             GroupName="nav"
                             Style="{StaticResource FlowNavItem}">
                             <StackPanel Orientation="Horizontal">
-                                <Border Style="{StaticResource FlowNavTile}"><materialDesign:PackIcon Style="{StaticResource FlowNavIcon}" Kind="CogOutline" /></Border>
+                                <Grid>
+                                    <Border Style="{StaticResource FlowNavTile}"><materialDesign:PackIcon Style="{StaticResource FlowNavIcon}" Kind="CogOutline" /></Border>
+                                    <Ellipse
+                                        x:Name="navSettingsDot"
+                                        Width="9"
+                                        Height="9"
+                                        Margin="0,5,9,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Fill="OrangeRed"
+                                        ToolTip="Доступно обновление"
+                                        Visibility="Collapsed" />
+                                </Grid>
                                 <TextBlock
                                     x:Name="navSettingsLabel"
                                     VerticalAlignment="Center"

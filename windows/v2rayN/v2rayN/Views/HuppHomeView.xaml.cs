@@ -25,6 +25,12 @@ public partial class HuppHomeView : UserControl
         btnEmptyPaste.Click += async (_, _) => await PasteAsync();
         btnMode.Click += (_, _) => OpenModeMenu();
         btnDiagnose.Click += (_, _) => (Window.GetWindow(this) as MainWindow)?.ShowDiagnosis();
+        btnUpdateNow.Click += (_, _) => (Window.GetWindow(this) as MainWindow)?.ShowUpdate();
+        btnUpdateInfo.Click += (_, _) => (Window.GetWindow(this) as MainWindow)?.ShowUpdate();
+        btnUpdateLater.Click += (_, _) => UpdateNotifier.Later();
+        // A quiet card on top of the list when a newer build is out (not skipped, not snoozed); follows changes from the notifier.
+        UpdateNotifier.Changed += () => Dispatcher.BeginInvoke(new Action(RefreshUpdateBanner));
+        Loaded += (_, _) => RefreshUpdateBanner();
     }
 
     public void Attach(MainWindowViewModel main)
@@ -37,6 +43,16 @@ public partial class HuppHomeView : UserControl
     }
 
     public HuppHomeViewModel? HomeViewModel => _vm;
+
+    private void RefreshUpdateBanner()
+    {
+        var candidate = UpdateNotifier.BannerCandidate();
+        updateBanner.Visibility = candidate == null ? Visibility.Collapsed : Visibility.Visible;
+        if (candidate != null)
+        {
+            txtUpdateBanner.Text = $"Доступно обновление build-{candidate.Build}";
+        }
+    }
 
     private void OnProfilesChanged(object? sender, NotifyCollectionChangedEventArgs e) => UpdateEmptyState();
 
