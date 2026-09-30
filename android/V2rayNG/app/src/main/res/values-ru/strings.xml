@@ -926,4 +926,5 @@
     <string name="update_notify_switch">Сообщать о новых версиях</string>
     <string name="update_notify_summary">Примерно дважды в сутки проверяет GitHub, есть ли новая версия. Это единственный запрос, который приложение делает само; в нём нет идентификаторов устройства и аккаунта. Ничего не устанавливается, пока вы не нажмёте «Обновить».</string>
     <string name="update_checksum_failed">Файл обновления повреждён или изменён, установка отменена</string>
+    <string name="about_channel">Канал FlowVeil</string>
 </resources>

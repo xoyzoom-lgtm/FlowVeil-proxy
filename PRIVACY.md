@@ -1,7 +1,7 @@
 # Политика конфиденциальности FlowVeil
 
 Действует с 30 сентября 2026 г.
-Разработчик: GxoyzoomG · Telegram: [@GxoyzoomG](https://t.me/GxoyzoomG)
+Разработчик: GxoyzoomG · Telegram: [@GxoyzoomG](https://t.me/GxoyzoomG) · Канал: [t.me/FlowVeil](https://t.me/FlowVeil)
 
 FlowVeil — клиент для подключения к прокси-серверам по подписке (Android и Windows). У FlowVeil **нет своих серверов, аккаунтов и аналитики**: приложение работает только на вашем устройстве и само по себе ничего о вас не собирает и никуда не отправляет разработчику.
 
@@ -57,4 +57,4 @@ FlowVeil основан на открытых проектах v2rayNG и v2rayN
 ## 7. Изменения и связь
 
 Если политика изменится, новая версия появится по этой ссылке, дата вверху обновится.
-Вопросы: Telegram [@GxoyzoomG](https://t.me/GxoyzoomG).
+Вопросы: Telegram [@GxoyzoomG](https://t.me/GxoyzoomG); новости: канал [t.me/FlowVeil](https://t.me/FlowVeil).

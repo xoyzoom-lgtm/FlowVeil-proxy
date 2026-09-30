@@ -11,7 +11,7 @@
 
 ![Android](https://img.shields.io/badge/Android_7%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows_10%20%2F%2011-0078D6?style=flat-square&logo=windows&logoColor=white)
-[![Telegram](https://img.shields.io/badge/Telegram-@GxoyzoomG-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://t.me/GxoyzoomG)
+[![Telegram](https://img.shields.io/badge/Telegram-канал_FlowVeil-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://t.me/FlowVeil) [![Автор](https://img.shields.io/badge/Автор-@GxoyzoomG-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://t.me/GxoyzoomG)
 
 **Вставьте ссылку на подписку — и нажмите одну кнопку.**
 
@@ -118,7 +118,7 @@ FlowVeil покажет причину. Чаще всего: ссылка отк
 
 ## 💬 Связь
 
-Вопросы и предложения — в Telegram [@GxoyzoomG](https://t.me/GxoyzoomG).
+Новости и обновления — в Telegram-канале [t.me/FlowVeil](https://t.me/FlowVeil). Вопросы и предложения — [@GxoyzoomG](https://t.me/GxoyzoomG).
 
 ---
 

@@ -577,6 +577,7 @@ public partial class MainWindow
         });
         Row(about, PackIconKind.HelpCircleOutline, "Частые вопросы", "Что такое подписка, как поставить, как проверить файл", () => ProcUtils.ProcessStart("https://xoyzoom-lgtm.github.io/FlowVeil-proxy/#faq"));
         Row(about, PackIconKind.Link, "Ссылки-приглашения", "flowveil://add?url=… добавляет подписку в один клик; ссылку и QR-код собирает страница проекта", () => UI.Show("Ссылка вида flowveil://add?url=<адрес подписки> открывает FlowVeil и сразу добавляет подписку. Провайдеры могут собрать такую ссылку и QR-код на странице проекта, в разделе «Для провайдеров»."));
+        Row(about, PackIconKind.Bullhorn, "Канал FlowVeil", "Новости, версии и вопросы: t.me/FlowVeil", () => ProcUtils.ProcessStart("https://t.me/FlowVeil"));
         Row(about, PackIconKind.Send, "Автор", "Telegram @GxoyzoomG", () => ProcUtils.ProcessStart("https://t.me/GxoyzoomG"));
         Row(about, PackIconKind.ShieldLockOutline, "Политика конфиденциальности", "Какие данные есть у приложения и куда уходят", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md"));
         Row(about, PackIconKind.Github, "Исходный код", "github.com/xoyzoom-lgtm/FlowVeil-proxy", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/FlowVeil-proxy"));

@@ -169,7 +169,7 @@ object AppConfig {
     const val APP_WIKI_MODE = "$UPSTREAM_URL/wiki/Mode"
     const val APP_PRIVACY_POLICY = "$APP_URL/blob/main/PRIVACY.md"
     const val APP_PROMOTION_URL = "aHR0cHM6Ly85LjIzNDQ1Ni54eXovYWJjLmh0bWw="
-    const val TG_CHANNEL_URL = AUTHOR_TG_URL
+    const val TG_CHANNEL_URL = "https://t.me/FlowVeil"
     // One light, predictable ping target; the second one is used only when the first gets no answer.
     const val DELAY_TEST_URL = "https://www.gstatic.com/generate_204"
     const val DELAY_TEST_URL2 = "https://cp.cloudflare.com/generate_204"
