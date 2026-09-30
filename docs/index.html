@@ -147,20 +147,34 @@ h1 .w{display:inline-block;opacity:0;transform:translateY(22px);animation:wordIn
 .note{margin-top:18px;font-size:14px;color:var(--dim)}
 .platform-note{margin-top:12px;font-size:14px;color:var(--muted);padding:10px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:inline-block}
 
-/* routing diagram */
+/* hero: a phone with the app open, the four traffic chips hang around it */
 .router{position:relative;width:100%;aspect-ratio:1/1.02;max-width:560px;margin:0 auto;will-change:transform}
-.router svg{width:100%;height:100%;overflow:visible}
-.router .path{fill:none;stroke:rgba(255,255,255,.14);stroke-width:2}
-.router .flow{fill:none;stroke-width:2.2;stroke-dasharray:5 14;animation:dash 1.4s linear infinite}
-@keyframes dash{to{stroke-dashoffset:-19}}
-.router .node rect{fill:rgba(10,26,56,.9);stroke:rgba(255,255,255,.14)}
-.router text{fill:var(--text);font:600 13px var(--font)}
-.router .small{fill:var(--muted);font:500 10.5px var(--mono)}
-.router .hub circle.ring{fill:none;stroke:rgba(59,224,176,.5);stroke-width:2;transform-origin:280px 285px;animation:hubring 2.6s ease-out infinite}
-.router .hub circle.ring.r2{animation-delay:1.3s}
-@keyframes hubring{from{transform:scale(.8);opacity:.9}to{transform:scale(1.45);opacity:0}}
+.router .links{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.router .flow{fill:none;stroke:rgba(59,224,176,.55);stroke-width:2;stroke-dasharray:5 12;animation:dash 1.6s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-17}}
+.chip{position:absolute;padding:13px 20px;border-radius:14px;background:rgba(10,26,56,.9);border:1px solid rgba(255,255,255,.14);font:600 13px var(--font);animation:bob 5s ease-in-out infinite}
+.chip:nth-of-type(2){animation-delay:-1.2s}.chip:nth-of-type(3){animation-delay:-2.4s}.chip:nth-of-type(4){animation-delay:-3.6s}
+@keyframes bob{50%{transform:translateY(-7px)}}
+.phone{position:absolute;left:38%;top:3%;width:49%;aspect-ratio:9/18.4;border-radius:11% / 5.4%;padding:2.2%;background:linear-gradient(160deg,#1b2a4a,#0a1226);border:1px solid rgba(255,255,255,.18);box-shadow:0 40px 90px -30px rgba(0,0,0,.8),0 0 0 1px rgba(0,0,0,.6),0 0 80px -20px rgba(59,224,176,.35)}
+.phone .notch{position:absolute;top:2.6%;left:50%;width:26%;height:2.2%;transform:translateX(-50%);border-radius:99px;background:#02060f;z-index:2}
+.screen{text-align:left;height:100%;border-radius:9.5% / 4.7%;overflow:hidden;padding:11% 9% 6%;background:radial-gradient(120% 60% at 50% 0%,#12507a 0%,#0b1f45 45%,#070f26 100%);display:flex;flex-direction:column;align-items:center;color:var(--text);font-size:clamp(9px,1.5vw,12px)}
+.app-top{display:flex;align-items:center;gap:6px;align-self:stretch;font-weight:800;font-size:1.15em}
+.app-top img{border-radius:6px}.app-top i{margin-left:auto;width:1.6em;height:1.6em;border-radius:50%;background:rgba(255,255,255,.1)}
+.power{position:relative;margin-top:9%;width:36%;aspect-ratio:1;border-radius:50%;background:linear-gradient(145deg,#62f2c8,#1FA37A);display:grid;place-items:center;box-shadow:0 0 0 .9em rgba(59,224,176,.12),0 0 0 1.9em rgba(59,224,176,.06);animation:glow 3s ease-in-out infinite}
+.power svg{width:46%;height:46%;fill:none;stroke:#04241b;stroke-width:2.4;stroke-linecap:round}
+@keyframes glow{50%{box-shadow:0 0 0 1.2em rgba(59,224,176,.16),0 0 0 2.4em rgba(59,224,176,.04)}}
+.state{margin-top:14%;font-weight:800;letter-spacing:.14em;font-size:.95em;color:var(--mint)}
+.timer{margin-top:3%;font:600 1.5em var(--mono);font-variant-numeric:tabular-nums}
+.cur,.srvs li{display:flex;align-items:center;gap:.6em;align-self:stretch;padding:.7em .8em;border-radius:1em;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
+.cur{margin-top:7%;font-weight:700}
+.fl{display:grid;place-items:center;width:2.1em;height:2.1em;border-radius:50%;background:rgba(255,255,255,.12);font:700 .75em var(--mono)}
+.nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{padding:.25em .7em;border-radius:99px;background:rgba(34,197,94,.16);color:#4ade80;font:700 .9em var(--mono);font-variant-numeric:tabular-nums}
+.spd{display:flex;justify-content:space-between;align-self:stretch;margin-top:5%;padding:0 .3em;color:var(--muted);font-size:.9em}
+.srvs{list-style:none;align-self:stretch;margin-top:6%;display:grid;gap:.5em}
+.srvs li{font-weight:600;padding:.55em .8em}
 .router.paused *{animation-play-state:paused!important}
-.rule-log{position:absolute;left:0;right:0;bottom:-6px;margin:0 auto;width:max-content;max-width:100%;padding:8px 14px;border-radius:12px;background:rgba(10,26,56,.85);border:1px solid var(--line);font:500 12px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(prefers-reduced-motion:reduce){.chip,.power,.router .flow{animation:none}}
 
 /* ---------- marquee ---------- */
 .marquee{position:relative;border-block:1px solid var(--line);background:rgba(255,255,255,.02);overflow:hidden}
@@ -343,6 +357,7 @@ p a,li a,.foot div a{text-decoration:underline;text-underline-offset:3px}
 }
 @media(max-width:860px){.sticky{display:block}body{padding-bottom:0}}
 @media(max-width:680px){
+  .router{aspect-ratio:1/1.3}.phone{left:34%;width:60%}.chip{padding:11px 16px}
   section{padding:60px 0}
   .bento,.plat,.steps{grid-template-columns:1fr}.card.wide{grid-column:auto}
   .steps .line{display:none}
@@ -447,40 +462,33 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
     </div>
 
     <div class="router" id="router" aria-hidden="true">
-      <svg viewBox="0 0 560 570">
-        <defs>
-          <linearGradient id="gHub" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#62f2c8"/><stop offset="1" stop-color="#1FA37A"/></linearGradient>
-          <clipPath id="hubClip"><circle cx="280" cy="285" r="30"/></clipPath>
-        </defs>
-        <path class="path" id="pA" d="M110 90 C 200 90, 200 285, 280 285"/>
-        <path class="path" id="pB" d="M110 200 C 190 200, 210 285, 280 285"/>
-        <path class="path" id="pC" d="M110 370 C 190 370, 210 285, 280 285"/>
-        <path class="path" id="pD" d="M110 480 C 200 480, 200 285, 280 285"/>
-        <path class="path" id="pP" d="M280 285 C 360 285, 360 120, 450 120"/>
-        <path class="path" id="pDi" d="M280 285 C 360 285, 370 285, 450 285"/>
-        <path class="path" id="pBl" d="M280 285 C 360 285, 360 450, 450 450"/>
-        <path class="flow" d="M280 285 C 360 285, 360 120, 450 120" stroke="#38BDF8"/>
-        <path class="flow" d="M280 285 C 360 285, 370 285, 450 285" stroke="#3BE0B0"/>
-        <path class="flow" d="M280 285 C 360 285, 360 450, 450 450" stroke="#EF4444" style="animation-duration:2.2s"/>
-
-        <g class="node"><rect x="10" y="66" width="104" height="48" rx="14"/><text x="30" y="95">Браузер</text></g>
-        <g class="node"><rect x="10" y="176" width="104" height="48" rx="14"/><text x="30" y="205">Видео</text></g>
-        <g class="node"><rect x="10" y="346" width="104" height="48" rx="14"/><text x="34" y="375">Банк</text></g>
-        <g class="node"><rect x="10" y="456" width="104" height="48" rx="14"/><text x="26" y="485">Трекер</text></g>
-
-        <g class="hub">
-          <circle class="ring" cx="280" cy="285" r="62"/><circle class="ring r2" cx="280" cy="285" r="62"/>
-          <circle cx="280" cy="285" r="56" fill="url(#gHub)"/>
-          <image href="assets/logo-144.webp" x="250" y="255" width="60" height="60" clip-path="url(#hubClip)"/>
-        </g>
-        <text x="238" y="372" class="small">routing</text>
-
-        <g class="node"><rect x="436" y="92" width="124" height="56" rx="14" style="stroke:rgba(56,189,248,.5)"/><text x="450" y="116">Прокси</text><text x="450" y="134" class="small">VLESS · Reality</text></g>
-        <g class="node"><rect x="436" y="257" width="124" height="56" rx="14" style="stroke:rgba(59,224,176,.5)"/><text x="450" y="281">Напрямую</text><text x="450" y="299" class="small">geosite:ru</text></g>
-        <g class="node"><rect x="436" y="422" width="124" height="56" rx="14" style="stroke:rgba(239,68,68,.5)"/><text x="450" y="446">Блок</text><text x="450" y="464" class="small">ads · trackers</text></g>
-        <g id="packets"></g>
+      <svg class="links" viewBox="0 0 560 570" preserveAspectRatio="none">
+        <path class="flow" d="M118 92 C 170 92, 170 190, 226 200"/>
+        <path class="flow" d="M118 202 C 170 202, 180 250, 226 262"/>
+        <path class="flow" d="M118 372 C 170 372, 180 330, 226 318"/>
+        <path class="flow" d="M118 482 C 170 482, 170 400, 226 380"/>
       </svg>
-      <div class="rule-log" id="ruleLog">youtube.com → <b style="color:#38BDF8">proxy</b></div>
+      <div class="chip" style="left:0;top:11.5%">Браузер</div>
+      <div class="chip" style="left:0;top:31%">Видео</div>
+      <div class="chip" style="left:0;top:63%">Банк</div>
+      <div class="chip" style="left:0;top:82%">Трекер</div>
+
+      <div class="phone">
+        <span class="notch"></span>
+        <div class="screen">
+          <div class="app-top"><img src="assets/logo-144.webp" width="22" height="22" alt=""><b>FlowVeil</b><i></i></div>
+          <div class="power"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9M6.3 6.6a8 8 0 1011.4 0"/></svg></div>
+          <div class="state">ПОДКЛЮЧЕНО</div>
+          <div class="timer" id="phTimer">00:12:41</div>
+          <div class="cur"><span class="fl">DE</span><span class="nm">Германия</span><span class="pill" id="phPing">42 мс</span></div>
+          <div class="spd"><span>↓ 86 Мбит/с</span><span>↑ 24 Мбит/с</span></div>
+          <ul class="srvs">
+            <li><span class="fl">NL</span><span class="nm">Нидерланды</span><span class="pill">31 мс</span></li>
+            <li><span class="fl">FI</span><span class="nm">Финляндия</span><span class="pill">47 мс</span></li>
+            <li><span class="fl">SE</span><span class="nm">Швеция</span><span class="pill">58 мс</span></li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1018,49 +1026,24 @@ if (typeof module !== 'undefined') module.exports = QR;
   /* ================================================================
      3. Hero: routing diagram, tilt, particles (one pointer handler, one visibility rule)
      ================================================================ */
-  const heroWrap = $('.hero-wrap'), router = $('#router'), packets = $('#packets'), ruleLog = $('#ruleLog');
-  const NS = 'http://www.w3.org/2000/svg';
-  const flows = [
-    { from: 'pA', to: 'pP', color: '#38BDF8', text: 'google.com → <b style="color:#38BDF8">proxy</b>' },
-    { from: 'pB', to: 'pP', color: '#38BDF8', text: 'youtube.com → <b style="color:#38BDF8">proxy</b>' },
-    { from: 'pC', to: 'pDi', color: '#3BE0B0', text: 'sberbank.ru → <b style="color:#3BE0B0">direct</b> · geosite:category-ru' },
-    { from: 'pA', to: 'pDi', color: '#3BE0B0', text: '192.168.1.1 → <b style="color:#3BE0B0">direct</b> · geoip:private' },
-    { from: 'pD', to: 'pBl', color: '#EF4444', text: 'ads.tracker.net → <b style="color:#f87171">block</b> · geosite:category-ads' },
-    { from: 'pB', to: 'pP', color: '#38BDF8', text: 'telegram.org → <b style="color:#38BDF8">proxy</b>' },
-    { from: 'pC', to: 'pDi', color: '#3BE0B0', text: 'ozon.ru → <b style="color:#3BE0B0">direct</b> · мои сайты' },
-  ];
-  const send = (f) => {
-    const a = document.getElementById(f.from), b = document.getElementById(f.to);
-    const la = a.getTotalLength(), lb = b.getTotalLength();
-    const dot = document.createElementNS(NS, 'circle');
-    dot.setAttribute('r', 5); dot.setAttribute('fill', '#E6FBFF');
-    packets.appendChild(dot);
-    const t0 = performance.now(), d1 = 900, d2 = 900;
-    let switched = false;
-    const step = (t) => {
-      const e = t - t0;
-      let p;
-      if (e < d1) p = a.getPointAtLength(la * (e / d1));
-      else {
-        if (!switched) { switched = true; dot.setAttribute('fill', f.color); ruleLog.innerHTML = f.text; }
-        p = b.getPointAtLength(lb * Math.min(1, (e - d1) / d2));
-      }
-      dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y);
-      if (e < d1 + d2) requestAnimationFrame(step); else dot.remove();
-    };
-    requestAnimationFrame(step);
+  const heroWrap = $('.hero-wrap'), router = $('#router');
+  let routerOn = false, heroInView = true;
+  // The phone's ping and timer move a little, only while the hero is on screen and motion is allowed.
+  const phPing = $('#phPing'), phTimer = $('#phTimer');
+  let secs = 12 * 60 + 41, phoneTimer = 0;
+  const pad = (n) => String(n).padStart(2, '0');
+  const tickPhone = () => {
+    secs++;
+    phTimer.textContent = `${pad(Math.floor(secs / 3600))}:${pad(Math.floor(secs / 60) % 60)}:${pad(secs % 60)}`;
+    if (secs % 3 === 0) phPing.textContent = `${38 + Math.floor(Math.random() * 12)} мс`;
   };
-  let flowIdx = 0, flowTimer = 0, routerOn = false, heroInView = true;
   const syncRouter = () => {
     const want = heroInView && !document.hidden;
     if (want === routerOn) return;
     routerOn = want;
     router.classList.toggle('paused', !want);
-    clearInterval(flowTimer);
-    if (want && !reduce) {
-      send(flows[flowIdx++ % flows.length]);
-      flowTimer = setInterval(() => send(flows[flowIdx++ % flows.length]), 700);
-    }
+    clearInterval(phoneTimer);
+    if (want && !reduce) phoneTimer = setInterval(tickPhone, 1000);
   };
   watch(heroWrap, (on) => { heroInView = on; syncRouter(); syncParticles(); }, { threshold: 0 });
   document.addEventListener('visibilitychange', () => { syncRouter(); syncParticles(); });
