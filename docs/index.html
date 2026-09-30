@@ -394,6 +394,17 @@ p a,li a,.foot div a{text-decoration:underline;text-underline-offset:3px}
   .progress{display:none}
 }
 html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!important}
+
+.chip{display:flex;flex-direction:column;gap:5px;align-items:flex-start;width:23%;min-width:0}
+.chip small{font:700 9.5px var(--mono);padding:2px 7px;border-radius:99px;white-space:nowrap}
+.chip small.via{background:rgba(59,224,176,.16);color:#3be0b0}
+.chip small.dir{background:rgba(255,255,255,.1);color:var(--muted)}
+.rule{align-self:stretch;margin-top:5%;padding:.6em .7em;border-radius:.9em;background:rgba(59,224,176,.08);border:1px solid rgba(59,224,176,.22);font-size:.85em;line-height:1.35}
+.rule b{display:block;color:var(--mint);font-size:.8em;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.2em}
+.prov{position:absolute;left:24%;right:6%;bottom:0;z-index:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:rgba(10,26,56,.92);border:1px dashed rgba(59,224,176,.45);font-size:12px}
+.prov svg{flex:none;width:22px;height:22px;fill:none;stroke:var(--mint);stroke-width:2;stroke-linecap:round}
+.prov span{min-width:0}.prov b{display:block;font-weight:700}.prov i{display:block;font:11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:680px){.chip small{display:none}.prov{left:6%;right:6%;padding:8px 10px}.prov i{display:none}.rule span{display:none}}
 </style>
 </head>
 <body>
@@ -477,10 +488,10 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
 
     <div class="router" id="router" aria-hidden="true">
       <svg class="rlinks" id="links"></svg>
-      <div class="chip" style="left:0;top:11.5%">Браузер</div>
-      <div class="chip" style="left:0;top:31%">Видео</div>
-      <div class="chip" style="left:0;top:63%">Банк</div>
-      <div class="chip" style="left:0;top:82%">Трекер</div>
+      <div class="chip" style="left:0;top:11.5%"><span>Браузер</span><small class="via">через сервер</small></div>
+      <div class="chip" style="left:0;top:31%"><span>Видео</span><small class="via">через сервер</small></div>
+      <div class="chip" style="left:0;top:55%"><span>Банк</span><small class="dir">напрямую</small></div>
+      <div class="chip" style="left:0;top:72%"><span>Трекер</span><small class="dir">напрямую</small></div>
 
       <div class="phone">
         <span class="notch"></span>
@@ -490,7 +501,7 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
           <div class="state">ПОДКЛЮЧЕНО</div>
           <div class="timer" id="phTimer">00:12:41</div>
           <div class="cur"><span class="fl de"></span><span class="nm">Германия</span><span class="pill" id="phPing">42 мс</span></div>
-          <div class="spd"><span>↓ 86 Мбит/с</span><span>↑ 24 Мбит/с</span></div>
+          <div class="rule"><b>Правила</b><span>РФ — напрямую, остальное — через сервер</span></div>
           <ul class="srvs">
             <li><span class="fl nl"></span><span class="nm">Нидерланды</span><span class="pill">31 мс</span></li>
             <li><span class="fl fi"></span><span class="nm">Финляндия</span><span class="pill">47 мс</span></li>
@@ -498,6 +509,7 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
           </ul>
         </div>
       </div>
+      <div class="prov" id="prov"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg><span><b>Подписка вашего провайдера</b><i>https://provider.example/sub/…</i></span></div>
       <div class="app" style="right:0;top:6.5%"><i class="ap yt"><svg viewBox="0 0 24 24"><path d="M9 7l8 5-8 5z"/></svg></i><span>YouTube</span><em>24 мс</em></div>
       <div class="app" style="right:0;top:23.5%"><i class="ap tg"><svg viewBox="0 0 24 24"><path d="M3 11.5l17-7-3 15-5-4-3 3v-5l8-7-10 6z"/></svg></i><span>Telegram</span><em>18 мс</em></div>
       <div class="app" style="right:0;top:41.5%"><i class="ap tt"><svg viewBox="0 0 24 24"><path d="M14 4v9.5a3.5 3.5 0 11-3.5-3.5M14 4c.4 2.2 1.8 3.6 4 3.8"/></svg></i><span>TikTok</span><em>31 мс</em></div>
@@ -1069,6 +1081,11 @@ if (typeof module !== 'undefined') module.exports = QR;
       const y1 = left ? cy : py, y2 = left ? py : cy, mx = (x1 + x2) / 2;
       return `<path class="flow${left ? '' : ' out'}" d="M${x1.toFixed(1)} ${y1.toFixed(1)} C ${mx.toFixed(1)} ${y1.toFixed(1)}, ${mx.toFixed(1)} ${y2.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}"/>`;
     });
+    const pv = router.querySelector('#prov');
+    if (pv) {
+      const p = pv.getBoundingClientRect(), x = p.left - box.left + p.width / 2, y1 = p.top - box.top + 4, y2 = ph.t + ph.h - 4;
+      paths.push(`<path class="flow up" d="M${x.toFixed(1)} ${y1.toFixed(1)} L ${x.toFixed(1)} ${y2.toFixed(1)}"/>`);
+    }
     linksSvg.setAttribute('viewBox', `0 0 ${box.width.toFixed(0)} ${box.height.toFixed(0)}`);
     linksSvg.innerHTML = paths.join('');
   };
