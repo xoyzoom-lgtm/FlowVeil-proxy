@@ -63,7 +63,7 @@ public sealed class AddPageView : ScrollViewer
                     _ = RunMigrationAsync(fileName);
                 }
             }))));
-        column.Children.Add(Card(PackIconKind.ContentPaste, "Из Happ и других приложений",
+        column.Children.Add(Card(PackIconKind.ContentPaste, "Из других приложений",
             "Скопируйте ссылку подписки в том приложении (в Happ: «Поделиться подпиской») и вставьте сюда. Зашифрованные ссылки (happ://crypt…) открыть нельзя: попросите у провайдера обычную ссылку",
             Buttons(Flat("Вставить из буфера", () => _ = AddFromTextAsync(ReadClipboard())))));
 

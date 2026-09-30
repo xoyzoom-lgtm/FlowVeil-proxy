@@ -170,11 +170,23 @@ You are a blunt senior developer and a pragmatic technical partner. Goal: reliab
   then copy cores as in `build.yml`, installer via Inno Setup 6 `windows/FlowVeil.iss`.
 - Check CI after every push: `https://github.com/xoyzoom-lgtm/FlowVeil-proxy/actions`.
 
-## Known open issues / ideas (as of build-60)
-- Windows needs a real device check of: custom JSON ping, TUN elevation task, tray menu,
-  flags, subscription card traffic. Owner reported many Windows bugs; test there first.
-- Windows right panel has a large empty gap between the mode selector and the server card.
-- HWID changed once for the owner when he reinstalled (random → ANDROID_ID based); should be
-  stable now.
-- Windows UI not localized; no macOS/Linux build of the FlowVeil UI.
-- Installer is not code-signed ("unknown publisher" warning).
+## Diagnostics, updates, subscriptions, failover (what exists now)
+- **"Why does it not work?"** (Android `net/Diagnosis.kt` + `handler/DiagnosticsRunner.kt`, Windows `Handler/Diagnosis.cs` + `DiagnosticsRunner.cs`): ordered probes (network, clock, DNS, subscription, server, end-to-end through the core) → one cause from the shared taxonomy (`DiagCause` ids are identical on both platforms) → plain-language text + what to do. The report never contains links, keys, addresses or network names (`ReportMask`). A new cause needs: enum + both texts (ru/en) + test.
+- **Update notifications** (`net/UpdateLogic.kt` ↔ `Handler/UpdateLogic.cs`, mirrored; `UpdateNotifier`): check on start and every ~6 h, ETag/304, one notice per version + one reminder after 3 days, "Later"/"Skip this version", off-switch in settings. Only request the app makes on its own; GitHub only; no identifiers. Nothing is installed without the user's "Update"; the download is checked against the release's `SHA256SUMS.txt` (written by the `release` job in `build.yml`).
+- **Subscriptions on Windows**: `SubsLogic` (pure: health, filter, best, failover order), `HuppHomeViewModel.Subs.cs` (chips strip, grouped list, state in `guiConfigs/subs_ui.json`). "Best" = best inside the current filter; Russian servers, expired/disabled/out-of-traffic subscriptions are never picked. The Add page refreshes the VM's subscription snapshot (a stale snapshot was the cause of "second subscription not selectable").
+- **Failover**: Android `core/ConnectionWatchdog.kt` (+ `net/FailoverPlan.kt`, setting "switch between subscriptions"), Windows `HuppHomeViewModel.Failover.cs` (+ `Handler/Failover.cs`). Two failed checks in a row while the machine itself is online → test candidates (same subscription first, then other usable ones) → switch to the fastest that works → tell the user. Not verified on real devices.
+- **Invite links**: `flowveil://add?url=<encoded>&name=<title>` (`net/InviteLink.kt` ↔ `Handler/InviteLink.cs`); the site generates link, QR and a printable sheet in the browser. Provider headers shown in the app: `profile-title`, `subscription-userinfo`, `announce`, `support-url`, `profile-web-page-url` (only http(s)/tg:// are opened).
+- **Backup**: Windows zips the whole `guiConfigs` folder (so every state file is included); Android backs up all MMKV stores.
+- **Real-device checks** live in `TESTING.md` (sections 0–7). Nothing in this list is verified on a device unless the owner says so; report "done / not done / not verified" honestly.
+
+## What we deliberately do not do
+- No telemetry, accounts, ads, or server-side components (no stats for providers, no relay). No silent auto-install of updates.
+- Rule profiles ("Профили правил") are deferred (stashed as `profiles-deferred`), not dropped.
+- Tiles mode for the Windows server list (virtualization risk with 500+ servers); colour labels for subscriptions.
+- Windows installer is not signed yet: see `SIGNING.md` (SignPath Foundation is the free route; needs the owner's application).
+- Commit messages carry no AI attribution trailers (owner's request); older history still has them.
+
+## Open issues / ideas
+- Real screenshots for the site: drop files into `docs/assets/shots/` and list them in `shots.json` (the section stays hidden until then).
+- Windows UI is not localized; no macOS/Linux build of the FlowVeil UI.
+- Data folder is still `%LocalAppData%\v2rayN` and the subscription User-Agent is `v2rayNG/1.10.5` (changing either may break providers/upgrades; owner has not decided).
