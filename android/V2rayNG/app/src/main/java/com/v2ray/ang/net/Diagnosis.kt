@@ -256,3 +256,15 @@ object ReportMask {
         return out
     }
 }
+
+/** The `Date` header of an HTTP answer (RFC 1123), as epoch milliseconds; null when it is missing or odd. */
+object HttpDate {
+    fun parse(value: String?): Long? {
+        if (value.isNullOrBlank()) return null
+        return runCatching {
+            val format = java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", java.util.Locale.US)
+            format.isLenient = false
+            format.parse(value.trim())?.time
+        }.getOrNull()
+    }
+}

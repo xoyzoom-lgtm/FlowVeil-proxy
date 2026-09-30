@@ -130,4 +130,10 @@ class DiagnosisTest {
     }
 
     @Test fun maskLeavesPlainText() = assertEquals("Android 14, Pixel 7, wifi", ReportMask.apply("Android 14, Pixel 7, wifi"))
+
+    @Test fun httpDate() {
+        assertEquals(1_700_000_000_000L, HttpDate.parse("Tue, 14 Nov 2023 22:13:20 GMT"))
+        assertEquals(null, HttpDate.parse("yesterday"))
+        assertEquals(null, HttpDate.parse(null))
+    }
 }

@@ -29,6 +29,8 @@ import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.QRCodeDecoder
 import com.v2ray.ang.util.Utils
+import com.v2ray.ang.net.SubIssue
+import com.v2ray.ang.net.SubscriptionHealth
 import java.net.URI
 
 object AngConfigManager {
@@ -499,7 +501,7 @@ object AngConfigManager {
 
             val url = HttpUtil.toIdnUrl(it.subscription.url)
             if (!Utils.isValidUrl(url)) {
-                SubscriptionErrors.record(it.guid, str(R.string.sub_error_not_link))
+                SubscriptionErrors.record(it.guid, str(R.string.sub_error_not_link), SubIssue.WEB_PAGE)
                 return SubscriptionUpdateResult(failureCount = 1)
             }
             // Plain http:// subscriptions (common for panels on an IP:port) are accepted like on the
@@ -559,7 +561,7 @@ object AngConfigManager {
                     in 500..599 -> str(R.string.sub_error_http_5xx, code!!)
                     else -> str(R.string.sub_error_unreachable, lastNetworkError ?: str(R.string.sub_error_empty_response))
                 }
-                SubscriptionErrors.record(it.guid, reason)
+                SubscriptionErrors.record(it.guid, reason, if (code != null) SubscriptionHealth.byHttpStatus(code) else SubIssue.UNREACHABLE)
                 return SubscriptionUpdateResult(failureCount = 1)
             }
 
@@ -588,15 +590,18 @@ object AngConfigManager {
                 )
             } else {
                 // Got response but no valid configs parsed
-                val looksLikePage = configText.trimStart().startsWith("<")
+                val issue = SubscriptionHealth.byBody(configText)
                 SubscriptionErrors.record(
                     it.guid,
-                    when {
-                        looksLikePage -> str(R.string.sub_error_web_page)
-                        configText.trimStart().startsWith("happ://") -> str(R.string.sub_error_happ_crypt)
+                    when (issue) {
+                        SubIssue.WEB_PAGE -> str(R.string.sub_error_web_page)
+                        SubIssue.HAPP_CRYPT -> str(R.string.sub_error_happ_crypt)
                         else -> str(R.string.sub_error_no_servers)
-                    }
+                    },
+                    issue
                 )
+                // Unknown shapes go to the log so the heuristics can be improved (only the shape, never the body).
+                if (issue == SubIssue.NO_SERVERS) BypassLog.add("diag: subscription gave no servers, body starts with '${configText.trimStart().take(1)}', ${configText.length} chars")
                 return SubscriptionUpdateResult(failureCount = 1)
             }
         } catch (e: Exception) {

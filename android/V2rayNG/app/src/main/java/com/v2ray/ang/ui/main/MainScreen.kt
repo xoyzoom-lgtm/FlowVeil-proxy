@@ -184,6 +184,7 @@ fun MainScreen(
             speed = uiState.speed,
             isTesting = uiState.isTesting,
             onBest = if (uiState.showBestButton && rows.size > 1) ({ onAction(MainAction.ConnectBest) }) else null,
+            onDiagnose = { onAction(MainAction.OpenDiagnosis) },
         )
     }
     val emptyContent: @Composable () -> Unit = {

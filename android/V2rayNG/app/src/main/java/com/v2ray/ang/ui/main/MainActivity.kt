@@ -142,6 +142,14 @@ class MainActivity : HelperBaseComponentActivity() {
         BackHandler { moveTaskToBack(false) }
         WhatsNewDialog()
         var showMigration by remember { mutableStateOf(false) }
+        var showDiagnosis by remember { mutableStateOf(false) }
+        if (showDiagnosis) {
+            DiagnosisDialog(
+                running = mainViewModel.uiState.value.isRunning,
+                onUpdateSubscription = { mainViewModel.onAction(MainAction.UpdateSubscriptions) },
+                onDismiss = { showDiagnosis = false },
+            )
+        }
         if (pairQr != null || pairManual) {
             PairSendDialog(qr = pairQr, preset = pairPreset, onDismiss = { pairQr = null; pairManual = false; pairPreset = null })
         }
@@ -179,6 +187,7 @@ class MainActivity : HelperBaseComponentActivity() {
                     MainAction.ImportQRcode -> importQRcode()
                     MainAction.ImportClipboard -> importClipboard()
                     MainAction.OpenMigration -> showMigration = true
+                    MainAction.OpenDiagnosis -> showDiagnosis = true
                     MainAction.ImportConfigLocal -> importConfigLocal()
                     is MainAction.ImportManually -> importManually(action.type)
                     MainAction.RestartService -> LauncherManager.restartServiceOrStart(this, ::requestServiceStart)

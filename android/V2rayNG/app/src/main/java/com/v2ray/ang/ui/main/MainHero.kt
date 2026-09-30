@@ -422,6 +422,7 @@ internal fun ConnectionHero(
     speed: Pair<Long, Long>? = null,
     isTesting: Boolean = false,
     onBest: (() -> Unit)? = null,
+    onDiagnose: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -494,6 +495,18 @@ internal fun ConnectionHero(
                         .padding(horizontal = 14.dp, vertical = 7.dp)
                 )
             }
+        }
+        if (onDiagnose != null) {
+            Text(
+                text = stringResource(R.string.diag_link),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable(onClick = onDiagnose)
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            )
         }
     }
 }

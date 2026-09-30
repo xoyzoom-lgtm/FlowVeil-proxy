@@ -115,9 +115,9 @@ object PhysicalNetwork {
         }
     }
 
+    /** Every real (non-tunnel) network the system knows, as candidates, plus their handles. */
     @Suppress("DEPRECATION")
-    private fun recompute(notify: Boolean): Snapshot {
-        val cm = manager ?: return snapshot
+    private fun candidatesOf(cm: ConnectivityManager): Pair<List<NetCandidate>, Map<Long, Network>> {
         val candidates = mutableListOf<NetCandidate>()
         val handles = HashMap<Long, Network>()
         val networks = runCatching { cm.allNetworks.toList() }.getOrDefault(emptyList())
@@ -140,6 +140,28 @@ object PhysicalNetwork {
                 captive = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL),
             )
         }
+        return candidates to handles
+    }
+
+    /** One-off look for screens outside the core process (the diagnosis): no callbacks, nothing stored or published. */
+    fun lookNow(context: Context): Snapshot? {
+        val cm = context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return null
+        val (candidates, handles) = candidatesOf(cm)
+        val selection = NetworkPicker.pick(candidates)
+        val primary = selection.primary
+        return Snapshot(
+            type = primary?.type ?: NetType.NONE,
+            network = primary?.let { handles[it.key] },
+            others = selection.others.map { it.type }.distinct(),
+            hasIpv6 = primary?.hasIpv6 == true,
+            captive = primary?.captive == true,
+            since = 0L,
+        )
+    }
+
+    private fun recompute(notify: Boolean): Snapshot {
+        val cm = manager ?: return snapshot
+        val (candidates, handles) = candidatesOf(cm)
         val selection = NetworkPicker.pick(candidates)
         val primary = selection.primary
         val (old, updated) = synchronized(lock) {

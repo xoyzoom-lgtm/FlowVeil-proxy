@@ -85,7 +85,7 @@ object NetProbe {
                     val step = if (response.code in 200..299 || response.code == 204) ProbeStep.ok(response.code, size)
                     else ProbeStep(ProbeStep.Kind.BAD_STATUS, response.code, size)
                     LogUtil.d(AppConfig.TAG, "NetProbe[${route.label}] $host -> HTTP ${response.code}")
-                    Result(step, text)
+                    Result(step, text, com.v2ray.ang.net.HttpDate.parse(response.header("Date")))
                 }
             } catch (e: Exception) {
                 val kind = classify(e)
@@ -121,7 +121,8 @@ object NetProbe {
         }
     }
 
-    data class Result(val step: ProbeStep, val body: String?)
+    /** [serverDateMs]: the time the server put into its `Date` header (used to judge the phone clock). */
+    data class Result(val step: ProbeStep, val body: String?, val serverDateMs: Long? = null)
 
     private fun classify(e: Exception): ProbeStep.Kind = when {
         e is SocketTimeoutException || (e is InterruptedIOException && e.message?.contains("timeout", true) == true) -> ProbeStep.Kind.TIMEOUT
