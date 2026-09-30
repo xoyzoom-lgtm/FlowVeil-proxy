@@ -5,6 +5,7 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.handler.BypassState
+import com.v2ray.ang.handler.DevMode
 import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.NetInfoCache
@@ -157,7 +158,7 @@ object BypassController {
         val onOurBypass = WhitelistBypass.active == current
         // A bypass server the user picked himself is his choice: do not move him off it.
         if (!onOurBypass && manual && current in WhitelistBypass.servers()) {
-            LogUtil.i(AppConfig.TAG, "Bypass: the current server is a user-chosen bypass server, leaving it")
+            LogUtil.w(AppConfig.TAG, "Bypass: the current server is a user-chosen bypass server, leaving it")
             return false
         }
         when (diagnoseNow()) {
@@ -244,6 +245,8 @@ object BypassController {
     // ------------------------------------------------------------------
 
     private fun scheduleIdentity(delayMs: Long, force: Boolean) {
+        // Only the developer-mode card shows the addresses; the checks that need them fetch them themselves.
+        if (!DevMode.isOn()) return
         identityJob?.cancel()
         identityJob = scope.launch {
             if (delayMs > 0) delay(delayMs)
@@ -300,7 +303,7 @@ object BypassController {
         }
         val diagnosis = WhitelistBypass.diagnose(viaProxy = false, domesticDirect = domestic, foreignDirect = foreign)
         WhitelistBypass.lastDiagnosis = "${diagnosis.name}: ru-direct=$domestic foreign-direct=$foreign @${System.currentTimeMillis()}"
-        LogUtil.i(AppConfig.TAG, "Bypass: diagnosis ${diagnosis.name} (ru-direct=$domestic foreign-direct=$foreign)")
+        LogUtil.w(AppConfig.TAG, "Bypass: diagnosis ${diagnosis.name} (ru-direct=$domestic foreign-direct=$foreign)")
         return diagnosis
     }
 
@@ -417,7 +420,7 @@ object BypassController {
                 val verdict = verifyAfterSwitch(full) { CoreServiceManager.isRunning() && stillNeeded() }
                 when (verdict.outcome) {
                     Outcome.OK -> {
-                        LogUtil.i(AppConfig.TAG, "Bypass: $guid passed the check ($delayMs ms)")
+                        LogUtil.w(AppConfig.TAG, "Bypass: $guid passed the check ($delayMs ms)")
                         return TryResult(guid, null, aborted = false)
                     }
                     Outcome.UNKNOWN -> return TryResult(null, lastReason, aborted = true)
@@ -454,7 +457,7 @@ object BypassController {
         val service = ConnectionWatchdog.currentService() ?: return
         val now = System.currentTimeMillis()
         if (now < nextSearchAt) {
-            LogUtil.i(AppConfig.TAG, "Bypass: backing off for ${(nextSearchAt - now) / 1000}s")
+            LogUtil.w(AppConfig.TAG, "Bypass: backing off for ${(nextSearchAt - now) / 1000}s")
             return
         }
         val candidates = bypassCandidates(current)
@@ -468,7 +471,7 @@ object BypassController {
             )
             return
         }
-        LogUtil.i(AppConfig.TAG, "Bypass: restricted network, testing ${candidates.size} servers")
+        LogUtil.w(AppConfig.TAG, "Bypass: restricted network, testing ${candidates.size} servers")
         NetInfoCache.writeBypass(BypassState.SEARCHING, returnTo = returnToName())
 
         // One snapshot per episode, taken before the first switch: a chain of bypass servers keeps it.
@@ -541,7 +544,7 @@ object BypassController {
         if (!net.type.isLan || net.captive) return
         if (System.currentTimeMillis() < nextSearchAt) return
         if (!lanHasInternet(net)) {
-            LogUtil.i(AppConfig.TAG, "Bypass: the normal network has no internet yet, staying on the current server")
+            LogUtil.w(AppConfig.TAG, "Bypass: the normal network has no internet yet, staying on the current server")
             return
         }
         val service = ConnectionWatchdog.currentService() ?: return
@@ -554,7 +557,7 @@ object BypassController {
 
         val originState = measureOrigin(service, origin)
         val action = ReturnLogic.decide(snap.mode, currentIsOrigin = false, origin = originState, limitMs = WhitelistBypass.pingLimitMs(), allowReplacement = true)
-        LogUtil.i(AppConfig.TAG, "Bypass: back on the normal network, action $action")
+        LogUtil.w(AppConfig.TAG, "Bypass: back on the normal network, action $action")
         val stillNeeded = { PhysicalNetwork.snapshot.type.isLan && !userOverride && WhitelistBypass.isEnabled() }
         when (action) {
             ReturnAction.STAY -> Unit
@@ -609,7 +612,8 @@ object BypassController {
             return
         }
         if (result.aborted) return
-        // Keep the server that works now (it may still be the bypass one) and try again later.
+        // Back to the server that worked before this search (a failed candidate must not stay active).
+        if (CoreServiceManager.currentServerGuid() != current) ourSwitch(current)
         failedSearches++
         val wait = WhitelistBypass.backoffMillis(failedSearches)
         nextSearchAt = System.currentTimeMillis() + wait
@@ -700,7 +704,7 @@ object BypassController {
         val active = WhitelistBypass.active ?: return
         val current = CoreServiceManager.currentServerGuid()
         if (current != null && current != active) {
-            LogUtil.i(AppConfig.TAG, "Bypass: the user picked another server, the episode is over")
+            LogUtil.w(AppConfig.TAG, "Bypass: the user picked another server, the episode is over")
             WhitelistBypass.clearState()
             userOverride = true
         }

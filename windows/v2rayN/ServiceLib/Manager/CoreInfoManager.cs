@@ -76,7 +76,8 @@ public sealed class CoreInfoManager
     {
         return type switch
         {
-            ECoreType.v2rayN => !Utils.IsPackagedInstall(),
+            // FlowVeil is not published in the upstream v2rayN repository: updating "v2rayN" would replace it with the original app.
+            ECoreType.v2rayN => false,
             ECoreType.Xray => true,
             ECoreType.mihomo => true,
             ECoreType.sing_box => true,

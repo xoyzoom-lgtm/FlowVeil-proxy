@@ -24,6 +24,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.LifecycleEventEffect
+import com.v2ray.ang.handler.BatteryOptimization
+import com.v2ray.ang.ui.compose.ConfirmDialog
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.painterResource
@@ -221,6 +224,8 @@ fun SettingsScreen(
     var whitelistBypassReturn by rememberMmkvBool(WhitelistBypass.PREF_AUTO_RETURN, true)
     var whitelistBypassCount by remember { mutableStateOf(WhitelistBypass.servers().size) }
     var showBypassPicker by remember { mutableStateOf(false) }
+    var showBatteryDialog by remember { mutableStateOf(false) }
+    var batteryAllowed by remember { mutableStateOf(true) }
     var bypassBadMinutes by rememberMmkvString(WhitelistBypass.PREF_BAD_MINUTES, WhitelistBypass.DEFAULT_BAD_MINUTES.toString())
     var bypassPingLimit by rememberMmkvString(WhitelistBypass.PREF_PING_LIMIT, ReturnLogic.DEFAULT_PING_LIMIT_MS.toString())
     var bypassStableSeconds by rememberMmkvString(WhitelistBypass.PREF_STABLE_SECONDS, ReturnLogic.DEFAULT_STABLE_SECONDS.toString())
@@ -234,6 +239,7 @@ fun SettingsScreen(
     val subUpdateEntries = stringArrayResource(R.array.sub_update_interval_entries).toList()
     val subUpdateValues = stringArrayResource(R.array.sub_update_interval_values).toList()
     val settingsContext = LocalContext.current
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { batteryAllowed = BatteryOptimization.isIgnored(settingsContext) }
     val deviceHwid = remember { DeviceIdentity.hwid() }
     var confirmRemove by rememberMmkvBool(AppConfig.PREF_CONFIRM_REMOVE, false)
     var language by remember {
@@ -394,9 +400,17 @@ fun SettingsScreen(
                     title = stringResource(R.string.title_whitelist_bypass),
                     summary = stringResource(R.string.summary_whitelist_bypass),
                     checked = whitelistBypass,
-                    onCheckedChange = { whitelistBypass = it }
+                    onCheckedChange = {
+                        whitelistBypass = it
+                        if (it && !batteryAllowed) showBatteryDialog = true
+                    }
                 )
                 if (whitelistBypass) {
+                    SettingsMenuItem(
+                        title = stringResource(R.string.title_bypass_battery),
+                        subtitle = stringResource(if (batteryAllowed) R.string.summary_bypass_battery_on else R.string.summary_bypass_battery_off),
+                        onClick = { BatteryOptimization.request(settingsContext) }
+                    )
                     SettingsListItem(
                         title = stringResource(R.string.title_whitelist_bypass_mode),
                         entries = listOf(
@@ -443,6 +457,16 @@ fun SettingsScreen(
                             onSelected = { bypassStableSeconds = it }
                         )
                     }
+                }
+                if (showBatteryDialog) {
+                    ConfirmDialog(
+                        title = stringResource(R.string.bypass_battery_dialog_title),
+                        message = stringResource(R.string.bypass_battery_dialog_message),
+                        confirmText = stringResource(R.string.bypass_battery_allow),
+                        dismissText = stringResource(R.string.bypass_battery_later),
+                        onConfirm = { BatteryOptimization.request(settingsContext) },
+                        onDismiss = { showBatteryDialog = false }
+                    )
                 }
                 if (showBypassPicker) {
                     BypassServerPickerDialog(

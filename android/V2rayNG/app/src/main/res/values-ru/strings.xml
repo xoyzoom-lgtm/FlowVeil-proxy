@@ -706,6 +706,13 @@
     <string name="summary_whitelist_bypass_servers">Выбрано: %1$d. Используется самый быстрый рабочий</string>
     <string name="title_whitelist_bypass_auto_return">Возвращаться на прежний сервер при Wi-Fi</string>
     <string name="summary_whitelist_bypass_auto_return">Когда телефон снова на Wi-Fi или Ethernet и старый сервер работает нормально. Иначе выберется подходящий (не российский)</string>
+    <string name="title_bypass_battery">Работа в фоне</string>
+    <string name="summary_bypass_battery_on">Разрешено: Android не будет «усыплять» FlowVeil</string>
+    <string name="summary_bypass_battery_off">Не разрешено: авто-обход может не сработать, пока телефон лежит в кармане. Нажмите, чтобы разрешить</string>
+    <string name="bypass_battery_dialog_title">Разрешить работу в фоне?</string>
+    <string name="bypass_battery_dialog_message">Авто-обход следит за сетью и переключает сервер, пока телефон лежит в кармане. Многие прошивки (Xiaomi, OPPO, vivo, Huawei и др.) сами «усыпляют» приложения, и тогда обход не сработает вовсе.\n\nРазрешите FlowVeil работать без ограничений батареи. На этих телефонах также включите «Автозапуск» для FlowVeil в настройках приложения.\n\nРасход батареи почти не растёт: регулярные проверки идут только при включённом экране.</string>
+    <string name="bypass_battery_allow">Разрешить</string>
+    <string name="bypass_battery_later">Позже</string>
     <string name="whitelist_bypass_search_hint">Поиск серверов</string>
     <string name="whitelist_bypass_favorites">Избранные</string>
     <string name="whitelist_bypass_no_servers">Серверов пока нет. Сначала добавьте подписку</string>

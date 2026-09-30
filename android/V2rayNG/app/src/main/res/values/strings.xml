@@ -702,6 +702,13 @@
     <string name="summary_whitelist_bypass_servers">Selected: %1$d. The fastest working one is used</string>
     <string name="title_whitelist_bypass_auto_return">Return to the previous server on Wi-Fi</string>
     <string name="summary_whitelist_bypass_auto_return">When the phone is back on Wi-Fi or Ethernet and the old server works well. Otherwise a suitable server is picked (never a Russian one)</string>
+    <string name="title_bypass_battery">Work in the background</string>
+    <string name="summary_bypass_battery_on">Allowed: Android will not put FlowVeil to sleep</string>
+    <string name="summary_bypass_battery_off">Not allowed: the auto bypass may not react while the phone is in your pocket. Tap to allow</string>
+    <string name="bypass_battery_dialog_title">Allow work in the background?</string>
+    <string name="bypass_battery_dialog_message">The auto bypass watches the network and switches the server while the phone lies in your pocket. Many phones (Xiaomi, OPPO, vivo, Huawei and others) put apps to sleep on their own, and then the bypass will not work at all.\n\nAllow FlowVeil to work without battery restrictions. On those phones also turn on "Autostart" for FlowVeil in the app settings.\n\nBattery use barely changes: regular checks run only while the screen is on.</string>
+    <string name="bypass_battery_allow">Allow</string>
+    <string name="bypass_battery_later">Later</string>
     <string name="whitelist_bypass_search_hint">Search servers</string>
     <string name="whitelist_bypass_favorites">Favorites</string>
     <string name="whitelist_bypass_no_servers">No servers yet. Add a subscription first</string>
