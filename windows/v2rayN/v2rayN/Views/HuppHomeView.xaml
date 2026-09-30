@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:conv="clr-namespace:v2rayN.Converters"
+    xmlns:vm="clr-namespace:v2rayN.ViewModels"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Background="Transparent">
     <UserControl.Resources>
@@ -14,6 +15,7 @@
         <conv:FlagImageConverter x:Key="FlagImage" />
         <conv:DelayTextConverter x:Key="DelayText" />
         <conv:DelayBrushConverter x:Key="DelayBrush" />
+        <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
 
         <Style x:Key="HuppCard" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
@@ -78,97 +80,150 @@
                 </Border>
             </Grid>
         </DataTemplate>
-    </UserControl.Resources>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="380" />
-            <ColumnDefinition Width="340" />
-        </Grid.ColumnDefinitions>
+        <!--  Tiny scrollbar: no arrow buttons, a 6 px thumb that fades in on hover  -->
+        <Style x:Key="ScrollTrackButton" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Border Background="Transparent" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ThinScrollBar" TargetType="ScrollBar">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="MinWidth" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Width="10" Background="Transparent">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Style="{StaticResource ScrollTrackButton}" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border
+                                                    x:Name="thumb"
+                                                    Width="6"
+                                                    Background="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                                                    CornerRadius="3"
+                                                    Opacity="0.3" />
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="thumb" Property="Opacity" Value="0.7" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsDragging" Value="True">
+                                                        <Setter TargetName="thumb" Property="Opacity" Value="0.9" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Style="{StaticResource ScrollTrackButton}" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <!--  Servers  -->
-        <DockPanel Grid.Column="0" Margin="20,16,10,16">
+        <!--  A small pill that can be switched on: quick filters  -->
+        <Style x:Key="FilterPill" TargetType="ToggleButton">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="0,0,8,6" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border
+                            x:Name="pill"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                            BorderBrush="Transparent"
+                            BorderThickness="1.5"
+                            CornerRadius="15">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.FontSize="12" TextElement.FontWeight="SemiBold" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="pill" Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Foreground}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="pill" Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="pill" Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Health dot of a subscription  -->
+        <Style x:Key="HealthDot" TargetType="Ellipse">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Height" Value="8" />
+            <Setter Property="Fill" Value="#22C55E" />
+        </Style>
+
+        <Style x:Key="ChipStyle" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                </DataTrigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ChipText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Foreground}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  One tag chip of a server row  -->
+        <DataTemplate x:Key="TagChip">
             <Border
-                x:Name="updateBanner"
-                Margin="4,0,0,12"
-                Padding="14,10"
-                BorderBrush="{DynamicResource MaterialDesign.Brush.Primary}"
-                BorderThickness="1"
-                CornerRadius="16"
-                DockPanel.Dock="Top"
-                Style="{StaticResource HuppCard}"
-                Visibility="Collapsed">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <Button
-                            x:Name="btnUpdateInfo"
-                            Content="Что нового"
-                            Style="{StaticResource MaterialDesignFlatButton}" />
-                        <Button
-                            x:Name="btnUpdateLater"
-                            Content="Позже"
-                            Style="{StaticResource MaterialDesignFlatButton}" />
-                        <Button
-                            x:Name="btnUpdateNow"
-                            Content="Обновить"
-                            Style="{StaticResource MaterialDesignFlatButton}" />
-                    </StackPanel>
-                    <TextBlock
-                        x:Name="txtUpdateBanner"
-                        VerticalAlignment="Center"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                        TextTrimming="CharacterEllipsis" />
-                </DockPanel>
-            </Border>
-            <DockPanel Margin="4,0,0,12" DockPanel.Dock="Top">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Button
-                        x:Name="btnPingAll"
-                        Style="{StaticResource RoundIconButton}"
-                        ToolTip="Проверить пинг всех серверов">
-                        <materialDesign:PackIcon Kind="Speedometer" />
-                    </Button>
-                    <Button
-                        x:Name="btnUpdateSubs"
-                        Margin="4,0"
-                        Style="{StaticResource RoundIconButton}"
-                        ToolTip="Обновить подписки">
-                        <materialDesign:PackIcon Kind="Refresh" />
-                    </Button>
-                    <Button
-                        x:Name="btnAdd"
-                        Height="36"
-                        Margin="6,0,0,0"
-                        Padding="14,0"
-                        materialDesign:ButtonAssist.CornerRadius="18"
-                        Style="{StaticResource MaterialDesignFlatDarkBgButton}"
-                        ToolTip="Скопируйте ссылку на подписку и нажмите — она добавится сама (Ctrl+V)">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon VerticalAlignment="Center" Kind="Plus" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Добавить" />
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
+                Margin="0,0,6,0"
+                Padding="7,1"
+                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                CornerRadius="8">
                 <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="26"
-                    FontWeight="Bold"
-                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                    Text="Серверы" />
-            </DockPanel>
+                    FontSize="10"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                    Text="{Binding}" />
+            </Border>
+        </DataTemplate>
 
-            <!--  Subscription cards  -->
-            <ScrollViewer
-                MaxHeight="420"
-                DockPanel.Dock="Top"
-                VerticalScrollBarVisibility="Auto">
-                <ItemsControl x:Name="lstCards" ItemsSource="{Binding Cards}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
+        <DataTemplate x:Key="SubCardTemplate">
                             <Border
                                 Margin="0,0,0,10"
                                 Cursor="Hand"
@@ -267,20 +322,305 @@
                                             </StackPanel>
                                         </Border>
                                     </UniformGrid>
-                                    <!--  Provider announcement, always shown in full  -->
+                                    <!--  Blocking state: expired / out of traffic  -->
+                                    <Border
+                                        Margin="0,10,0,0"
+                                        Padding="12,8"
+                                        Background="#26EF4444"
+                                        CornerRadius="12"
+                                        Visibility="{Binding IsBlocking, Converter={StaticResource BoolToVis}}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                <Button
+                                                    Click="CardUpdate_Click"
+                                                    Content="Обновить"
+                                                    Style="{StaticResource MaterialDesignFlatButton}" />
+                                                <Button
+                                                    Click="CardSupport_Click"
+                                                    Content="Поддержка"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Visibility="{Binding SupportUrl, Converter={StaticResource NotEmptyToVis}}" />
+                                            </StackPanel>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontWeight="SemiBold"
+                                                Foreground="#EF4444"
+                                                Text="{Binding HealthText}"
+                                                TextWrapping="Wrap" />
+                                        </DockPanel>
+                                    </Border>
+                                    <!--  Provider announcement, two lines with "show all"  -->
                                     <TextBlock
                                         Margin="0,10,0,0"
+                                        FontFamily="Segoe UI, Segoe UI Emoji, Segoe UI Symbol"
                                         FontSize="13"
                                         Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                                        LineHeight="18"
+                                        LineStackingStrategy="BlockLineHeight"
+                                        MaxHeight="{Binding AnnounceMaxHeight}"
                                         Text="{Binding Announce}"
+                                        TextTrimming="CharacterEllipsis"
                                         TextWrapping="Wrap"
                                         Visibility="{Binding Announce, Converter={StaticResource NotEmptyToVis}}" />
+                                    <Button
+                                        Height="28"
+                                        Padding="0"
+                                        HorizontalAlignment="Left"
+                                        Click="AnnounceToggle_Click"
+                                        Content="{Binding AnnounceToggleText}"
+                                        FontSize="12"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Visibility="{Binding AnnounceIsLong, Converter={StaticResource BoolToVis}}" />
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="380" />
+            <ColumnDefinition Width="340" />
+        </Grid.ColumnDefinitions>
+
+        <!--  Servers  -->
+        <Grid Grid.Column="0" Margin="20,16,10,16">
+        <DockPanel MaxWidth="1000">
+            <Border
+                x:Name="updateBanner"
+                Margin="4,0,0,12"
+                Padding="14,10"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Primary}"
+                BorderThickness="1"
+                CornerRadius="16"
+                DockPanel.Dock="Top"
+                Style="{StaticResource HuppCard}"
+                Visibility="Collapsed">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <Button
+                            x:Name="btnUpdateInfo"
+                            Content="Что нового"
+                            Style="{StaticResource MaterialDesignFlatButton}" />
+                        <Button
+                            x:Name="btnUpdateLater"
+                            Content="Позже"
+                            Style="{StaticResource MaterialDesignFlatButton}" />
+                        <Button
+                            x:Name="btnUpdateNow"
+                            Content="Обновить"
+                            Style="{StaticResource MaterialDesignFlatButton}" />
+                    </StackPanel>
+                    <TextBlock
+                        x:Name="txtUpdateBanner"
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </Border>
+            <DockPanel Margin="4,0,0,12" DockPanel.Dock="Top">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button
+                        x:Name="btnPingAll"
+                        Style="{StaticResource RoundIconButton}"
+                        ToolTip="Проверить пинг всех серверов">
+                        <materialDesign:PackIcon Kind="Speedometer" />
+                    </Button>
+                    <Button
+                        x:Name="btnUpdateSubs"
+                        Margin="4,0"
+                        Style="{StaticResource RoundIconButton}"
+                        ToolTip="Обновить подписки">
+                        <materialDesign:PackIcon Kind="Refresh" />
+                    </Button>
+                    <Button
+                        x:Name="btnAdd"
+                        Height="36"
+                        Margin="6,0,0,0"
+                        Padding="14,0"
+                        materialDesign:ButtonAssist.CornerRadius="18"
+                        Style="{StaticResource MaterialDesignFlatDarkBgButton}"
+                        ToolTip="Скопируйте ссылку на подписку и нажмите — она добавится сама (Ctrl+V)">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon VerticalAlignment="Center" Kind="Plus" />
+                            <TextBlock
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="Добавить" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="26"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                    Text="Серверы" />
+            </DockPanel>
+
+
+            <!--  Subscription strip: Все · подписки · Избранное · +  -->
+            <DockPanel x:Name="chipsBar" Margin="0,0,0,10" DockPanel.Dock="Top">
+                <RepeatButton
+                    x:Name="btnChipsLeft"
+                    Width="28"
+                    Height="28"
+                    Margin="0,0,4,0"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    DockPanel.Dock="Left"
+                    Focusable="False"
+                    Style="{StaticResource MaterialDesignFlatButton}">
+                    <materialDesign:PackIcon Kind="ChevronLeft" />
+                </RepeatButton>
+                <RepeatButton
+                    x:Name="btnChipsRight"
+                    Width="28"
+                    Height="28"
+                    Margin="4,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    DockPanel.Dock="Right"
+                    Focusable="False"
+                    Style="{StaticResource MaterialDesignFlatButton}">
+                    <materialDesign:PackIcon Kind="ChevronRight" />
+                </RepeatButton>
+                <ScrollViewer
+                    x:Name="chipsScroll"
+                    HorizontalScrollBarVisibility="Hidden"
+                    PreviewMouseWheel="Chips_MouseWheel"
+                    VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl x:Name="lstChips" ItemsSource="{Binding Chips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    MouseDown="Chip_MouseDown"
+                                    MouseLeftButtonUp="Chip_MouseLeftButtonUp"
+                                    MouseRightButtonUp="Chip_MouseRightButtonUp"
+                                    Style="{StaticResource ChipStyle}"
+                                    ToolTip="{Binding Tooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse
+                                            Margin="0,0,7,0"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsSub, Converter={StaticResource BoolToVis}}">
+                                            <Ellipse.Style>
+                                                <Style BasedOn="{StaticResource HealthDot}" TargetType="Ellipse">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HealthKey}" Value="soon">
+                                                            <Setter Property="Fill" Value="#F59E0B" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding HealthKey}" Value="bad">
+                                                            <Setter Property="Fill" Value="#EF4444" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding HealthKey}" Value="error">
+                                                            <Setter Property="Fill" Value="#F97316" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding HealthKey}" Value="off">
+                                                            <Setter Property="Fill" Value="#9CA3AF" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                            Kind="Star"
+                                            Visibility="{Binding IsFavorites, Converter={StaticResource BoolToVis}}" />
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                            Kind="Plus"
+                                            Visibility="{Binding IsAdd, Converter={StaticResource BoolToVis}}" />
+                                        <TextBlock
+                                            MaxWidth="170"
+                                            FontSize="13"
+                                            FontWeight="SemiBold"
+                                            Style="{StaticResource ChipText}"
+                                            Text="{Binding Title}"
+                                            TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Visibility>
+                                                <Binding Path="IsAdd" Converter="{StaticResource InverseBoolToVis}" />
+                                            </TextBlock.Visibility>
+                                        </TextBlock>
+                                        <TextBlock
+                                            Margin="7,0,0,0"
+                                            FontSize="12"
+                                            Opacity="0.7"
+                                            Style="{StaticResource ChipText}"
+                                            Text="{Binding CountText}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+
+            <!--  One subscription: the detailed card  -->
+            <ContentControl
+                Content="{Binding SelectedCard}"
+                ContentTemplate="{StaticResource SubCardTemplate}"
+                DockPanel.Dock="Top"
+                Visibility="{Binding HasSelectedCard, Converter={StaticResource BoolToVis}}" />
+
+            <!--  Search, sort, quick filters  -->
+            <DockPanel Margin="0,0,0,8" DockPanel.Dock="Top">
+                <Button
+                    x:Name="btnSort"
+                    Height="38"
+                    Margin="8,0,0,0"
+                    Padding="14,0"
+                    materialDesign:ButtonAssist.CornerRadius="19"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    ToolTip="Порядок серверов">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon VerticalAlignment="Center" Kind="SortVariant" />
+                        <TextBlock
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            Text="{Binding SortTitle}" />
+                    </StackPanel>
+                </Button>
+                <TextBox
+                    x:Name="txtSearch"
+                    Height="38"
+                    Padding="12,0"
+                    VerticalContentAlignment="Center"
+                    materialDesign:HintAssist.Hint="Поиск: название, страна, протокол (Ctrl+F)"
+                    FocusVisualStyle="{x:Null}"
+                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+            <WrapPanel Margin="0,0,0,2" DockPanel.Dock="Top">
+                <ToggleButton
+                    Content="Живые"
+                    IsChecked="{Binding FilterAlive}"
+                    Style="{StaticResource FilterPill}" />
+                <ToggleButton
+                    Content="Reality"
+                    IsChecked="{Binding FilterReality}"
+                    Style="{StaticResource FilterPill}" />
+                <ToggleButton
+                    Content="UDP и игровые"
+                    IsChecked="{Binding FilterUdp}"
+                    Style="{StaticResource FilterPill}" />
+                <ToggleButton
+                    Content="Избранные"
+                    IsChecked="{Binding FilterFavorite}"
+                    Style="{StaticResource FilterPill}" />
+            </WrapPanel>
 
             <!--  Empty state  -->
             <StackPanel
@@ -333,40 +673,145 @@
                 </Button>
             </StackPanel>
 
-            <!--  Server list  -->
+
+            <!--  Nothing found  -->
+            <StackPanel
+                Margin="0,40,0,0"
+                HorizontalAlignment="Center"
+                DockPanel.Dock="Top"
+                Visibility="{Binding NoResults, Converter={StaticResource BoolToVis}}">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                    Text="Ничего не найдено" />
+                <Button
+                    x:Name="btnResetFilters"
+                    Margin="0,12,0,0"
+                    Content="Сбросить фильтры"
+                    Style="{StaticResource MaterialDesignOutlinedButton}" />
+            </StackPanel>
+            <TextBlock
+                Margin="0,40,0,0"
+                HorizontalAlignment="Center"
+                DockPanel.Dock="Top"
+                Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                Text="Здесь пока нет серверов. Нажмите «Обновить» у подписки или добавьте другую."
+                TextWrapping="Wrap"
+                Visibility="{Binding HasNothingHere, Converter={StaticResource BoolToVis}}" />
+
+            <!--  Server list: group headers and servers in one flat, virtualised list  -->
             <ListBox
                 x:Name="lstServers"
                 Margin="0,4,0,0"
+                Background="Transparent"
+                BorderThickness="0"
+                FocusVisualStyle="{x:Null}"
                 HorizontalContentAlignment="Stretch"
-                ItemsSource="{Binding Profiles.ProfileItems}"
+                ItemsSource="{Binding Items}"
+                KeyDown="Servers_KeyDown"
+                ScrollViewer.CanContentScroll="True"
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.ScrollUnit="Pixel"
                 VirtualizingPanel.VirtualizationMode="Recycling">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="0" />
-                        <Setter Property="Margin" Value="0,0,6,8" />
-                        <Setter Property="Cursor" Value="Hand" />
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <ContentPresenter />
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border MouseLeftButtonUp="Server_MouseLeftButtonUp">
+                <ListBox.Resources>
+                    <Style BasedOn="{StaticResource ThinScrollBar}" TargetType="ScrollBar" />
+                    <DataTemplate DataType="{x:Type vm:HuppHeaderRow}">
+                        <Border
+                            Margin="0,6,6,2"
+                            Padding="6,6"
+                            Background="Transparent"
+                            Cursor="Hand"
+                            MouseLeftButtonUp="Header_MouseLeftButtonUp"
+                            MouseRightButtonUp="Header_MouseRightButtonUp">
+                            <DockPanel>
+                                <Button
+                                    Width="30"
+                                    Height="30"
+                                    Padding="0"
+                                    Click="HeaderPing_Click"
+                                    DockPanel.Dock="Right"
+                                    Style="{StaticResource RoundIconButton}"
+                                    ToolTip="Проверить пинг этой подписки">
+                                    <materialDesign:PackIcon Kind="Speedometer" />
+                                </Button>
+                                <Button
+                                    Width="30"
+                                    Height="30"
+                                    Padding="0"
+                                    Click="HeaderToggle_Click"
+                                    Style="{StaticResource RoundIconButton}"
+                                    ToolTip="Свернуть или развернуть">
+                                    <materialDesign:PackIcon Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}">
+                                        <materialDesign:PackIcon.Style>
+                                            <Style TargetType="materialDesign:PackIcon">
+                                                <Setter Property="Kind" Value="ChevronDown" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCollapsed}" Value="True">
+                                                        <Setter Property="Kind" Value="ChevronRight" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </materialDesign:PackIcon.Style>
+                                    </materialDesign:PackIcon>
+                                </Button>
+                                <Ellipse Margin="4,0,8,0" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style BasedOn="{StaticResource HealthDot}" TargetType="Ellipse">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HealthKey}" Value="soon">
+                                                    <Setter Property="Fill" Value="#F59E0B" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HealthKey}" Value="bad">
+                                                    <Setter Property="Fill" Value="#EF4444" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HealthKey}" Value="error">
+                                                    <Setter Property="Fill" Value="#F97316" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HealthKey}" Value="off">
+                                                    <Setter Property="Fill" Value="#9CA3AF" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock
+                                            MaxWidth="360"
+                                            FontSize="14"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                            Text="{Binding Title}"
+                                            TextTrimming="CharacterEllipsis"
+                                            ToolTip="{Binding Title}" />
+                                        <TextBlock
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource SubText}"
+                                            Text="{Binding CountText}" />
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource SubText}" Text="{Binding Summary}" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="#EF4444"
+                                        Text="{Binding HealthText}"
+                                        Visibility="{Binding HealthText, Converter={StaticResource NotEmptyToVis}}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:HuppServerRow}">
+                        <Border MouseLeftButtonUp="Server_MouseLeftButtonUp" ToolTip="{Binding Model.Remarks}">
                             <Border.Style>
                                 <Style BasedOn="{StaticResource HuppCard}" TargetType="Border">
-                                    <Setter Property="Padding" Value="14,12" />
-                                    <Setter Property="CornerRadius" Value="18" />
+                                    <Setter Property="Padding" Value="14,9" />
+                                    <Setter Property="CornerRadius" Value="16" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                        <DataTrigger Binding="{Binding Unavailable}" Value="True">
+                                            <Setter Property="Opacity" Value="0.5" />
                                         </DataTrigger>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter Property="Opacity" Value="0.92" />
@@ -377,6 +822,7 @@
                             <Border.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Click="ServerConnect_Click" Header="Выбрать сервер" />
+                                    <MenuItem Click="ServerFavorite_Click" Header="В избранное / убрать" />
                                     <MenuItem Click="ServerEdit_Click" Header="Изменить" />
                                     <MenuItem Click="ServerShare_Click" Header="Скопировать ссылку" />
                                     <Separator />
@@ -389,11 +835,20 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
+                                <!--  Accent bar of the server in use  -->
+                                <Border
+                                    Grid.Column="0"
+                                    Width="4"
+                                    Margin="-14,-9,10,-9"
+                                    Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                                    CornerRadius="16,0,0,16"
+                                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}" />
                                 <ContentPresenter
                                     Grid.Column="0"
                                     VerticalAlignment="Center"
-                                    Content="{Binding Remarks, Converter={StaticResource ProfileCode}}"
+                                    Content="{Binding Code}"
                                     ContentTemplate="{StaticResource FlagBadge}" />
                                 <StackPanel
                                     Grid.Column="1"
@@ -403,40 +858,112 @@
                                         FontSize="14"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                                        Text="{Binding Remarks, Converter={StaticResource ProfileName}}"
+                                        Text="{Binding Name}"
                                         TextTrimming="CharacterEllipsis" />
-                                    <TextBlock
-                                        Margin="0,2,0,0"
-                                        Style="{StaticResource SubText}"
-                                        Text="{Binding Converter={StaticResource ProfileDescription}}" />
+                                    <ItemsControl Margin="0,3,0,0" ItemTemplate="{StaticResource TagChip}" ItemsSource="{Binding Tags}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
                                 </StackPanel>
-                                <Grid
+                                <Border
                                     Grid.Column="2"
+                                    Margin="0,0,8,0"
+                                    Padding="6,2"
+                                    Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                    CornerRadius="9"
+                                    Visibility="{Binding Unavailable, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock
+                                        FontSize="10"
+                                        FontWeight="SemiBold"
+                                        Foreground="#EF4444"
+                                        Text="недоступно" />
+                                </Border>
+                                <Button
+                                    Grid.Column="3"
+                                    Width="28"
+                                    Height="28"
+                                    Margin="0,0,6,0"
+                                    Padding="0"
                                     VerticalAlignment="Center"
-                                    Visibility="{Binding DelayVal, Converter={StaticResource NotEmptyToVis}}">
+                                    Click="ServerStar_Click"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    ToolTip="Избранное">
+                                    <materialDesign:PackIcon Width="18" Height="18">
+                                        <materialDesign:PackIcon.Style>
+                                            <Style TargetType="materialDesign:PackIcon">
+                                                <Setter Property="Kind" Value="StarOutline" />
+                                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                        <Setter Property="Kind" Value="Star" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </materialDesign:PackIcon.Style>
+                                    </materialDesign:PackIcon>
+                                </Button>
+                                <Grid
+                                    Grid.Column="4"
+                                    Width="66"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding Model.DelayVal, Converter={StaticResource NotEmptyToVis}}">
                                     <Border
-                                        Background="{Binding DelayVal, Converter={StaticResource DelayBrush}}"
+                                        Background="{Binding Model.DelayVal, Converter={StaticResource DelayBrush}}"
                                         CornerRadius="12"
                                         Opacity="0.15" />
                                     <TextBlock
-                                        Margin="10,3"
+                                        Margin="0,3"
+                                        HorizontalAlignment="Center"
                                         FontSize="12"
                                         FontWeight="SemiBold"
-                                        Foreground="{Binding DelayVal, Converter={StaticResource DelayBrush}}"
-                                        Text="{Binding DelayVal, Converter={StaticResource DelayText}}" />
+                                        Foreground="{Binding Model.DelayVal, Converter={StaticResource DelayBrush}}"
+                                        Text="{Binding Model.DelayVal, Converter={StaticResource DelayText}}" />
                                 </Grid>
-                                <materialDesign:PackIcon
-                                    Grid.Column="3"
-                                    Margin="6,0,0,0"
-                                    VerticalAlignment="Center"
-                                    Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
-                                    Kind="ChevronRight" />
                             </Grid>
                         </Border>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
+                </ListBox.Resources>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,0,6,8" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Grid>
+                                        <ContentPresenter />
+                                        <!--  Focus ring only while the keyboard is used  -->
+                                        <Border
+                                            x:Name="ring"
+                                            BorderBrush="{DynamicResource MaterialDesign.Brush.Primary}"
+                                            BorderThickness="1.5"
+                                            CornerRadius="16"
+                                            IsHitTestVisible="False"
+                                            Visibility="Collapsed" />
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}}" Value="True" />
+                                                <Condition Binding="{Binding KeyboardNav, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter TargetName="ring" Property="Visibility" Value="Visible" />
+                                        </MultiDataTrigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
             </ListBox>
         </DockPanel>
+        </Grid>
 
         <!--  Connect pane  -->
         <Border
@@ -445,166 +972,192 @@
             Padding="20"
             Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
             CornerRadius="28">
-            <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Top">
+            <ScrollViewer x:Name="paneScroll" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer.Resources>
+                    <Style BasedOn="{StaticResource ThinScrollBar}" TargetType="ScrollBar" />
+                </ScrollViewer.Resources>
+                <Grid MinHeight="{Binding ViewportHeight, ElementName=paneScroll}">
+                    <StackPanel VerticalAlignment="Center">
                     <Button
-                        x:Name="btnPower"
-                        Width="180"
-                        Height="180"
-                        Margin="0,16,0,0"
-                        HorizontalAlignment="Center"
-                        Cursor="Hand"
-                        ToolTip="Подключить / отключить">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Grid>
-                                    <Ellipse x:Name="halo" Margin="-14" Opacity="0.12" Fill="{DynamicResource MaterialDesign.Brush.Primary}" />
-                                    <Ellipse
-                                        x:Name="circle"
-                                        Fill="{DynamicResource MaterialDesign.Brush.Background}"
-                                        Stroke="{DynamicResource MaterialDesign.Brush.Primary}"
-                                        StrokeThickness="2" />
-                                    <materialDesign:PackIcon
-                                        x:Name="icon"
-                                        Width="72"
-                                        Height="72"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                        Kind="Power" />
-                                </Grid>
-                                <ControlTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                        <Setter TargetName="circle" Property="Fill" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
-                                        <Setter TargetName="icon" Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Foreground}" />
-                                        <Setter TargetName="halo" Property="Opacity" Value="0.25" />
-                                    </DataTrigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
-                                        <Setter Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="0.95" ScaleY="0.95" />
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                            x:Name="btnPower"
+                            Width="180"
+                            Height="180"
+                            Margin="0,16,0,0"
+                            HorizontalAlignment="Center"
+                            Cursor="Hand"
+                            ToolTip="Подключить / отключить">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Grid>
+                                        <Ellipse x:Name="halo" Margin="-14" Opacity="0.12" Fill="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                        <Ellipse
+                                            x:Name="circle"
+                                            Fill="{DynamicResource MaterialDesign.Brush.Background}"
+                                            Stroke="{DynamicResource MaterialDesign.Brush.Primary}"
+                                            StrokeThickness="2" />
+                                        <materialDesign:PackIcon
+                                            x:Name="icon"
+                                            Width="72"
+                                            Height="72"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                            Kind="Power" />
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                            <Setter TargetName="circle" Property="Fill" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                            <Setter TargetName="icon" Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Foreground}" />
+                                            <Setter TargetName="halo" Property="Opacity" Value="0.25" />
+                                        </DataTrigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+                                            <Setter Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="0.95" ScaleY="0.95" />
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
 
-                    <TextBlock
-                        Margin="0,24,0,0"
-                        HorizontalAlignment="Center"
-                        FontSize="20"
-                        FontWeight="Bold"
-                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                        Text="{Binding StatusText}" />
-                    <TextBlock
-                        Margin="0,4,0,0"
-                        HorizontalAlignment="Center"
-                        FontFamily="Segoe UI Variable Display, Segoe UI"
-                        FontSize="16"
-                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
-                        Text="{Binding TimerText}" />
-                    <TextBlock
-                        Margin="0,6,0,0"
-                        HorizontalAlignment="Center"
-                        Style="{StaticResource SubText}"
-                        Text="{Binding HintText}"
-                        TextAlignment="Center"
-                        TextWrapping="Wrap" />
-                    <TextBlock
-                        Margin="0,4,0,0"
-                        HorizontalAlignment="Center"
-                        Style="{StaticResource SubText}"
-                        Text="{Binding SpeedText}"
-                        Visibility="{Binding IsConnected, Converter={StaticResource BoolToVis}}" />
-
-                    <!--  Happ-style mode picker: grouped menu opened from a button  -->
-                    <Button
-                        x:Name="btnMode"
-                        Height="48"
-                        Margin="0,24,0,0"
-                        Padding="16,0"
-                        HorizontalContentAlignment="Stretch"
-                        materialDesign:ButtonAssist.CornerRadius="14"
-                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        ToolTip="Режим подключения">
-                        <DockPanel>
-                            <materialDesign:PackIcon
-                                VerticalAlignment="Center"
-                                DockPanel.Dock="Right"
-                                Kind="ChevronDown" />
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontWeight="SemiBold"
-                                Text="{Binding ModeTitle}" />
-                        </DockPanel>
-                    </Button>
-                </StackPanel>
-
-                <StackPanel DockPanel.Dock="Bottom">
-                    <Border
-                        Padding="14,12"
-                        Background="{DynamicResource MaterialDesign.Brush.Background}"
-                        CornerRadius="20">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <ContentPresenter
-                                VerticalAlignment="Center"
-                                Content="{Binding ServerCode}"
-                                ContentTemplate="{StaticResource FlagBadge}" />
-                            <StackPanel
-                                Grid.Column="1"
-                                Margin="12,0,0,0"
-                                VerticalAlignment="Center">
-                                <TextBlock
-                                    FontSize="14"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                                    Text="{Binding ServerName}"
-                                    TextTrimming="CharacterEllipsis" />
-                                <TextBlock Style="{StaticResource SubText}" Text="{Binding ServerDescription}" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                    <DockPanel Margin="0,12,0,0">
                         <TextBlock
-                            Margin="12,0,0,0"
-                            VerticalAlignment="Center"
-                            DockPanel.Dock="Right"
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                            Text="{Binding PingText}" />
+                            Margin="0,24,0,0"
+                            HorizontalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                            Text="{Binding StatusText}" />
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            HorizontalAlignment="Center"
+                            FontFamily="Segoe UI Variable Display, Segoe UI"
+                            FontSize="16"
+                            Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                            Text="{Binding TimerText}" />
+                        <TextBlock
+                            Margin="0,6,0,0"
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource SubText}"
+                            Text="{Binding HintText}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource SubText}"
+                            Text="{Binding SpeedText}"
+                            Visibility="{Binding IsConnected, Converter={StaticResource BoolToVis}}" />
+
+                        <!--  Happ-style mode picker: grouped menu opened from a button  -->
                         <Button
-                            x:Name="btnTestPing"
+                            x:Name="btnMode"
+                            Height="48"
+                            Margin="0,24,0,0"
+                            Padding="16,0"
+                            HorizontalContentAlignment="Stretch"
+                            materialDesign:ButtonAssist.CornerRadius="14"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="Режим подключения">
+                            <DockPanel>
+                                <materialDesign:PackIcon
+                                    VerticalAlignment="Center"
+                                    DockPanel.Dock="Right"
+                                    Kind="ChevronDown" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{Binding ModeTitle}" />
+                            </DockPanel>
+                        </Button>
+
+                        <!--  Speed of this session: appears once the core reports it  -->
+                        <Polyline
                             Height="44"
-                            materialDesign:ButtonAssist.CornerRadius="22"
-                            Content="Обновить пинг"
-                            Style="{StaticResource MaterialDesignOutlinedButton}" />
-                    </DockPanel>
-                    <Button
-                        x:Name="btnConnectBest"
-                        Height="44"
-                        Margin="0,10,0,0"
-                        materialDesign:ButtonAssist.CornerRadius="22"
-                        Content="⚡ Подключиться к лучшему"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        ToolTip="Проверить серверы подписки и подключиться к самому быстрому" />
-                    <Button
-                        x:Name="btnDiagnose"
-                        Height="36"
-                        Margin="0,6,0,0"
-                        Content="Почему не работает?"
-                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
-                        Style="{StaticResource MaterialDesignFlatButton}"
-                        ToolTip="Проверит сеть, время, подписку и сервер и подскажет, что делать" />
-                </StackPanel>
-            </DockPanel>
+                            Margin="0,14,0,0"
+                            Points="{Binding SparkPoints}"
+                            Stroke="{DynamicResource MaterialDesign.Brush.Primary}"
+                            StrokeLineJoin="Round"
+                            StrokeThickness="2"
+                            Visibility="{Binding HasSpark, Converter={StaticResource BoolToVis}}" />
+                        <StackPanel Margin="0,14,0,0">
+                    <Border
+                                Padding="14,12"
+                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                CornerRadius="20">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter
+                                        VerticalAlignment="Center"
+                                        Content="{Binding ServerCode}"
+                                        ContentTemplate="{StaticResource FlagBadge}" />
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Margin="12,0,0,0"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                            Text="{Binding ServerName}"
+                                            TextWrapping="Wrap"
+                                            ToolTip="{Binding ServerName}" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                                            Text="{Binding ServerDescription}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <DockPanel Margin="0,12,0,0">
+                                <TextBlock
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    DockPanel.Dock="Right"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                    Text="{Binding PingText}" />
+                                <Button
+                                    x:Name="btnTestPing"
+                                    Height="44"
+                                    materialDesign:ButtonAssist.CornerRadius="22"
+                                    Content="{Binding PingAllCaption}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}" />
+                            </DockPanel>
+                            <Button
+                                x:Name="btnConnectBest"
+                                Height="44"
+                                Margin="0,10,0,0"
+                                materialDesign:ButtonAssist.CornerRadius="22"
+                                Content="⚡ Подключиться к лучшему"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                ToolTip="Проверит серверы выбранного списка и подключится к самому быстрому. Просроченные подписки и российские серверы не участвуют" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="11"
+                                Style="{StaticResource SubText}"
+                                Text="{Binding BestCaption}" />
+                            <Button
+                                x:Name="btnDiagnose"
+                                Height="36"
+                                Margin="0,6,0,0"
+                                Content="Почему не работает?"
+                                Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                ToolTip="Проверит сеть, время, подписку и сервер и подскажет, что делать" />
+
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
         </Border>
     </Grid>
 </UserControl>

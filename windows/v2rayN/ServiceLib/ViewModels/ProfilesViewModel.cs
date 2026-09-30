@@ -742,6 +742,28 @@ public partial class ProfilesViewModel : MyReactiveObject
         _speedtestService?.RunLoop(actionType, lstSelected);
     }
 
+    /// <summary>Real-ping test of just the given servers (the current filter of the main screen), in the order of the list.</summary>
+    public async Task ServerSpeedtestSubset(IReadOnlyCollection<string> indexIds)
+    {
+        var selected = JsonUtils.Deserialize<List<ProfileItem>>(JsonUtils.Serialize(ProfileItems?.Where(t => indexIds.Contains(t.IndexId)).OrderBy(t => t.Sort)));
+        if (selected is null || selected.Count <= 0)
+        {
+            SpeedtestFinished?.Invoke();
+            return;
+        }
+
+        _speedtestService ??= new SpeedtestService(_config, async (SpeedTestResult result) =>
+        {
+            RxSchedulers.MainThreadScheduler.Schedule(() =>
+            {
+                _ = SetSpeedTestResult(result);
+            });
+            await Task.CompletedTask;
+        });
+        _speedtestService?.RunLoop(ESpeedActionType.Realping, selected);
+        await Task.CompletedTask;
+    }
+
     public void ServerSpeedtestStop()
     {
         _speedtestService?.ExitLoop();

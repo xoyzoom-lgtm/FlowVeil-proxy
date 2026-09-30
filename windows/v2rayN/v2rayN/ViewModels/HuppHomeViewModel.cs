@@ -39,13 +39,30 @@ public sealed class HuppSubCard : HuppObservable
 
     private bool _isSelected;
     public bool IsSelected { get => _isSelected; set => Set(ref _isSelected, value); }
+
+    public SubHealth Health { get; init; }
+
+    /// <summary>What is wrong with the subscription, in words; empty when all is well.</summary>
+    public string HealthText { get; init; } = string.Empty;
+
+    /// <summary>Expired or out of traffic: a red banner with what to do.</summary>
+    public bool IsBlocking { get; init; }
+
+    /// <summary>The provider's announcement is long: it is folded to two lines with "Показать полностью".</summary>
+    public bool AnnounceIsLong { get; init; }
+
+    private bool _announceExpanded;
+    public bool AnnounceExpanded { get => _announceExpanded; set { if (Set(ref _announceExpanded, value)) { Raise(nameof(AnnounceMaxHeight)); Raise(nameof(AnnounceToggleText)); } } }
+    /// <summary>Two lines of 18 px while folded (WPF has no MaxLines).</summary>
+    public double AnnounceMaxHeight => AnnounceExpanded || !AnnounceIsLong ? double.PositiveInfinity : 36;
+    public string AnnounceToggleText => AnnounceExpanded ? "Свернуть" : "Показать полностью";
 }
 
 /// <summary>
 /// Home screen state: subscription cards, the server list and a single connect button.
 /// "Connected" means traffic is routed through the core, via system proxy or TUN.
 /// </summary>
-public sealed class HuppHomeViewModel : HuppObservable
+public sealed partial class HuppHomeViewModel : HuppObservable
 {
     public const string ModeProxy = "proxy";
     public const string ModeTunSingbox = "tun-singbox";
@@ -82,13 +99,19 @@ public sealed class HuppHomeViewModel : HuppObservable
         Status = status;
         _mode = LoadMode();
 
-        Profiles.SubItems.CollectionChanged += (_, _) => RebuildCards();
+        InitSubs();
+        Profiles.SubItems.CollectionChanged += (_, _) =>
+        {
+            RebuildCards();
+            RebuildListSoon();
+        };
         Profiles.ProfileItems.CollectionChanged += OnProfilesChanged;
         Profiles.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(ProfilesViewModel.SelectedSub))
             {
                 UpdateCardSelection();
+                SyncSelectionFromProfiles();
             }
         };
         Status.PropertyChanged += OnStatusChanged;
@@ -253,7 +276,10 @@ public sealed class HuppHomeViewModel : HuppObservable
         Profiles.SelectedSub = card.Sub;
     }
 
-    /// <summary>Tests the servers of the open subscription, selects the fastest one and connects.</summary>
+    /// <summary>
+    /// Tests the servers of the current chip (one subscription, "Все" = all switched-on ones, "Избранное"), then selects the fastest and connects.
+    /// Russian servers are never "the best" (they unblock nothing); expired, out-of-traffic and switched-off subscriptions are excluded always.
+    /// </summary>
     public async Task ConnectBestAsync()
     {
         if (IsBusy || Profiles.ProfileItems.Count == 0)
@@ -261,34 +287,36 @@ public sealed class HuppHomeViewModel : HuppObservable
             return;
         }
         IsBusy = true;
-        PingText = "Ищу лучший сервер…";
+        PingText = $"Ищу лучший: {ScopeTitle}…";
         try
         {
+            var scope = ScopeFacts();
             var finished = new TaskCompletionSource();
             void OnFinished() => finished.TrySetResult();
             Profiles.SpeedtestFinished += OnFinished;
             try
             {
-                await Profiles.ServerSpeedtest(ESpeedActionType.FastRealping);
+                await Profiles.ServerSpeedtestSubset(scope.Where(s => SubUsable(s.SubId)).Select(s => s.IndexId).ToHashSet());
                 await Task.WhenAny(finished.Task, Task.Delay(TimeSpan.FromMinutes(3)));
             }
             finally
             {
                 Profiles.SpeedtestFinished -= OnFinished;
             }
-            // Servers in Russia answer fastest but unblock nothing, so they are never "the best".
-            var best = Profiles.ProfileItems.Where(t => t.Delay > 0 && !IsRussianServer(t.Remarks)).OrderBy(t => t.Delay).FirstOrDefault();
-            if (best == null)
+            // Delays changed: read the scope again.
+            var best = SubsLogic.Best(ScopeFacts(), SubUsable, IsRussianServer);
+            var model = best == null ? null : Profiles.ProfileItems.FirstOrDefault(t => t.IndexId == best.IndexId);
+            if (model == null)
             {
                 PingText = "Рабочий сервер не найден";
                 return;
             }
-            await SelectServerAsync(best);
+            await SelectServerAsync(model);
             if (!IsConnected)
             {
                 await ConnectAsync();
             }
-            PingText = $"Лучший: {best.Remarks} · {best.Delay} мс";
+            PingText = $"Лучший: {model.Remarks} · {model.Delay} мс";
         }
         catch (Exception ex)
         {
@@ -318,9 +346,30 @@ public sealed class HuppHomeViewModel : HuppObservable
             || System.Text.RegularExpressions.Regex.IsMatch(name, "(^|[^a-z])ru([^a-z]|$)");
     }
 
+    /// <summary>Tests the servers of the current chip; a second press stops the run. The list stays usable meanwhile.</summary>
     public async Task PingAllAsync()
     {
-        await Profiles.ServerSpeedtest(ESpeedActionType.FastRealping);
+        if (IsPinging)
+        {
+            Profiles.ServerSpeedtestStop();
+            IsPinging = false;
+            return;
+        }
+        IsPinging = true;
+        await Profiles.ServerSpeedtestSubset(ScopeFacts().Select(s => s.IndexId).ToHashSet());
+    }
+
+    /// <summary>Tests the servers of one subscription (the group button), whatever chip is open.</summary>
+    public async Task PingSubscriptionAsync(string subId)
+    {
+        if (IsPinging)
+        {
+            Profiles.ServerSpeedtestStop();
+            IsPinging = false;
+            return;
+        }
+        IsPinging = true;
+        await Profiles.ServerSpeedtestSubset(FactsOf(Profiles.ProfileItems.ToList()).Where(s => s.SubId == subId).Select(s => s.IndexId).ToHashSet());
     }
 
     /// <summary>Just the number: "123 мс", or a dash when there is no answer.</summary>
@@ -436,6 +485,7 @@ public sealed class HuppHomeViewModel : HuppObservable
 
             case nameof(StatusBarViewModel.RunningServerDisplay):
                 UpdateSelectedServer();
+                RefreshActiveFlags();
                 break;
         }
     }
@@ -444,6 +494,7 @@ public sealed class HuppHomeViewModel : HuppObservable
     {
         UpdateSelectedServer();
         ScheduleAutoPingAll();
+        RebuildListSoon();
     }
 
     private void UpdateConnection()
@@ -550,6 +601,7 @@ public sealed class HuppHomeViewModel : HuppObservable
             Cards.Add(MakeCard(sub));
         }
         UpdateCardSelection();
+        UpdateSelectedCard();
     }
 
     private void UpdateCardSelection()
@@ -561,13 +613,18 @@ public sealed class HuppHomeViewModel : HuppObservable
         }
     }
 
-    private static HuppSubCard MakeCard(SubItem sub)
+    private HuppSubCard MakeCard(SubItem sub)
     {
         var info = SubscriptionInfoStore.Get(sub.Id);
-        var title = info?.Title.IsNotEmpty() == true ? info.Title! : sub.Remarks;
+        var title = LocalTitle(sub, info);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var facts = MakeFacts(sub, now);
+        var health = SubsLogic.HealthOf(facts, now);
+        var healthText = HealthText(health, facts, now);
+        var blocking = health is SubHealth.Expired or SubHealth.TrafficOver;
         if (info == null)
         {
-            return new HuppSubCard { Sub = sub, Title = title };
+            return new HuppSubCard { Sub = sub, Title = title, Health = health, HealthText = healthText, IsBlocking = blocking };
         }
 
         var traffic = string.Empty;
@@ -606,10 +663,14 @@ public sealed class HuppHomeViewModel : HuppObservable
             ExpireDetail = expireDetail,
             LeftText = left,
             ExpireText = expire,
-            Announce = info.Announce ?? string.Empty,
+            Announce = TextSanitizer.ForWpf(info.Announce),
+            AnnounceIsLong = TextSanitizer.ForWpf(info.Announce).Length > 110 || TextSanitizer.ForWpf(info.Announce).Contains('\n'),
             SupportUrl = info.SupportUrl ?? string.Empty,
             Progress = progress,
             HasProgress = info.Total > 0 && info.Total < 1L << 50,
+            Health = health,
+            HealthText = healthText,
+            IsBlocking = blocking,
         };
     }
 

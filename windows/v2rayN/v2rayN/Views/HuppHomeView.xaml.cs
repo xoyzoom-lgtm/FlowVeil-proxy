@@ -17,13 +17,21 @@ public partial class HuppHomeView : UserControl
         InitializeComponent();
 
         btnPower.Click += async (_, _) => await Run(() => _vm?.ToggleAsync());
-        btnTestPing.Click += async (_, _) => await Run(() => _vm?.TestCurrentAsync());
+        btnTestPing.Click += async (_, _) => await Run(() => _vm?.PingAllAsync());
         btnPingAll.Click += async (_, _) => await Run(() => _vm?.PingAllAsync());
         btnConnectBest.Click += async (_, _) => await Run(() => _vm?.ConnectBestAsync());
         btnUpdateSubs.Click += async (_, _) => await UpdateSubsAsync("");
         btnAdd.Click += async (_, _) => await PasteAsync();
         btnEmptyPaste.Click += async (_, _) => await PasteAsync();
         btnMode.Click += (_, _) => OpenModeMenu();
+        btnSort.Click += (_, _) => OpenSortMenu();
+        btnResetFilters.Click += (_, _) => _vm?.ResetFilters();
+        btnChipsLeft.Click += (_, _) => chipsScroll.ScrollToHorizontalOffset(chipsScroll.HorizontalOffset - 120);
+        btnChipsRight.Click += (_, _) => chipsScroll.ScrollToHorizontalOffset(chipsScroll.HorizontalOffset + 120);
+        chipsScroll.ScrollChanged += (_, _) => UpdateChipArrows();
+        PreviewKeyDown += View_PreviewKeyDown;
+        PreviewMouseDown += (_, _) => KeyboardNav = false;
+        HuppHomeViewModel.DiagnosisTextOf = cause => DiagnosisTexts.Of(cause).Title;
         btnDiagnose.Click += (_, _) => (Window.GetWindow(this) as MainWindow)?.ShowDiagnosis();
         btnUpdateNow.Click += (_, _) => (Window.GetWindow(this) as MainWindow)?.ShowUpdate();
         btnUpdateInfo.Click += (_, _) => (Window.GetWindow(this) as MainWindow)?.ShowUpdate();
@@ -39,6 +47,7 @@ public partial class HuppHomeView : UserControl
         _vm = new HuppHomeViewModel(main.ProfilesViewModel, main.StatusBarViewModel);
         DataContext = _vm;
         _vm.Profiles.ProfileItems.CollectionChanged += OnProfilesChanged;
+        _vm.AddRequested += () => (Window.GetWindow(this) as MainWindow)?.ShowAddSubscription();
         UpdateEmptyState();
     }
 
@@ -59,8 +68,12 @@ public partial class HuppHomeView : UserControl
     private void UpdateEmptyState()
     {
         var empty = _vm == null || (_vm.Profiles.ProfileItems.Count == 0 && _vm.Profiles.ServerFilter.IsNullOrEmpty());
-        panelEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
-        lstServers.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
+        var noSubs = _vm == null || _vm.Profiles.SubItems.Count(t => t.Id.IsNotEmpty()) == 0;
+        var nothing = empty && noSubs;
+        panelEmpty.Visibility = nothing ? Visibility.Visible : Visibility.Collapsed;
+        lstServers.Visibility = nothing ? Visibility.Collapsed : Visibility.Visible;
+        chipsBar.Visibility = nothing ? Visibility.Collapsed : Visibility.Visible;
+        txtSearch.Visibility = nothing ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private static async Task Run(Func<Task?> action)
@@ -202,15 +215,24 @@ public partial class HuppHomeView : UserControl
         }
     }
 
-    /// <summary>Everything you can do with a subscription, same list as on the phone.</summary>
+    /// <summary>Everything you can do with a subscription (the "⋮" of the card, and a right or middle click on its chip).</summary>
     private void CardMenu_Click(object sender, RoutedEventArgs e)
     {
         var card = CardOf(sender);
-        if (card == null || _vm == null || _main == null)
+        if (card == null)
         {
             return;
         }
         e.Handled = true;
+        OpenSubMenu(card, sender as UIElement);
+    }
+
+    private void OpenSubMenu(HuppSubCard card, UIElement? target)
+    {
+        if (_vm == null || _main == null)
+        {
+            return;
+        }
 
         MenuItem Item(string header, MaterialDesignThemes.Wpf.PackIconKind icon, Func<Task> action)
         {
@@ -223,17 +245,30 @@ public partial class HuppHomeView : UserControl
             return item;
         }
 
-        var menu = new ContextMenu { PlacementTarget = sender as UIElement };
+        var enabled = _vm.IsSubscriptionEnabled(card.Sub.Id);
+        var menu = new ContextMenu { PlacementTarget = target };
         menu.Items.Add(Item("Обновить подписку", MaterialDesignThemes.Wpf.PackIconKind.Refresh, () => UpdateSubsAsync(card.Sub.Id)));
-        menu.Items.Add(Item("Проверить серверы", MaterialDesignThemes.Wpf.PackIconKind.Speedometer, async () =>
+        menu.Items.Add(Item("Проверить пинг серверов", MaterialDesignThemes.Wpf.PackIconKind.Speedometer, () => _vm.PingSubscriptionAsync(card.Sub.Id)));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Переименовать", MaterialDesignThemes.Wpf.PackIconKind.RenameBox, async () =>
         {
-            await SelectCardAsync(card);
-            await _vm.PingAllAsync();
+            var name = await PromptAsync("Название подписки", _vm.LocalNameOf(card.Sub.Id) ?? card.Title, "Пусто = как у провайдера. Ссылка и данные подписки не меняются");
+            if (name != null)
+            {
+                _vm.RenameSubscription(card.Sub.Id, name);
+            }
         }));
-        menu.Items.Add(Item("Отсортировать по пингу", MaterialDesignThemes.Wpf.PackIconKind.SortAscending, async () =>
+        menu.Items.Add(Item(enabled ? "Выключить" : "Включить", enabled ? MaterialDesignThemes.Wpf.PackIconKind.EyeOff : MaterialDesignThemes.Wpf.PackIconKind.Eye,
+            () => _vm.SetSubscriptionEnabledAsync(card.Sub, !enabled)));
+        menu.Items.Add(Item("Выше в списке", MaterialDesignThemes.Wpf.PackIconKind.ArrowUp, () =>
         {
-            await SelectCardAsync(card);
-            await _vm.Profiles.SortServer(nameof(EServerColName.DelayVal));
+            _vm.MoveSubscription(card.Sub.Id, -1);
+            return Task.CompletedTask;
+        }));
+        menu.Items.Add(Item("Ниже в списке", MaterialDesignThemes.Wpf.PackIconKind.ArrowDown, () =>
+        {
+            _vm.MoveSubscription(card.Sub.Id, 1);
+            return Task.CompletedTask;
         }));
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("Изменить подписку", MaterialDesignThemes.Wpf.PackIconKind.Pencil, async () =>
@@ -259,7 +294,7 @@ public partial class HuppHomeView : UserControl
             }));
         }
         menu.Items.Add(new Separator());
-        menu.Items.Add(Item("Удалить дубликаты", MaterialDesignThemes.Wpf.PackIconKind.LayersRemove, async () =>
+        menu.Items.Add(Item("Удалить дубликаты серверов", MaterialDesignThemes.Wpf.PackIconKind.LayersRemove, async () =>
         {
             var (before, kept) = await ConfigHandler.DedupServerList(AppManager.Instance.Config, card.Sub.Id);
             var removed = before - kept;
@@ -274,12 +309,14 @@ public partial class HuppHomeView : UserControl
         }));
         menu.Items.Add(Item("Удалить подписку", MaterialDesignThemes.Wpf.PackIconKind.DeleteOutline, async () =>
         {
-            if (UI.ShowYesNo($"Удалить подписку «{card.Title}» и все её серверы?") != MessageBoxResult.Yes)
+            var count = _vm.ServerCountOf(card.Sub.Id);
+            if (UI.ShowYesNo($"Удалить подписку «{card.Title}» и её серверы ({count})?") != MessageBoxResult.Yes)
             {
                 return;
             }
             await ConfigHandler.DeleteSubItem(AppManager.Instance.Config, card.Sub.Id);
             SubscriptionInfoStore.Remove(card.Sub.Id);
+            _vm.ForgetSubscription(card.Sub.Id);
             await _vm.Profiles.RefreshSubscriptions();
             await _vm.Profiles.RefreshServers();
             await _main.Reload();
@@ -287,6 +324,31 @@ public partial class HuppHomeView : UserControl
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("Добавить ещё подписку", MaterialDesignThemes.Wpf.PackIconKind.Plus, PasteAsync));
         menu.IsOpen = true;
+    }
+
+    /// <summary>A one-line text prompt in a dialog; null when cancelled.</summary>
+    private static async Task<string?> PromptAsync(string title, string initial, string hint)
+    {
+        var box = new TextBox { Text = initial, MinWidth = 320, Margin = new Thickness(0, 12, 0, 4) };
+        var panel = new StackPanel { Margin = new Thickness(24) };
+        panel.Children.Add(new TextBlock { Text = title, FontSize = 18, FontWeight = FontWeights.SemiBold });
+        panel.Children.Add(box);
+        var note = new TextBlock { Text = hint, FontSize = 12, TextWrapping = TextWrapping.Wrap, MaxWidth = 320 };
+        note.SetResourceReference(TextBlock.ForegroundProperty, "MaterialDesign.Brush.ForegroundLight");
+        panel.Children.Add(note);
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 14, 0, 0) };
+        var cancel = new Button { Content = "Отмена", Margin = new Thickness(0, 0, 8, 0) };
+        var ok = new Button { Content = "Сохранить" };
+        if (Application.Current?.TryFindResource("MaterialDesignFlatButton") is Style flat)
+        {
+            cancel.Style = flat;
+        }
+        cancel.Click += (_, _) => MaterialDesignThemes.Wpf.DialogHost.Close("RootDialog", false);
+        ok.Click += (_, _) => MaterialDesignThemes.Wpf.DialogHost.Close("RootDialog", true);
+        buttons.Children.Add(cancel);
+        buttons.Children.Add(ok);
+        panel.Children.Add(buttons);
+        return await MaterialDesignThemes.Wpf.DialogHost.Show(panel, "RootDialog") is true ? box.Text.Trim() : null;
     }
 
     private async Task SelectCardAsync(HuppSubCard card)
@@ -303,10 +365,33 @@ public partial class HuppHomeView : UserControl
 
     #region Servers
 
-    private static ProfileItemModel? ServerOf(object sender) => (sender as FrameworkElement)?.DataContext as ProfileItemModel;
+    private static HuppServerRow? RowOf(object sender) => (sender as FrameworkElement)?.DataContext as HuppServerRow;
+
+    private static ProfileItemModel? ServerOf(object sender) => RowOf(sender)?.Model;
+
+    private void ServerStar_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (RowOf(sender) is { } row)
+        {
+            _vm?.ToggleFavorite(row);
+        }
+    }
+
+    private void ServerFavorite_Click(object sender, RoutedEventArgs e)
+    {
+        if (RowOf(sender) is { } row)
+        {
+            _vm?.ToggleFavorite(row);
+        }
+    }
 
     private async void Server_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        if (e.OriginalSource is DependencyObject source && FindAncestor<Button>(source) != null)
+        {
+            return;
+        }
         await Run(() => _vm?.SelectServerAsync(ServerOf(sender)));
     }
 
@@ -371,6 +456,176 @@ public partial class HuppHomeView : UserControl
     }
 
     #endregion Servers
+
+    #region Chips, groups, sort, keyboard
+
+    public static readonly DependencyProperty KeyboardNavProperty =
+        DependencyProperty.Register(nameof(KeyboardNav), typeof(bool), typeof(HuppHomeView), new PropertyMetadata(false));
+
+    /// <summary>True while the keyboard drives the list: the focus ring shows only then (a mouse click hides it).</summary>
+    public bool KeyboardNav
+    {
+        get => (bool)GetValue(KeyboardNavProperty);
+        set => SetValue(KeyboardNavProperty, value);
+    }
+
+    private static SubChip? ChipOf(object sender) => (sender as FrameworkElement)?.DataContext as SubChip;
+
+    private HuppSubCard? CardOfChip(SubChip? chip) =>
+        chip is { IsSub: true } ? _vm?.Cards.FirstOrDefault(c => c.Sub.Id == chip.Selection.SubId) : null;
+
+    private void Chip_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) => _vm?.SelectChip(ChipOf(sender));
+
+    /// <summary>Middle click opens the management menu of a subscription chip, like a right click.</summary>
+    private void Chip_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Middle && CardOfChip(ChipOf(sender)) is { } card)
+        {
+            e.Handled = true;
+            OpenSubMenu(card, sender as UIElement);
+        }
+    }
+
+    private void Chip_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (CardOfChip(ChipOf(sender)) is { } card)
+        {
+            e.Handled = true;
+            OpenSubMenu(card, sender as UIElement);
+        }
+    }
+
+    /// <summary>The wheel over the strip scrolls it sideways.</summary>
+    private void Chips_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        chipsScroll.ScrollToHorizontalOffset(chipsScroll.HorizontalOffset - e.Delta);
+        e.Handled = true;
+    }
+
+    private void UpdateChipArrows()
+    {
+        var overflow = chipsScroll.ExtentWidth > chipsScroll.ViewportWidth + 1;
+        btnChipsLeft.Visibility = btnChipsRight.Visibility = overflow ? Visibility.Visible : Visibility.Collapsed;
+        btnChipsLeft.IsEnabled = chipsScroll.HorizontalOffset > 0;
+        btnChipsRight.IsEnabled = chipsScroll.HorizontalOffset < chipsScroll.ScrollableWidth - 1;
+    }
+
+    private void Header_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is DependencyObject source && FindAncestor<Button>(source) != null)
+        {
+            return;
+        }
+        if ((sender as FrameworkElement)?.DataContext is HuppHeaderRow header)
+        {
+            _vm?.SelectChip(_vm.Chips.FirstOrDefault(c => c.IsSub && c.Selection.SubId == header.SubId));
+        }
+    }
+
+    private void Header_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is HuppHeaderRow header && _vm?.Cards.FirstOrDefault(c => c.Sub.Id == header.SubId) is { } card)
+        {
+            e.Handled = true;
+            OpenSubMenu(card, sender as UIElement);
+        }
+    }
+
+    private void HeaderToggle_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if ((sender as FrameworkElement)?.DataContext is HuppHeaderRow header)
+        {
+            _vm?.ToggleGroup(header);
+        }
+    }
+
+    private async void HeaderPing_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if ((sender as FrameworkElement)?.DataContext is HuppHeaderRow header && _vm != null)
+        {
+            await Run(() => _vm.PingSubscriptionAsync(header.SubId));
+        }
+    }
+
+    private void AnnounceToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (CardOf(sender) is { } card)
+        {
+            card.AnnounceExpanded = !card.AnnounceExpanded;
+        }
+    }
+
+    private void OpenSortMenu()
+    {
+        if (_vm == null)
+        {
+            return;
+        }
+        var menu = new ContextMenu { PlacementTarget = btnSort, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
+        foreach (var (sort, title) in new[] { (ServerSort.Provider, "Как у провайдера"), (ServerSort.Ping, "По пингу"), (ServerSort.Name, "По названию") })
+        {
+            var item = new MenuItem { Header = title, IsChecked = _vm.Sort == sort };
+            var chosen = sort;
+            item.Click += (_, _) => _vm.Sort = chosen;
+            menu.Items.Add(item);
+        }
+        menu.IsOpen = true;
+    }
+
+    /// <summary>Ctrl+F search, Ctrl+Tab / Ctrl+Shift+Tab next / previous subscription, Enter connects to the selected server, Del removes a favourite.</summary>
+    private void View_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is Key.Tab or Key.Up or Key.Down or Key.Enter or Key.PageUp or Key.PageDown or Key.Home or Key.End)
+        {
+            KeyboardNav = true;
+        }
+        var ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+        if (ctrl && e.Key == Key.F)
+        {
+            txtSearch.Focus();
+            txtSearch.SelectAll();
+            e.Handled = true;
+        }
+        else if (ctrl && e.Key == Key.Tab)
+        {
+            _vm?.StepChip((Keyboard.Modifiers & ModifierKeys.Shift) != 0 ? -1 : 1);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && txtSearch.IsKeyboardFocused && txtSearch.Text.Length > 0)
+        {
+            txtSearch.Clear();
+            e.Handled = true;
+        }
+    }
+
+    private async void Servers_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (_vm == null || lstServers.SelectedItem is not HuppServerRow row)
+        {
+            return;
+        }
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            await Run(async () =>
+            {
+                await _vm.SelectServerAsync(row.Model);
+                if (!_vm.IsConnected)
+                {
+                    await _vm.ConnectAsync();
+                }
+            });
+        }
+        else if (e.Key == Key.Delete && row.IsFavorite)
+        {
+            e.Handled = true;
+            _vm.ToggleFavorite(row);
+        }
+    }
+
+    #endregion Chips, groups, sort, keyboard
 
     private static T? FindAncestor<T>(DependencyObject? d, Func<T, bool>? match = null) where T : DependencyObject
     {

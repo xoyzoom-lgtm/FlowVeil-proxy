@@ -112,15 +112,17 @@ public sealed class DelayBrushConverter : IValueConverter
     private static readonly SolidColorBrush Good = Freeze(Color.FromRgb(0x22, 0xC5, 0x5E));
     private static readonly SolidColorBrush Medium = Freeze(Color.FromRgb(0xF5, 0x9E, 0x0B));
     private static readonly SolidColorBrush Bad = Freeze(Color.FromRgb(0xEF, 0x44, 0x44));
+    private static readonly SolidColorBrush Muted = Freeze(Color.FromRgb(0x9C, 0xA3, 0xAF));
 
+    /// <summary>Below 100 ms good, up to 250 medium, above that bad; no answer is drawn muted (a dead server is not an alarm).</summary>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var delay = int.TryParse(value as string, out var d) ? d : 0;
         return delay switch
         {
-            <= 0 => Bad,
-            < 300 => Good,
-            < 800 => Medium,
+            <= 0 => Muted,
+            < 100 => Good,
+            < 250 => Medium,
             _ => Bad,
         };
     }
@@ -133,4 +135,13 @@ public sealed class DelayBrushConverter : IValueConverter
         brush.Freeze();
         return brush;
     }
+}
+
+/// <summary>The opposite of the usual bool → visibility.</summary>
+public sealed class InverseBoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is true ? Visibility.Collapsed : Visibility.Visible;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => null;
 }
