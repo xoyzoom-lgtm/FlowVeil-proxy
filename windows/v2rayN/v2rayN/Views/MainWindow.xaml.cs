@@ -574,6 +574,13 @@ public partial class MainWindow
                     inbound.AllowLANConn = v;
                 }
             });
+        var appMode = AppProxySettings.Mode;
+        var appCount = AppProxySettings.Apps.Count;
+        Row(tunnel, PackIconKind.ApplicationOutline, "Прокси для приложений",
+            appMode == AppProxySettings.ModeOff ? "Выключено: все приложения по общим правилам"
+                : appMode == AppProxySettings.ModeDirect ? $"Напрямую: {appCount} прилож."
+                : $"Через прокси только: {appCount} прилож.",
+            () => _ = DialogHost.Show(new AppProxyView(() => NoticeManager.Instance.Enqueue("Применится при следующем подключении")), "RootDialog").ContinueWith(_ => Dispatcher.BeginInvoke(new Action(() => BuildSettingsPage(vm)))));
         var pingUrl = settings.SpeedTestItem.SpeedPingTestUrl.IsNullOrEmpty() ? Global.SpeedPingTestUrls[0] : settings.SpeedTestItem.SpeedPingTestUrl;
         Row(tunnel, PackIconKind.Speedometer, "Адрес для пинга", pingUrl, () => OpenPingUrlMenu(vm));
 

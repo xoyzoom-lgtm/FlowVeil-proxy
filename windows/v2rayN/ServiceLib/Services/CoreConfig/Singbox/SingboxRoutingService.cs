@@ -254,7 +254,13 @@ public partial class CoreConfigSingboxService
             var ipRules = new List<RulesItem>();
             if (routing != null)
             {
-                var rules = JsonUtils.Deserialize<List<RulesItem>>(routing.RuleSet);
+                // FlowVeil: per-application rules go first (see AppProxySettings).
+                var appRules = AppProxySettings.BuildRules(out var appsOnly);
+                foreach (var appRule in appRules)
+                {
+                    GenRoutingUserRule(appRule);
+                }
+                var rules = appsOnly ? [] : JsonUtils.Deserialize<List<RulesItem>>(routing.RuleSet);
                 foreach (var item1 in rules ?? [])
                 {
                     if (!item1.Enabled)

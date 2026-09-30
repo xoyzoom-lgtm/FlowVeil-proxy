@@ -46,7 +46,13 @@ public partial class CoreConfigV2rayService
                     {
                         _coreConfig.routing.domainStrategy = routing.DomainStrategy;
                     }
-                    var rules = JsonUtils.Deserialize<List<RulesItem>>(routing.RuleSet);
+                    // FlowVeil: per-application rules go first (see AppProxySettings).
+                    var appRules = AppProxySettings.BuildRules(out var appsOnly);
+                    foreach (var appRule in appRules)
+                    {
+                        GenRoutingUserRule(JsonUtils.Deserialize<RulesItem4Ray>(JsonUtils.Serialize(appRule)));
+                    }
+                    var rules = appsOnly ? [] : JsonUtils.Deserialize<List<RulesItem>>(routing.RuleSet);
                     foreach (var item in rules)
                     {
                         if (!item.Enabled)
