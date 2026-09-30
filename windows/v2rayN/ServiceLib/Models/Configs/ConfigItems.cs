@@ -19,6 +19,13 @@ public class CoreBasicItem
 
     public bool EnableFinalFragment { get; set; }
 
+    /// <summary>FlowVeil: junk (noise) packets before UDP-based connections (Hysteria2, mKCP), like the "noises" of Happ.</summary>
+    public bool EnableNoise { get; set; }
+
+    public string? NoiseRand { get; set; }
+
+    public string? NoiseDelay { get; set; }
+
     public bool EnableCacheFile4Sbox { get; set; } = true;
 }
 

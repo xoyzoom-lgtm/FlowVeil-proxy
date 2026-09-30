@@ -648,6 +648,10 @@
     <string name="settings_section_connection">Connection</string>
     <string name="title_pref_ru_direct">Russian sites directly</string>
     <string name="summary_pref_ru_direct">Russian sites and banks open directly, everything else goes through the server</string>
+    <string name="title_pref_noise">Noises (junk traffic)</string>
+    <string name="summary_pref_noise">Random packets before the connection so its start is harder to recognise. Works with UDP servers (Hysteria2, mKCP); slightly more traffic. Applies on the next connection</string>
+    <string name="title_pref_noise_rand">Noise packet size (bytes, range)</string>
+    <string name="title_pref_noise_delay">Noise delay (ms, range)</string>
     <string name="title_pref_auto_failover">Switch server automatically</string>
     <string name="summary_pref_auto_failover">If the server stops responding, move to the next working one without disconnecting</string>
     <string name="title_pref_sub_reminders">Subscription reminders</string>

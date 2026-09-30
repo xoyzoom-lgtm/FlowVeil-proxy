@@ -790,6 +790,40 @@ public partial class CoreConfigV2rayService
         }
     }
 
+    /// <summary>
+    /// "Noises": random packets sent ahead of the real ones on UDP-based outbounds (Hysteria2, mKCP,
+    /// QUIC), so the start of a connection does not look like the protocol it is. TCP outbounds are
+    /// left alone (the fragment option is the TCP counterpart). A profile's own finalmask JSON wins.
+    /// </summary>
+    private void ApplyNoise()
+    {
+        var rand = _config.CoreBasicItem.NoiseRand.NullIfEmpty() ?? "10-20";
+        var delay = _config.CoreBasicItem.NoiseDelay.NullIfEmpty() ?? "10-16";
+        foreach (var outbound in _coreConfig.outbounds.Where(n => n.protocol != "freedom" && n.streamSettings != null))
+        {
+            var network = outbound.streamSettings.network;
+            if (network is not ("hysteria" or "kcp" or "quic"))
+            {
+                continue;
+            }
+            outbound.streamSettings.finalmask ??= new Finalmask4Ray();
+            if (outbound.streamSettings.finalmask is not Finalmask4Ray mask)
+            {
+                continue;
+            }
+            mask.udp ??= [];
+            if (mask.udp.Any(m => m.type == "noise"))
+            {
+                continue;
+            }
+            mask.udp.Insert(0, new Mask4Ray
+            {
+                type = "noise",
+                settings = new MaskSettings4Ray { noise = [new NoiseMask4Ray { rand = rand, delay = delay }] },
+            });
+        }
+    }
+
     private void ApplyFinalFragment()
     {
         var fragmentMask = BuildFragmentsMasks();

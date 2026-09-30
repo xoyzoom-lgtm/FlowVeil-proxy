@@ -227,6 +227,9 @@ fun SettingsScreen(
     var showBypassPicker by remember { mutableStateOf(false) }
     var showBatteryDialog by remember { mutableStateOf(false) }
     var showBypassLog by remember { mutableStateOf(false) }
+    var noiseEnabled by rememberMmkvBool(AppConfig.PREF_NOISE_ENABLED, false)
+    var noiseRand by rememberMmkvString(AppConfig.PREF_NOISE_RAND, "10-20")
+    var noiseDelay by rememberMmkvString(AppConfig.PREF_NOISE_DELAY, "10-16")
     var bypassFallback by rememberMmkvString(WhitelistBypass.PREF_FALLBACK, WhitelistBypass.FALLBACK_NONE)
     var bypassPingBypass by rememberMmkvString(WhitelistBypass.PREF_BYPASS_PING, WhitelistBypass.DEFAULT_BYPASS_PING_MS.toString())
     var bypassSearchSeconds by rememberMmkvString(WhitelistBypass.PREF_SEARCH_SECONDS, WhitelistBypass.DEFAULT_SEARCH_SECONDS.toString())
@@ -397,6 +400,24 @@ fun SettingsScreen(
                     checked = showBestButton,
                     onCheckedChange = { showBestButton = it }
                 )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_noise),
+                    summary = stringResource(R.string.summary_pref_noise),
+                    checked = noiseEnabled,
+                    onCheckedChange = { noiseEnabled = it }
+                )
+                if (noiseEnabled && devMode) {
+                    SettingsEditItem(
+                        title = stringResource(R.string.title_pref_noise_rand),
+                        value = noiseRand,
+                        onValueChanged = { noiseRand = it }
+                    )
+                    SettingsEditItem(
+                        title = stringResource(R.string.title_pref_noise_delay),
+                        value = noiseDelay,
+                        onValueChanged = { noiseDelay = it }
+                    )
+                }
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_auto_failover),
                     summary = stringResource(R.string.summary_pref_auto_failover),

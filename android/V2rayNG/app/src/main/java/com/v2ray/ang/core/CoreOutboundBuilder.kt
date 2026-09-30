@@ -554,7 +554,43 @@ object CoreOutboundBuilder {
                 LogUtil.w("V2rayConfigManager", "Invalid finalMask JSON, keeping previously generated finalmask")
             }
         }
+        applyNoise(streamSettings, profileItem)
         return sni
+    }
+
+    /**
+     * "Noises": random packets ahead of the real ones on UDP-based outbounds (Hysteria2, mKCP), so the
+     * start of a connection does not look like the protocol it is. Off by default; TCP outbounds are
+     * left alone (fragmentation is their counterpart) and a profile's own finalmask always wins.
+     */
+    private fun applyNoise(streamSettings: OutboundBean.StreamSettingsBean, profileItem: ProfileItem) {
+        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_NOISE_ENABLED, false)) return
+        if (!profileItem.finalMask.isNullOrEmpty()) return
+        if (streamSettings.network != NetworkType.HYSTERIA.type && streamSettings.network != NetworkType.KCP.type) return
+        try {
+            val finalMaskObj = streamSettings.finalmask?.let { JsonUtil.parseString(JsonUtil.toJson(it)) } ?: JsonObject()
+            val current = finalMaskObj.get("udp")?.takeIf { it.isJsonArray }?.asJsonArray
+            if (current?.any { it.isJsonObject && it.asJsonObject.get("type")?.asString == "noise" } == true) return
+            val noise = OutboundBean.StreamSettingsBean.FinalMaskBean.MaskBean(
+                type = "noise",
+                settings = OutboundBean.StreamSettingsBean.FinalMaskBean.MaskBean.MaskSettingsBean(
+                    noise = listOf(
+                        OutboundBean.StreamSettingsBean.FinalMaskBean.MaskBean.MaskSettingsBean.NoiseMaskBean(
+                            rand = MmkvManager.decodeSettingsString(AppConfig.PREF_NOISE_RAND)?.takeIf { it.isNotBlank() } ?: "10-20",
+                            delay = MmkvManager.decodeSettingsString(AppConfig.PREF_NOISE_DELAY)?.takeIf { it.isNotBlank() } ?: "10-16",
+                        )
+                    )
+                )
+            )
+            // Noise goes first: it is sent before what the other masks wrap.
+            val list = JsonArray()
+            list.add(JsonUtil.parseString(JsonUtil.toJson(noise)))
+            current?.forEach { list.add(it) }
+            finalMaskObj.add("udp", list)
+            streamSettings.finalmask = finalMaskObj
+        } catch (e: Exception) {
+            LogUtil.e(AppConfig.TAG, "Failed to add noise", e)
+        }
     }
 
     /**

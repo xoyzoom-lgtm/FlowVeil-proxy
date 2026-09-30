@@ -402,6 +402,19 @@ public partial class MainWindow
         Row(main, PackIconKind.Refresh, "Обновить все подписки", "Скачать свежий список серверов", () => Exec(vm.SubUpdateCmd));
         Row(main, PackIconKind.Autorenew, "Автообновление подписок", SubAutoUpdate.Title(SubAutoUpdate.Get()), () => OpenSubUpdateMenu(vm));
 
+        var noiseOn = AppManager.Instance.Config.CoreBasicItem.EnableNoise;
+        var connection = Section("Подключение");
+        Row(connection, PackIconKind.Waves,
+            noiseOn ? "Шумы: включены" : "Шумы: выключены",
+            "Случайные пакеты перед соединением, чтобы запутать анализ трафика. Работает с UDP-серверами (Hysteria2, mKCP), чуть увеличивает трафик. Применится при следующем подключении",
+            () =>
+            {
+                var config = AppManager.Instance.Config;
+                config.CoreBasicItem.EnableNoise = !config.CoreBasicItem.EnableNoise;
+                _ = ConfigHandler.SaveConfig(config);
+                BuildSettingsPage(vm);
+            });
+
         var app = Section("Приложение");
         Row(app, PackIconKind.Update, "Проверить обновления", $"Сейчас: build {HuppUpdater.CurrentBuild()}", () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));
         Row(app, PackIconKind.BackupRestore, "Резервная копия", "Сохранить или восстановить настройки и подписки", () => MenuBackupAndRestore_Click(this, new RoutedEventArgs()));

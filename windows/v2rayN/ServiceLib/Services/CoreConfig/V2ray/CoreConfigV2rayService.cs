@@ -60,6 +60,10 @@ public partial class CoreConfigV2rayService(CoreConfigContext context)
             {
                 ApplyOutboundFragment();
             }
+            if (_config.CoreBasicItem.EnableNoise)
+            {
+                ApplyNoise();
+            }
             if (_config.CoreBasicItem.EnableFinalFragment)
             {
                 ApplyFinalFragment();
@@ -206,6 +210,10 @@ public partial class CoreConfigV2rayService(CoreConfigContext context)
             {
                 ApplyOutboundFragment();
             }
+            if (_config.CoreBasicItem.EnableNoise)
+            {
+                ApplyNoise();
+            }
             if (_config.CoreBasicItem.EnableFinalFragment)
             {
                 ApplyFinalFragment();
@@ -281,6 +289,10 @@ public partial class CoreConfigV2rayService(CoreConfigContext context)
             if (_config.CoreBasicItem.EnableFragment)
             {
                 ApplyOutboundFragment();
+            }
+            if (_config.CoreBasicItem.EnableNoise)
+            {
+                ApplyNoise();
             }
             if (_config.CoreBasicItem.EnableFinalFragment)
             {

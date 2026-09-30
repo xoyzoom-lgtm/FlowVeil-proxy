@@ -652,6 +652,10 @@
     <string name="settings_section_connection">Подключение</string>
     <string name="title_pref_ru_direct">Российские сайты напрямую</string>
     <string name="summary_pref_ru_direct">Российские сайты и банки открываются напрямую, остальное — через сервер</string>
+    <string name="title_pref_noise">Шумы (мусорный трафик)</string>
+    <string name="summary_pref_noise">Случайные пакеты перед соединением, чтобы его начало труднее было опознать. Работает с UDP-серверами (Hysteria2, mKCP), чуть увеличивает трафик. Применится при следующем подключении</string>
+    <string name="title_pref_noise_rand">Размер шумового пакета (байт, диапазон)</string>
+    <string name="title_pref_noise_delay">Задержка шума (мс, диапазон)</string>
     <string name="title_pref_auto_failover">Автопереключение сервера</string>
     <string name="summary_pref_auto_failover">Если сервер перестал отвечать — перейти на следующий рабочий, не отключаясь</string>
     <string name="title_pref_sub_reminders">Напоминания о подписке</string>
