@@ -148,18 +148,23 @@ object NetProbe {
         return Client(builder.build(), Route.PHYSICAL)
     }
 
-    /** Client that goes through the local proxy of the running core, i.e. through the server. */
-    fun tunnel(timeoutMs: Long = PROBE_TIMEOUT_MS): Client {
-        val user = SettingsManager.getSocksUsername()
-        val pass = SettingsManager.getSocksPassword()
+    /**
+     * Client that goes through the local proxy of the running core, i.e. through the server.
+     * [route] says where that proxy listens (see [LocalProxy]); null = FlowVeil's own settings.
+     */
+    fun tunnel(route: LocalProxy.Route? = null, timeoutMs: Long = PROBE_TIMEOUT_MS): Client {
+        val type = route?.type ?: Proxy.Type.HTTP
+        val port = route?.port ?: SettingsManager.getHttpPort()
+        val user = if (route != null) route.user else SettingsManager.getSocksUsername()
+        val pass = if (route != null) route.pass else SettingsManager.getSocksPassword()
         val builder = OkHttpClient.Builder()
-            .proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(AppConfig.LOOPBACK, SettingsManager.getHttpPort())))
+            .proxy(Proxy(type, InetSocketAddress(AppConfig.LOOPBACK, port)))
             .followRedirects(false)
             .followSslRedirects(false)
             .connectTimeout(timeoutMs, TimeUnit.MILLISECONDS)
             .readTimeout(timeoutMs, TimeUnit.MILLISECONDS)
             .callTimeout(timeoutMs + 1_000L, TimeUnit.MILLISECONDS)
-        if (!user.isNullOrBlank() && !pass.isNullOrBlank()) {
+        if (type == Proxy.Type.HTTP && !user.isNullOrBlank() && !pass.isNullOrBlank()) {
             builder.proxyAuthenticator { _, response ->
                 if (response.request.header("Proxy-Authorization") != null) null
                 else response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(user, pass)).build()

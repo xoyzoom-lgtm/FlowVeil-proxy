@@ -7,6 +7,7 @@ import com.v2ray.ang.core.SingboxBridge
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.net.PingUrls
 
 /** One real connection test of a saved server, shared by the server list check and the watchdog. */
 object SpeedtestConfig {
@@ -18,6 +19,26 @@ object SpeedtestConfig {
     fun measure(context: Context, guid: String): Long =
         // Servers run through a sing-box bridge (TUIC) get a private one that ends with the test.
         SingboxBridge.scoped { measureInScope(context, guid) }
+
+    /**
+     * The check for a bypass candidate: two independent hosts must both answer through the server
+     * (a proxy that lets one host through proves little). The delay of the first is returned, -1
+     * when either fails. The app is excluded from its own tunnel, so this runs on the phone's
+     * real network. The native call reports only a time, so it is a filter; the exact HTTP 204 and
+     * the data check are done afterwards on the live connection.
+     */
+    fun measureStrict(context: Context, guid: String): Long =
+        SingboxBridge.scoped {
+            val result = CoreConfigManager.getV2rayConfig4Speedtest(context, guid)
+            if (!result.status) return@scoped -1L
+            var first = -1L
+            for (url in listOf(PingUrls.PRIMARY, PingUrls.FALLBACK)) {
+                val delay = runCatching { CoreNativeManager.measureOutboundDelay(result.content, url) }.getOrDefault(-1L)
+                if (delay <= 0) return@scoped -1L
+                if (first < 0) first = delay
+            }
+            first
+        }
 
     private fun measureInScope(context: Context, guid: String): Long {
         val result = CoreConfigManager.getV2rayConfig4Speedtest(context, guid)

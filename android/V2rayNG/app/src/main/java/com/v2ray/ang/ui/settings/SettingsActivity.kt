@@ -225,6 +225,7 @@ fun SettingsScreen(
     var whitelistBypassCount by remember { mutableStateOf(WhitelistBypass.servers().size) }
     var showBypassPicker by remember { mutableStateOf(false) }
     var showBatteryDialog by remember { mutableStateOf(false) }
+    var showBypassLog by remember { mutableStateOf(false) }
     var batteryAllowed by remember { mutableStateOf(true) }
     var bypassBadMinutes by rememberMmkvString(WhitelistBypass.PREF_BAD_MINUTES, WhitelistBypass.DEFAULT_BAD_MINUTES.toString())
     var bypassPingLimit by rememberMmkvString(WhitelistBypass.PREF_PING_LIMIT, ReturnLogic.DEFAULT_PING_LIMIT_MS.toString())
@@ -435,6 +436,11 @@ fun SettingsScreen(
                         onCheckedChange = { whitelistBypassReturn = it }
                     )
                     if (devMode) {
+                        SettingsMenuItem(
+                            title = stringResource(R.string.title_bypass_log),
+                            subtitle = stringResource(R.string.summary_bypass_log),
+                            onClick = { showBypassLog = true }
+                        )
                         SettingsListItem(
                             title = stringResource(R.string.title_bypass_bad_minutes),
                             entries = listOf("5", "10", "20", "60"),
@@ -458,6 +464,7 @@ fun SettingsScreen(
                         )
                     }
                 }
+                if (showBypassLog) BypassLogDialog(onDismiss = { showBypassLog = false })
                 if (showBatteryDialog) {
                     ConfirmDialog(
                         title = stringResource(R.string.bypass_battery_dialog_title),

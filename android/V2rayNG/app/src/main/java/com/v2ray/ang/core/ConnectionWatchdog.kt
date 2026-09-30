@@ -9,6 +9,7 @@ import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.BypassLog
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.ServerCountry
 import com.v2ray.ang.handler.SpeedtestManager
@@ -79,6 +80,7 @@ object ConnectionWatchdog {
                 switchLock.withLock {
                     if (bypassOn) BypassController.beforeCheck()
                     if (currentServerWorks()) return@withLock
+                    if (bypassOn) BypassLog.add("the current server does not answer (${serverName(CoreServiceManager.currentServerGuid().orEmpty())}), checking again in 5 s")
                     delay(RECHECK_DELAY_MS)
                     if (!CoreServiceManager.isRunning() || currentServerWorks()) return@withLock
 
@@ -88,10 +90,10 @@ object ConnectionWatchdog {
                     }
                     if (!isEnabled()) return@withLock
                     if (!deviceOnline()) {
-                        LogUtil.w(AppConfig.TAG, "Watchdog: server check failed but the phone is offline, not switching")
+                        BypassLog.add("the server does not answer and the phone is offline: not switching")
                         return@withLock
                     }
-                    LogUtil.w(AppConfig.TAG, "Watchdog: current server failed twice, switching")
+                    BypassLog.add("the current server failed twice: ordinary failover")
                     failover()
                 }
             }

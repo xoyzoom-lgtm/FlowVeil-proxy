@@ -713,6 +713,11 @@
     <string name="bypass_battery_dialog_message">Авто-обход следит за сетью и переключает сервер, пока телефон лежит в кармане. Многие прошивки (Xiaomi, OPPO, vivo, Huawei и др.) сами «усыпляют» приложения, и тогда обход не сработает вовсе.\n\nРазрешите FlowVeil работать без ограничений батареи. На этих телефонах также включите «Автозапуск» для FlowVeil в настройках приложения.\n\nРасход батареи почти не растёт: регулярные проверки идут только при включённом экране.</string>
     <string name="bypass_battery_allow">Разрешить</string>
     <string name="bypass_battery_later">Позже</string>
+    <string name="title_bypass_log">Журнал авто-обхода</string>
+    <string name="summary_bypass_log">Почему сервер выбран или пропущен. Адресов в нём нет</string>
+    <string name="bypass_log_empty">Пока пусто. Журнал заполняется, когда авто-обход проверяет или переключает сервер</string>
+    <string name="bypass_log_copy">Скопировать</string>
+    <string name="bypass_log_clear">Очистить</string>
     <string name="whitelist_bypass_search_hint">Поиск серверов</string>
     <string name="whitelist_bypass_favorites">Избранные</string>
     <string name="whitelist_bypass_no_servers">Серверов пока нет. Сначала добавьте подписку</string>

@@ -4,7 +4,9 @@ import android.app.Service
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.handler.BypassLog
 import com.v2ray.ang.handler.BypassState
+import com.v2ray.ang.handler.LocalProxy
 import com.v2ray.ang.handler.DevMode
 import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.handler.MmkvManager
@@ -19,6 +21,7 @@ import com.v2ray.ang.net.BypassVerdict
 import com.v2ray.ang.net.FailReason
 import com.v2ray.ang.net.NetType
 import com.v2ray.ang.net.Outcome
+import com.v2ray.ang.net.PingUrls
 import com.v2ray.ang.net.OriginState
 import com.v2ray.ang.net.ProbeStep
 import com.v2ray.ang.net.ReturnAction
@@ -27,7 +30,6 @@ import com.v2ray.ang.net.Verdict
 import com.v2ray.ang.receiver.WidgetProvider
 import com.v2ray.ang.service.RealPingExecutionLimiter
 import com.v2ray.ang.service.SpeedtestConfig
-import com.v2ray.ang.util.LogUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -128,10 +130,19 @@ object BypassController {
     internal fun ourSwitch(guid: String): Boolean {
         switching = true
         return try {
-            CoreServiceManager.switchServer(guid)
+            CoreServiceManager.switchServer(guid).also { if (it) lastOurs = guid }
         } finally {
             switching = false
         }
+    }
+
+    /** The server FlowVeil itself selected last; a different one in MMKV means the user stepped in. */
+    @Volatile
+    private var lastOurs: String? = null
+
+    private fun userChangedServer(): Boolean {
+        val ours = lastOurs ?: return false
+        return CoreServiceManager.currentServerGuid() != ours
     }
 
     fun applies(): Boolean =
@@ -158,14 +169,14 @@ object BypassController {
         val onOurBypass = WhitelistBypass.active == current
         // A bypass server the user picked himself is his choice: do not move him off it.
         if (!onOurBypass && manual && current in WhitelistBypass.servers()) {
-            LogUtil.w(AppConfig.TAG, "Bypass: the current server is a user-chosen bypass server, leaving it")
+            BypassLog.add("the current server is a user-chosen bypass server, leaving it")
             return false
         }
         when (diagnoseNow()) {
             Diagnosis.OK -> Unit
             Diagnosis.NO_NETWORK -> {
                 NetInfoCache.writeBypass(BypassState.NO_NETWORK, returnTo = returnToName())
-                LogUtil.w(AppConfig.TAG, "Bypass: no network at all, not switching")
+                BypassLog.add("no network at all, not switching")
             }
             Diagnosis.WHITELIST -> {
                 if (onOurBypass) WhitelistBypass.markBad(current)
@@ -267,11 +278,12 @@ object BypassController {
             if (v4 != null || clearOnFail) NetInfoCache.writeRealIp(v4, v6)
         }
         if (CoreServiceManager.isRunning()) {
-            val exit = NetProbe.tunnel().use { it.fetchIp(NetProbe.IP_SERVICES) }
+            val route = CoreServiceManager.currentServerGuid()?.let { LocalProxy.resolve(it) }
+            val exit = route?.let { r -> NetProbe.tunnel(r).use { it.fetchIp(NetProbe.IP_SERVICES) } }
             if (exit != null || clearOnFail) NetInfoCache.writeExitIp(exit)
             val real = NetInfoCache.readRealIp()
             if (exit != null && real != null && exit == real) {
-                LogUtil.w(AppConfig.TAG, "Bypass: the address through the server equals the real one: the tunnel does not carry this traffic")
+                BypassLog.add("the address through the server equals the real one: the tunnel does not carry this traffic")
             }
         }
     }
@@ -303,7 +315,7 @@ object BypassController {
         }
         val diagnosis = WhitelistBypass.diagnose(viaProxy = false, domesticDirect = domestic, foreignDirect = foreign)
         WhitelistBypass.lastDiagnosis = "${diagnosis.name}: ru-direct=$domestic foreign-direct=$foreign @${System.currentTimeMillis()}"
-        LogUtil.w(AppConfig.TAG, "Bypass: diagnosis ${diagnosis.name} (ru-direct=$domestic foreign-direct=$foreign)")
+        BypassLog.add("diagnosis ${diagnosis.name} (ru-direct=$domestic foreign-direct=$foreign)")
         return diagnosis
     }
 
@@ -333,7 +345,11 @@ object BypassController {
     }
 
     private suspend fun runChecks(full: Boolean, alive: () -> Boolean): Verdict {
-        val tunnel = NetProbe.tunnel()
+        val guid = CoreServiceManager.currentServerGuid()
+        val route = guid?.let { LocalProxy.resolve(it) }
+        if (route == null) return runChecksWithoutInbound(full, alive)
+        BypassLog.add("check through the server via local ${route.label}")
+        val tunnel = NetProbe.tunnel(route)
         try {
             val first = tunnel.get(NetProbe.GSTATIC_204).step
             if (first.kind == ProbeStep.Kind.REFUSED) return BypassVerdict.decide(first, null, null, null, null)
@@ -368,6 +384,30 @@ object BypassController {
         }
     }
 
+    /**
+     * A custom profile without a local HTTP/SOCKS inbound (only the TUN): there is nothing to send a
+     * request to, so the core's own delay test is used, two hosts and a repeat. Weaker than the exact
+     * HTTP 204 and the data check, and said so in the log.
+     */
+    private suspend fun runChecksWithoutInbound(full: Boolean, alive: () -> Boolean): Verdict {
+        BypassLog.add("check: the profile has no local proxy port, using the core's delay test (weaker)")
+        suspend fun delayOf(url: String) = withContext(Dispatchers.IO) { CoreServiceManager.measureLive(url) }
+        delayOf(PingUrls.PRIMARY) // warms the connection up
+        if (!alive()) return Verdict(Outcome.UNKNOWN)
+        if (delayOf(PingUrls.PRIMARY) <= 0) return Verdict(Outcome.FAIL, FailReason.NO_GSTATIC)
+        if (delayOf(PingUrls.FALLBACK) <= 0) return Verdict(Outcome.FAIL, FailReason.NO_DATA)
+        if (full) {
+            var waited = 0L
+            while (waited < STABILITY_DELAY_MS) {
+                delay(500L)
+                waited += 500L
+                if (!alive()) return Verdict(Outcome.UNKNOWN)
+            }
+            if (delayOf(PingUrls.PRIMARY) <= 0) return Verdict(Outcome.FAIL, FailReason.UNSTABLE)
+        }
+        return Verdict(Outcome.OK, ipUnknown = true)
+    }
+
     /** Several small downloads at once: it is enough that one of them completes. */
     private suspend fun contentStep(tunnel: NetProbe.Client): ProbeStep = coroutineScope {
         val results = NetProbe.CONTENT_URLS.map { url -> async { tunnel.get(url, readBody = true).step } }.awaitAll()
@@ -400,39 +440,54 @@ object BypassController {
         stillNeeded: () -> Boolean,
     ): TryResult {
         var lastReason: FailReason? = null
+        val startGuid = CoreServiceManager.currentServerGuid()
+        lastOurs = startGuid
+        // Whatever happens, a candidate that did not pass must not stay active: go back to where we started.
+        fun leave(result: TryResult): TryResult {
+            if (result.found == null && startGuid != null && CoreServiceManager.isRunning() &&
+                CoreServiceManager.currentServerGuid() != startGuid && !userChangedServer()
+            ) {
+                BypassLog.add("search ended without a verified server, back to the previous one")
+                ourSwitch(startGuid)
+            }
+            return result
+        }
         for (batch in candidates.chunked(BYPASS_PARALLEL)) {
             currentCoroutineContext().ensureActive()
-            if (!CoreServiceManager.isRunning() || !stillNeeded()) return TryResult(null, lastReason, aborted = true)
+            if (!CoreServiceManager.isRunning() || !stillNeeded() || userChangedServer()) return leave(TryResult(null, lastReason, aborted = true))
             val results = coroutineScope {
                 batch.map { guid ->
                     async {
                         guid to runCatching {
-                            RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(guid)) { SpeedtestConfig.measure(service, guid) }
+                            RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(guid)) { SpeedtestConfig.measureStrict(service, guid) }
                         }.getOrDefault(-1L)
                     }
                 }.awaitAll()
             }
-            results.forEach { (guid, d) -> MmkvManager.encodeServerTestDelayMillis(guid, d) }
+            results.forEach { (guid, d) ->
+                MmkvManager.encodeServerTestDelayMillis(guid, d)
+                BypassLog.add("test on the network: ${serverName(guid)} -> ${if (d > 0) "$d ms" else "no answer"}")
+            }
             for ((guid, delayMs) in results.filter { it.second > 0 }.sortedBy { it.second }) {
-                if (!CoreServiceManager.isRunning() || !stillNeeded()) return TryResult(null, lastReason, aborted = true)
+                if (!CoreServiceManager.isRunning() || !stillNeeded() || userChangedServer()) return leave(TryResult(null, lastReason, aborted = true))
                 if (!ourSwitch(guid)) continue
                 delay(VERIFY_DELAY_MS)
                 val verdict = verifyAfterSwitch(full) { CoreServiceManager.isRunning() && stillNeeded() }
                 when (verdict.outcome) {
                     Outcome.OK -> {
-                        LogUtil.w(AppConfig.TAG, "Bypass: $guid passed the check ($delayMs ms)")
+                        BypassLog.add("$guid passed the check ($delayMs ms)")
                         return TryResult(guid, null, aborted = false)
                     }
-                    Outcome.UNKNOWN -> return TryResult(null, lastReason, aborted = true)
+                    Outcome.UNKNOWN -> return leave(TryResult(null, lastReason, aborted = true))
                     Outcome.FAIL -> {
                         WhitelistBypass.markBad(guid)
                         lastReason = verdict.reason
-                        LogUtil.w(AppConfig.TAG, "Bypass: $guid failed the check (${verdict.reason}), marked bad, next")
+                        BypassLog.add("$guid failed the check (${verdict.reason}), marked bad, next")
                     }
                 }
             }
         }
-        return TryResult(null, lastReason, aborted = false)
+        return leave(TryResult(null, lastReason, aborted = false))
     }
 
     private fun bypassCandidates(current: String): List<String> {
@@ -457,7 +512,7 @@ object BypassController {
         val service = ConnectionWatchdog.currentService() ?: return
         val now = System.currentTimeMillis()
         if (now < nextSearchAt) {
-            LogUtil.w(AppConfig.TAG, "Bypass: backing off for ${(nextSearchAt - now) / 1000}s")
+            BypassLog.add("backing off for ${(nextSearchAt - now) / 1000}s")
             return
         }
         val candidates = bypassCandidates(current)
@@ -471,7 +526,7 @@ object BypassController {
             )
             return
         }
-        LogUtil.w(AppConfig.TAG, "Bypass: restricted network, testing ${candidates.size} servers")
+        BypassLog.add("restricted network, testing ${candidates.size} servers")
         NetInfoCache.writeBypass(BypassState.SEARCHING, returnTo = returnToName())
 
         // One snapshot per episode, taken before the first switch: a chain of bypass servers keeps it.
@@ -500,7 +555,7 @@ object BypassController {
         failedSearches++
         val wait = WhitelistBypass.backoffMillis(failedSearches)
         nextSearchAt = System.currentTimeMillis() + wait
-        LogUtil.w(AppConfig.TAG, "Bypass: no working server, retry in ${wait / 1000}s")
+        BypassLog.add("no working server, retry in ${wait / 1000}s")
         NetInfoCache.writeBypass(BypassState.FAIL, result.lastReason ?: FailReason.NO_GSTATIC, returnToName())
         postEvent(service, "not_found", service.getString(R.string.whitelist_bypass_notify_not_found), NOTIFY_PROBLEM_GAP_MS)
     }
@@ -544,7 +599,7 @@ object BypassController {
         if (!net.type.isLan || net.captive) return
         if (System.currentTimeMillis() < nextSearchAt) return
         if (!lanHasInternet(net)) {
-            LogUtil.w(AppConfig.TAG, "Bypass: the normal network has no internet yet, staying on the current server")
+            BypassLog.add("the normal network has no internet yet, staying on the current server")
             return
         }
         val service = ConnectionWatchdog.currentService() ?: return
@@ -557,7 +612,7 @@ object BypassController {
 
         val originState = measureOrigin(service, origin)
         val action = ReturnLogic.decide(snap.mode, currentIsOrigin = false, origin = originState, limitMs = WhitelistBypass.pingLimitMs(), allowReplacement = true)
-        LogUtil.w(AppConfig.TAG, "Bypass: back on the normal network, action $action")
+        BypassLog.add("back on the normal network, action $action")
         val stillNeeded = { PhysicalNetwork.snapshot.type.isLan && !userOverride && WhitelistBypass.isEnabled() }
         when (action) {
             ReturnAction.STAY -> Unit
@@ -617,7 +672,7 @@ object BypassController {
         failedSearches++
         val wait = WhitelistBypass.backoffMillis(failedSearches)
         nextSearchAt = System.currentTimeMillis() + wait
-        LogUtil.w(AppConfig.TAG, "Bypass: no replacement found on the normal network, retry in ${wait / 1000}s")
+        BypassLog.add("no replacement found on the normal network, retry in ${wait / 1000}s")
         NetInfoCache.writeBypass(BypassState.FAIL, result.lastReason ?: FailReason.NO_GSTATIC, returnToName())
         postEvent(service, "not_found_lan", service.getString(R.string.whitelist_bypass_notify_not_found), NOTIFY_PROBLEM_GAP_MS)
     }
@@ -704,7 +759,7 @@ object BypassController {
         val active = WhitelistBypass.active ?: return
         val current = CoreServiceManager.currentServerGuid()
         if (current != null && current != active) {
-            LogUtil.w(AppConfig.TAG, "Bypass: the user picked another server, the episode is over")
+            BypassLog.add("the user picked another server, the episode is over")
             WhitelistBypass.clearState()
             userOverride = true
         }

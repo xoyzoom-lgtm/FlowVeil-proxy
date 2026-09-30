@@ -271,6 +271,12 @@ object CoreServiceManager {
         return -1L
     }
 
+    /** One delay test of [url] through the running core's outbound: ms, or -1 (also when not running). */
+    internal fun measureLive(url: String): Long {
+        if (!isRunning() || isReloading) return -1L
+        return runCatching { coreController.measureDelay(url) }.getOrDefault(-1L)
+    }
+
     internal fun currentServerGuid(): String? = MmkvManager.getSelectServer()
 
     /** Selects [guid] and restarts the core on it while the VPN interface stays up. */
