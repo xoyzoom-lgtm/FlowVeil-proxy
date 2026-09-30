@@ -672,6 +672,10 @@
     <string name="title_pref_noise_delay">Задержка шума (мс, диапазон)</string>
     <string name="title_pref_auto_failover">Автопереключение сервера</string>
     <string name="summary_pref_auto_failover">Если сервер перестал отвечать — перейти на следующий рабочий, не отключаясь</string>
+    <string name="title_pref_failover_across_subs">Переключаться между подписками</string>
+    <string name="summary_pref_failover_across_subs">Если в этой подписке нет рабочего сервера — попробовать серверы других подписок (выключенные и истёкшие пропускаются)</string>
+    <string name="failover_none_title">Сервер не отвечает</string>
+    <string name="failover_none_text">Рабочей замены не нашёл. Откройте FlowVeil и нажмите «Почему не работает?»</string>
     <string name="title_pref_sub_reminders">Напоминания о подписке</string>
     <string name="summary_pref_sub_reminders">Уведомить за 3 дня и за 1 день до конца подписки и когда заканчивается трафик</string>
     <string name="notification_channel_reminders">Напоминания о подписке</string>
@@ -698,6 +702,7 @@
     <string-array name="whats_new_items">
         <item>Ссылки-приглашения от провайдера теперь могут нести название сервиса, а на карточке подписки появилась кнопка «Сайт провайдера»</item>
         <item>Включение обхода белых списков само включает фрагментацию, если она нужна (при выключении всё возвращается как было)</item>
+        <item>Если сервер перестал пропускать трафик, FlowVeil переключается на рабочий: сначала в этой же подписке, затем в других (можно отключить в настройках)</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>

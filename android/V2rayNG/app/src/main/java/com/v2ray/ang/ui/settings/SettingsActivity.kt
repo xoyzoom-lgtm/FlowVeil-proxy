@@ -223,6 +223,7 @@ fun SettingsScreen(
     var speedEnabled by rememberMmkvBool(AppConfig.PREF_SPEED_ENABLED, false)
     var sendHwid by rememberMmkvBool(AppConfig.PREF_SEND_HWID, true)
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
+    var failoverAcrossSubs by rememberMmkvBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, true)
     var whitelistBypass by rememberMmkvBool(WhitelistBypass.PREF_ENABLED, false)
     var whitelistBypassMode by rememberMmkvString(WhitelistBypass.PREF_MODE, WhitelistBypass.MODE_AUTO)
     var whitelistBypassReturn by rememberMmkvBool(WhitelistBypass.PREF_AUTO_RETURN, true)
@@ -427,6 +428,14 @@ fun SettingsScreen(
                     checked = autoFailover,
                     onCheckedChange = { autoFailover = it }
                 )
+                if (autoFailover) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.title_pref_failover_across_subs),
+                        summary = stringResource(R.string.summary_pref_failover_across_subs),
+                        checked = failoverAcrossSubs,
+                        onCheckedChange = { failoverAcrossSubs = it }
+                    )
+                }
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_whitelist_bypass),
                     summary = stringResource(R.string.summary_whitelist_bypass),

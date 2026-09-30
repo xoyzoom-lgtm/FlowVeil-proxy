@@ -25,6 +25,7 @@ object SettingsChangeManager {
         AppConfig.PREF_HAPP_THEME_CUSTOM_JSON,
         AppConfig.PREF_SEND_HWID,
         AppConfig.PREF_AUTO_FAILOVER,
+        AppConfig.PREF_FAILOVER_ACROSS_SUBS,
         AppConfig.PREF_SUB_REMINDERS,
         AppConfig.PREF_SHOW_BEST_BUTTON,
         AppConfig.PREF_DEV_MODE,

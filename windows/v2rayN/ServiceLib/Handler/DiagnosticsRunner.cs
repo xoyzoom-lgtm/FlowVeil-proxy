@@ -136,6 +136,24 @@ public static class DiagnosticsRunner
         return ReportMask.Apply(sb.ToString());
     }
 
+    /// <summary>Does traffic really pass through the running core? Either of two well-known addresses must answer through the local port.</summary>
+    public static async Task<bool> TrafficPassesAsync(int port)
+    {
+        var proxy = new WebProxy(new Uri($"socks5://127.0.0.1:{port}"));
+        foreach (var url in Foreign)
+        {
+            var (status, _) = await Probe(proxy, url);
+            if (status is 204 or 200)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>A physical adapter is up and has a gateway: when it is not, a silent tunnel is not the server's fault.</summary>
+    public static bool NetworkUp() => HasRealNetwork();
+
     // ---- probes ----
 
     private static async Task<(int? Status, DateTimeOffset? Date)> Probe(IWebProxy? proxy, string url)

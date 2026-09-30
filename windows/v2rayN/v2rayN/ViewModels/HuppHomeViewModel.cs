@@ -101,6 +101,7 @@ public sealed partial class HuppHomeViewModel : HuppObservable
         _mode = LoadMode();
 
         InitSubs();
+        StartFailoverLoop();
         Profiles.SubItems.CollectionChanged += (_, _) =>
         {
             RebuildCards();

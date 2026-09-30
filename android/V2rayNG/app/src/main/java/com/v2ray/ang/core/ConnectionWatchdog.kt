@@ -14,6 +14,10 @@ import com.v2ray.ang.R
 import com.v2ray.ang.handler.BypassLog
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.ServerCountry
+import com.v2ray.ang.handler.SubscriptionErrors
+import com.v2ray.ang.net.FailoverPlan
+import com.v2ray.ang.net.SubIssue
+import com.v2ray.ang.net.SubscriptionHealth
 import com.v2ray.ang.handler.SpeedtestManager
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.helper.MessageHelper
@@ -42,7 +46,7 @@ import java.lang.ref.WeakReference
  * Keeps the connection alive: while connected (and the screen is on) it checks the current
  * server every [CHECK_INTERVAL_MS]. A failed check is repeated after [RECHECK_DELAY_MS]; if it
  * fails again while the phone itself is online, FlowVeil switches to the fastest working server
- * of the same subscription (never one in Russia) without turning the connection off, and tells
+ * of the same subscription, then of the other usable ones (never one in Russia) without turning the connection off, and tells
  * the user with a notification.
  *
  * On a restricted mobile network (an opt-in feature, see [BypassController]) the same failure
@@ -52,7 +56,7 @@ import java.lang.ref.WeakReference
  * switch at the same time.
  */
 object ConnectionWatchdog {
-    private const val CHECK_INTERVAL_MS = 30_000L
+    private const val CHECK_INTERVAL_MS = 20_000L
     private const val RECHECK_DELAY_MS = 5_000L
     private const val SCREEN_ON_DELAY_MS = 2_000L
     private const val MAX_CANDIDATES = 12
@@ -65,6 +69,7 @@ object ConnectionWatchdog {
     private var job: Job? = null
     private var checkNowJob: Job? = null
     private var serviceRef: WeakReference<Service>? = null
+    private var lastNoServerNoticeAt = 0L
 
     /** Screen on = the user is about to use the phone: check now, do not wait out the interval. */
     private val wake = Channel<Unit>(Channel.CONFLATED)
@@ -168,37 +173,68 @@ object ConnectionWatchdog {
         listOf("ya.ru" to 443, "vk.com" to 443, "mail.ru" to 443, "1.1.1.1" to 443, "8.8.8.8" to 443)
             .any { (host, port) -> runCatching { SpeedtestManager.socketConnectTime(host, port, 3000) >= 0 }.getOrDefault(false) }
 
+    /** A subscription whose servers make sense as a replacement: on, not expired, not out of traffic, no known access problem. */
+    private fun subscriptionUsable(subId: String): Boolean {
+        val sub = MmkvManager.decodeSubscription(subId) ?: return subId.isEmpty() || subId == AppConfig.DEFAULT_SUBSCRIPTION_ID
+        if (!sub.enabled) return false
+        if (SubscriptionHealth.byInfo(sub.expireAt, sub.trafficUsed, sub.trafficTotal, System.currentTimeMillis()) != SubIssue.NONE) return false
+        return when (SubscriptionErrors.issue(subId)) {
+            SubIssue.EXPIRED, SubIssue.TRAFFIC_OVER, SubIssue.BLOCKED, SubIssue.DEVICE_LIMIT, SubIssue.LINK_UNKNOWN, SubIssue.ACCESS_DENIED -> false
+            else -> true
+        }
+    }
+
     private suspend fun failover() {
         val service = serviceRef?.get() ?: return
         val current = CoreServiceManager.currentServerGuid() ?: return
-        val subId = MmkvManager.decodeServerConfig(current)?.subscriptionId ?: return
-        // Servers that tested fastest before come first, then untested ones in list order.
-        val candidates = MmkvManager.decodeServerList(subId)
-            .filter { it != current }
-            .filterNot { ServerCountry.isRussian(MmkvManager.decodeServerConfig(it)?.remarks) }
-            .map { it to (MmkvManager.decodeServerAffiliationInfo(it)?.testDelayMillis ?: 0L) }
-            .sortedWith(compareBy({ if (it.second > 0) 0 else 1 }, { if (it.second > 0) it.second else 0L }))
-            .map { it.first }
-            .take(MAX_CANDIDATES)
-        if (candidates.isEmpty()) return
-
-        // Test in parallel batches and take the fastest working server of the first batch that has one.
-        for (batch in candidates.chunked(PARALLEL)) {
-            if (!CoreServiceManager.isRunning()) return
-            val results = coroutineScope {
-                batch.map { guid -> async { guid to runCatching { SpeedtestConfig.measure(service, guid) }.getOrDefault(-1L) } }.awaitAll()
+        val currentSub = MmkvManager.decodeServerConfig(current)?.subscriptionId ?: return
+        val subs = MmkvManager.decodeSubscriptions().map { it.guid }
+        val all = (subs + currentSub).distinct().flatMap { subId ->
+            MmkvManager.decodeServerList(subId).mapIndexed { i, guid ->
+                FailoverPlan.Server(
+                    guid, subId, MmkvManager.decodeServerConfig(guid)?.remarks.orEmpty(),
+                    MmkvManager.decodeServerAffiliationInfo(guid)?.testDelayMillis ?: 0L, i
+                )
             }
-            results.forEach { (guid, delay) -> MmkvManager.encodeServerTestDelayMillis(guid, delay) }
-            val best = results.filter { it.second > 0 }.minByOrNull { it.second } ?: continue
-            LogUtil.i(AppConfig.TAG, "Watchdog: switching to ${best.first} (${best.second} ms)")
-            if (BypassController.ourSwitch(best.first)) {
-                MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_SERVER_SWITCHED, best.first)
-                WidgetProvider.refresh(service)
-                notifySwitched(service, current, best.first)
-            }
+        }
+        val groups = FailoverPlan.groups(
+            all, current, currentSub, subs, ::subscriptionUsable, ServerCountry::isRussian,
+            MmkvManager.decodeSettingsBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, true)
+        )
+        if (groups.isEmpty()) {
+            BypassLog.add("failover: no candidates (the subscription has no other servers and other subscriptions are off or unusable)")
             return
         }
+
+        // Test each group in parallel batches; take the fastest working server of the first batch that has one.
+        // The current subscription is a group of its own and is tried before the others.
+        for (group in groups) {
+            for (batch in group.take(MAX_CANDIDATES).chunked(PARALLEL)) {
+                if (!CoreServiceManager.isRunning()) return
+                val results = coroutineScope {
+                    batch.map { guid -> async { guid to runCatching { SpeedtestConfig.measure(service, guid) }.getOrDefault(-1L) } }.awaitAll()
+                }
+                results.forEach { (guid, delay) -> MmkvManager.encodeServerTestDelayMillis(guid, delay) }
+                val best = results.filter { it.second > 0 }.minByOrNull { it.second } ?: continue
+                LogUtil.i(AppConfig.TAG, "Watchdog: switching to ${best.first} (${best.second} ms)")
+                if (BypassController.ourSwitch(best.first)) {
+                    MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_SERVER_SWITCHED, best.first)
+                    WidgetProvider.refresh(service)
+                    notifySwitched(service, current, best.first)
+                }
+                return
+            }
+        }
         LogUtil.w(AppConfig.TAG, "Watchdog: no working server to switch to")
+        BypassLog.add("failover: none of the ${groups.sumOf { it.size }} candidates answered")
+        notifyNoServer(service)
+    }
+
+    private fun notifyNoServer(service: Service) {
+        val now = System.currentTimeMillis()
+        if (now - lastNoServerNoticeAt < 10 * 60_000L) return
+        lastNoServerNoticeAt = now
+        postNotification(service, NOTIFICATION_ID, service.getString(R.string.failover_none_title), service.getString(R.string.failover_none_text))
     }
 
     private fun serverName(guid: String): String = MmkvManager.decodeServerConfig(guid)?.remarks.orEmpty()

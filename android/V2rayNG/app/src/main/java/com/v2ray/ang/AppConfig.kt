@@ -67,6 +67,7 @@ object AppConfig {
     const val PREF_RECOMMENDED_DEFAULTS_APPLIED = "pref_recommended_defaults_applied"
     const val PREF_SEND_HWID = "pref_send_hwid"
     const val PREF_AUTO_FAILOVER = "pref_auto_failover"
+    const val PREF_FAILOVER_ACROSS_SUBS = "pref_failover_across_subs"
     const val PREF_RU_DIRECT = "pref_ru_direct"
     const val PREF_SHOW_BEST_BUTTON = "pref_show_best_button"
     const val PREF_DEV_MODE = "pref_dev_mode"

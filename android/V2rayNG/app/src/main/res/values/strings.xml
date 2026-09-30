@@ -668,6 +668,10 @@
     <string name="title_pref_noise_delay">Noise delay (ms, range)</string>
     <string name="title_pref_auto_failover">Switch server automatically</string>
     <string name="summary_pref_auto_failover">If the server stops responding, move to the next working one without disconnecting</string>
+    <string name="title_pref_failover_across_subs">Switch between subscriptions</string>
+    <string name="summary_pref_failover_across_subs">If this subscription has no working server, try servers of your other subscriptions (switched-off and expired ones are skipped)</string>
+    <string name="failover_none_title">The server is not answering</string>
+    <string name="failover_none_text">No working replacement found. Open FlowVeil and tap “Why does it not work?”</string>
     <string name="title_pref_sub_reminders">Subscription reminders</string>
     <string name="summary_pref_sub_reminders">Notify 3 days and 1 day before the subscription ends and when traffic runs low</string>
     <string name="notification_channel_reminders">Subscription reminders</string>
@@ -694,6 +698,7 @@
     <string-array name="whats_new_items">
         <item>Provider invite links can now carry the service name, and the subscription card has a “Provider website” button</item>
         <item>Turning on the whitelist bypass also turns on fragmentation when it is needed (everything is restored when you turn it off)</item>
+        <item>If a server stops carrying traffic, FlowVeil switches to a working one: first in the same subscription, then in your others (can be turned off in settings)</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
