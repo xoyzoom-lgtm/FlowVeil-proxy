@@ -149,7 +149,8 @@ h1 .w{display:inline-block;opacity:0;transform:translateY(22px);animation:wordIn
 
 /* hero: a phone with the app open, the four traffic chips hang around it */
 .router{position:relative;width:100%;aspect-ratio:1/1.02;max-width:560px;margin:0 auto;will-change:transform}
-.router .links{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.router .rlinks{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:0}
+.chip,.app,.phone{z-index:1}
 .router .flow{fill:none;stroke:rgba(59,224,176,.55);stroke-width:2;stroke-dasharray:5 12;animation:dash 1.6s linear infinite}
 @keyframes dash{to{stroke-dashoffset:-17}}
 .chip{position:absolute;padding:13px 20px;border-radius:14px;background:rgba(10,26,56,.9);border:1px solid rgba(255,255,255,.14);font:600 13px var(--font);animation:bob 5s ease-in-out infinite}
@@ -475,17 +476,7 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
     </div>
 
     <div class="router" id="router" aria-hidden="true">
-      <svg class="links" viewBox="0 0 560 570" preserveAspectRatio="none">
-        <path class="flow" d="M104 92 C 130 92, 130 190, 156 200"/>
-        <path class="flow" d="M104 202 C 130 202, 136 250, 156 262"/>
-        <path class="flow" d="M104 372 C 130 372, 136 330, 156 318"/>
-        <path class="flow" d="M104 482 C 130 482, 130 400, 156 380"/>
-        <path class="flow out" d="M404 190 C 430 186, 436 96, 458 82"/>
-        <path class="flow out" d="M404 236 C 430 236, 436 176, 458 158"/>
-        <path class="flow out" d="M404 284 C 430 284, 436 262, 458 250"/>
-        <path class="flow out" d="M404 330 C 430 330, 436 342, 458 350"/>
-        <path class="flow out" d="M404 376 C 430 376, 436 430, 458 444"/>
-      </svg>
+      <svg class="rlinks" id="links"></svg>
       <div class="chip" style="left:0;top:11.5%">Браузер</div>
       <div class="chip" style="left:0;top:31%">Видео</div>
       <div class="chip" style="left:0;top:63%">Банк</div>
@@ -1060,6 +1051,32 @@ if (typeof module !== 'undefined') module.exports = QR;
     phTimer.textContent = `${pad(Math.floor(secs / 3600))}:${pad(Math.floor(secs / 60) % 60)}:${pad(secs % 60)}`;
     if (secs % 3 === 0) phPing.textContent = `${38 + Math.floor(Math.random() * 12)} мс`;
   };
+  // Lines are drawn from the real positions of the tiles, so they always meet them (and follow resizes).
+  const linksSvg = $('#links');
+  const drawLinks = () => {
+    if (!linksSvg) return;
+    const box = router.getBoundingClientRect(), phone = router.querySelector('.phone').getBoundingClientRect();
+    if (!box.width) return;
+    // the tilt transform changes bounding boxes a little; offsets are relative to the router itself
+    const ph = { l: phone.left - box.left, r: phone.right - box.left, t: phone.top - box.top, h: phone.height };
+    const items = [...router.querySelectorAll('.chip'), ...router.querySelectorAll('.app')];
+    const paths = items.map((el, i) => {
+      const r = el.getBoundingClientRect(), left = el.classList.contains('chip');
+      const cy = r.top - box.top + r.height / 2;
+      const x1 = left ? r.right - box.left - 12 : ph.r - 6, x2 = left ? ph.l + 6 : r.left - box.left + 12;
+      const idx = left ? i : i - 4, n = left ? 4 : 5;
+      const py = ph.t + ph.h * (0.34 + 0.32 * idx / (n - 1));
+      const y1 = left ? cy : py, y2 = left ? py : cy, mx = (x1 + x2) / 2;
+      return `<path class="flow${left ? '' : ' out'}" d="M${x1.toFixed(1)} ${y1.toFixed(1)} C ${mx.toFixed(1)} ${y1.toFixed(1)}, ${mx.toFixed(1)} ${y2.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}"/>`;
+    });
+    linksSvg.setAttribute('viewBox', `0 0 ${box.width.toFixed(0)} ${box.height.toFixed(0)}`);
+    linksSvg.innerHTML = paths.join('');
+  };
+  drawLinks();
+  addEventListener('resize', drawLinks);
+  addEventListener('load', drawLinks);
+  if (window.ResizeObserver) new ResizeObserver(drawLinks).observe(router);
+  document.fonts && document.fonts.ready.then(drawLinks);
   const syncRouter = () => {
     const want = heroInView && !document.hidden;
     if (want === routerOn) return;
