@@ -656,6 +656,11 @@
     <string name="migrate_no_subs">There are no subscriptions to show</string>
     <string name="migrate_backup">From a v2rayNG backup file</string>
     <string name="migrate_note">A v2rayNG backup (Settings → Backup there) is only read for subscription links; nothing of yours here is replaced. Encrypted links from other apps cannot be opened.</string>
+    <string name="migrate_tv">Receive a subscription from a phone (for TV)</string>
+    <string name="tv_title">Add to this TV</string>
+    <string name="tv_hint">Scan the code with your phone camera. A page opens: paste the subscription link there and it arrives here. Both devices must be on the same home network.</string>
+    <string name="tv_no_network">This device is not on a home Wi-Fi or cable network. Connect it to the same network as your phone and try again.</string>
+    <string name="tv_received">Received: %1$d</string>
     <string name="migrate_backup_none">No subscription links found in this file</string>
     <string name="migrate_backup_found">Subscriptions found: %1$d</string>
     <string name="title_pref_noise">Noises (junk traffic)</string>

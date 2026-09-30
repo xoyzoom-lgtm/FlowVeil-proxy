@@ -660,6 +660,11 @@
     <string name="migrate_no_subs">Нет подписок, чтобы показать</string>
     <string name="migrate_backup">Из файла резервной копии v2rayNG</string>
     <string name="migrate_note">Резервная копия v2rayNG (там: Настройки → Резервное копирование) читается только ради ссылок подписок, ничего вашего здесь не заменяется. Зашифрованные ссылки других приложений открыть нельзя.</string>
+    <string name="migrate_tv">Принять подписку с телефона (для ТВ)</string>
+    <string name="tv_title">Добавить на этот ТВ</string>
+    <string name="tv_hint">Наведите камеру телефона на код. Откроется страница: вставьте на ней ссылку подписки, и она придёт сюда. Оба устройства должны быть в одной домашней сети.</string>
+    <string name="tv_no_network">Устройство не в домашней сети (Wi-Fi или кабель). Подключите его к той же сети, что и телефон, и повторите.</string>
+    <string name="tv_received">Получено: %1$d</string>
     <string name="migrate_backup_none">В этом файле нет ссылок на подписки</string>
     <string name="migrate_backup_found">Найдено подписок: %1$d</string>
     <string name="title_pref_noise">Шумы (мусорный трафик)</string>

@@ -133,6 +133,7 @@ class MainActivity : HelperBaseComponentActivity() {
             MigrationDialog(
                 onClipboard = { importClipboard() },
                 onBackup = { importV2rayNgBackup() },
+                onTvLink = { link -> mainViewModel.onAction(MainAction.ImportBatchConfig(link)) },
                 onDismiss = { showMigration = false },
             )
         }

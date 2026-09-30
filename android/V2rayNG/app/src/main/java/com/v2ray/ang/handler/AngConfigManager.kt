@@ -239,6 +239,7 @@ object AngConfigManager {
             servers.lines()
                 .flatMap { line -> SUB_URL_REGEX.findAll(line).map { it.value.trimEnd('.', ',', ')', '"', '\'') }.toList() }
                 .distinct()
+                .filterNot { it.contains("${TvReceiver.MARKER}=1") }
                 .forEach { str ->
                     // http:// links are accepted too: many panels on an IP:port only offer those.
                     if (Utils.isValidSubUrl(str) || (Utils.isValidUrl(str) && str.startsWith("http", ignoreCase = true))) {

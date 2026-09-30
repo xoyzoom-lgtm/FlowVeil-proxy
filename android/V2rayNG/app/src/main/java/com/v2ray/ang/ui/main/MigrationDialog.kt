@@ -30,11 +30,13 @@ import com.v2ray.ang.R
 fun MigrationDialog(
     onClipboard: () -> Unit,
     onBackup: () -> Unit,
+    onTvLink: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     var choose by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
     var qr by remember { mutableStateOf<Bitmap?>(null) }
+    var tvOpen by remember { mutableStateOf(false) }
 
     // The QR shows one of OUR subscriptions, to be scanned by another device (or another app).
     fun showQr() {
@@ -57,6 +59,7 @@ fun MigrationDialog(
         )
     }
     if (qr != null) QRCodeDialog(bitmap = qr, onDismiss = { qr = null })
+    if (tvOpen) TvReceiveDialog(onLink = onTvLink, onDismiss = { tvOpen = false })
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -72,6 +75,9 @@ fun MigrationDialog(
                 }
                 OutlinedButton(onClick = { onDismiss(); onBackup() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     Text(stringResource(R.string.migrate_backup))
+                }
+                OutlinedButton(onClick = { tvOpen = true }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Text(stringResource(R.string.migrate_tv))
                 }
                 Text(
                     stringResource(R.string.migrate_note),
