@@ -338,39 +338,51 @@ public sealed class AddPageView : ScrollViewer
             Fail(result.Error);
             return false;
         }
-        Finish(result.Servers);
+        if (!result.Existing)
+        {
+            Finish(result.Servers, result.Name);
+        }
         return true;
     }
 
-    /// <summary>Adds one subscription and downloads its servers; the number of servers or an error text.</summary>
-    private async Task<(int Servers, string? Error)> AddSubscriptionAsync(string link, string name, int minutes, string userAgent)
+    /// <summary>Adds one subscription and downloads its servers; the number of servers, the new subscription's id and name, or an error text.</summary>
+    private async Task<(int Servers, string? Error, string? SubId, string? Name, bool Existing)> AddSubscriptionAsync(string link, string name, int minutes, string userAgent)
     {
         SetBusy(true);
         try
         {
-            var table = ServiceLib.Helper.SQLiteHelper.Instance.TableAsync<SubItem>();
-            if (await table.CountAsync(e => e.Url == link) > 0)
+            var existing = await ServiceLib.Helper.SQLiteHelper.Instance.TableAsync<SubItem>().ToListAsync();
+            var duplicate = SubsLogic.FindDuplicate(existing.Select(e => (e.Id, e.Url ?? string.Empty)), link);
+            if (duplicate != null)
             {
-                return (0, "Такая подписка уже добавлена");
+                // The same subscription written slightly differently: offer to open the one that is already here instead of a silent second copy.
+                var known = existing.First(e => e.Id == duplicate);
+                await _vm.SelectSubscriptionAsync(duplicate);
+                NoticeManager.Instance.Enqueue($"Такая подписка уже есть: «{known.Remarks}». Открыл её");
+                _goToServers();
+                return (0, null, duplicate, known.Remarks, true);
             }
             var subItem = new SubItem { Id = string.Empty, Url = link, Remarks = name, AutoUpdateInterval = minutes, UserAgent = userAgent };
             if (await ConfigHandler.AddSubItem(AppManager.Instance.Config, subItem) != 0)
             {
-                return (0, "Не получилось добавить подписку");
+                return (0, "Не получилось добавить подписку", null, null, false);
             }
             var saved = await ServiceLib.Helper.SQLiteHelper.Instance.TableAsync<SubItem>().FirstOrDefaultAsync(e => e.Url == link);
-            if (saved != null)
+            if (saved == null)
             {
-                await _vm.UpdateSubscriptionProcess(saved.Id, false);
-                var count = await ServiceLib.Helper.SQLiteHelper.Instance.TableAsync<ProfileItem>().CountAsync(p => p.Subid == saved.Id);
-                return (count, null);
+                return (0, null, null, null, false);
             }
-            return (0, null);
+            // The list of subscriptions on the main screen is a snapshot: refresh it, or the new one has no chip until the next start.
+            await _vm.RefreshSubscriptionsAsync();
+            await _vm.UpdateSubscriptionProcess(saved.Id, false);
+            await _vm.SelectSubscriptionAsync(saved.Id);
+            var count = await ServiceLib.Helper.SQLiteHelper.Instance.TableAsync<ProfileItem>().CountAsync(p => p.Subid == saved.Id);
+            return (count, null, saved.Id, saved.Remarks, false);
         }
         catch (Exception ex)
         {
             Logging.SaveLog(nameof(AddPageView), ex);
-            return (0, "Не получилось добавить подписку");
+            return (0, "Не получилось добавить подписку", null, null, false);
         }
         finally
         {
@@ -378,10 +390,10 @@ public sealed class AddPageView : ScrollViewer
         }
     }
 
-    private void Finish(int servers)
+    private void Finish(int servers, string? name = null)
     {
         NoticeManager.Instance.Enqueue(servers > 0
-            ? $"Добавлено {servers} {Plural(servers, "сервер", "сервера", "серверов")}"
+            ? $"Добавлено {servers} {Plural(servers, "сервер", "сервера", "серверов")}" + (name.IsNotEmpty() ? $" в «{name}»" : string.Empty)
             : "Подписка добавлена, но серверов в ней пока нет. Проверьте ссылку или обновите позже");
         _goToServers();
     }
@@ -445,6 +457,7 @@ public sealed class AddPageView : ScrollViewer
             else
             {
                 NoticeManager.Instance.Enqueue($"Подписок найдено: {found}, добавлено новых: {added}. Загружаю серверы…");
+                await _vm.RefreshSubscriptionsAsync();
                 await _vm.UpdateSubscriptionProcess(string.Empty, false);
                 _goToServers();
             }
@@ -491,6 +504,7 @@ public sealed class AddPageView : ScrollViewer
             return;
         }
         var total = 0;
+        var addedAny = false;
         var singles = new List<string>();
         foreach (var item in payload.Items)
         {
@@ -504,6 +518,7 @@ public sealed class AddPageView : ScrollViewer
                     NoticeManager.Instance.Enqueue(result.Error);
                 }
                 total += result.Servers;
+                addedAny |= !result.Existing;
             }
             else
             {
@@ -514,6 +529,9 @@ public sealed class AddPageView : ScrollViewer
         {
             await _vm.AddServerViaClipboardAsync(string.Join("\n", singles));
         }
-        Finish(total);
+        if (addedAny || singles.Count > 0)
+        {
+            Finish(total);
+        }
     }
 }

@@ -433,6 +433,20 @@ public partial class MainWindowViewModel : MyReactiveObject
         }
     }
 
+    /// <summary>Reloads the list of subscriptions shown on the main screen. Must be called after a subscription was added or removed outside the classic dialogs: without it the new one has no chip and cannot be selected until the next start.</summary>
+    public Task RefreshSubscriptionsAsync() => RefreshSubscriptions();
+
+    /// <summary>Makes a subscription the current one (its servers fill the list); no-op when it is unknown.</summary>
+    public async Task SelectSubscriptionAsync(string subId)
+    {
+        await RefreshSubscriptions();
+        var sub = ProfilesViewModel.SubItems.FirstOrDefault(t => t.Id == subId);
+        if (sub != null)
+        {
+            ProfilesViewModel.SelectedSub = sub;
+        }
+    }
+
     private async Task RefreshSubscriptions()
     {
         //await Observable.Start(async () => await ProfilesViewModel.RefreshSubscriptions(), RxSchedulers.MainThreadScheduler);
