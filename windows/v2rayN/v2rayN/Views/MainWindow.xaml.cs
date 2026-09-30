@@ -400,11 +400,7 @@ public partial class MainWindow
         var main = Section("Подписки");
         Row(main, PackIconKind.ContentPaste, "Добавить подписку или сервер", "Скопируйте ссылку и нажмите сюда (Ctrl+V)", () => Exec(vm.AddServerViaClipboardCmd));
         Row(main, PackIconKind.Refresh, "Обновить все подписки", "Скачать свежий список серверов", () => Exec(vm.SubUpdateCmd));
-        Row(main, PackIconKind.QrcodeScan, "Сканировать QR-код с экрана", "Если провайдер дал QR-код", () => Exec(vm.AddServerViaScanCmd));
         Row(main, PackIconKind.Autorenew, "Автообновление подписок", SubAutoUpdate.Title(SubAutoUpdate.Get()), () => OpenSubUpdateMenu(vm));
-
-        var connection = Section("Подключение");
-        Row(connection, PackIconKind.ShieldAccount, "Запустить от администратора", "Нужно один раз для режима TUN — дальше без вопросов", () => Exec(vm.RebootAsAdminCmd));
 
         var app = Section("Приложение");
         Row(app, PackIconKind.Update, "Проверить обновления", $"Сейчас: build {HuppUpdater.CurrentBuild()}", () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));

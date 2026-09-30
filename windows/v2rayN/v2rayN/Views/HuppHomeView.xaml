@@ -551,7 +551,7 @@
                             x:Name="btnTestPing"
                             Height="44"
                             materialDesign:ButtonAssist.CornerRadius="22"
-                            Content="Проверить соединение"
+                            Content="Обновить пинг"
                             Style="{StaticResource MaterialDesignOutlinedButton}" />
                     </DockPanel>
                     <Button

@@ -112,12 +112,25 @@ begin
   Result := '';
 end;
 
+// TUN needs administrator rights. One UAC prompt here (at install time) registers a Task Scheduler
+// entry that starts FlowVeil with those rights later, so switching TUN on never asks again.
+procedure RegisterTunTask();
+var
+  Code: Integer;
+begin
+  if WizardSilent then Exit; // silent updates never show a prompt; the app registers it on first TUN use
+  if Exec(ExpandConstant('{sys}\schtasks.exe'), '/query /tn "FlowVeil (TUN)"', '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0) then Exit;
+  WizardForm.StatusLabel.Caption := 'Разрешите один раз запуск для режима TUN...';
+  ShellExec('runas', ExpandConstant('{app}\FlowVeil.exe'), '--register-tun-task', '', SW_HIDE, ewWaitUntilTerminated, Code);
+end;
+
 // If the Xray core was not bundled at build time, fetch it during installation.
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   Zip, Dir, Cmd: String;
   Code: Integer;
 begin
+  if CurStep = ssPostInstall then RegisterTunTask();
   if (CurStep = ssPostInstall) and not FileExists(ExpandConstant('{app}\bin\xray\xray.exe')) then
   begin
     WizardForm.StatusLabel.Caption := 'Скачиваю ядро Xray...';

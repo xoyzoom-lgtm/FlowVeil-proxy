@@ -23,6 +23,14 @@ public partial class App
     /// <param name="e"></param>
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (e.Args.Any(t => t == "--register-tun-task"))
+        {
+            // Started by the installer with administrator rights: create the scheduled task, then leave.
+            ElevatedTask.EnsureRegistered();
+            Environment.Exit(0);
+            return;
+        }
+
         var exePathKey = Utils.GetMd5(Utils.GetExePath());
 
         var rebootas = e.Args.Any(t => t == Global.RebootAs);

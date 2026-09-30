@@ -100,7 +100,7 @@ public sealed class DelayTextConverter : IValueConverter
         {
             return string.Empty;
         }
-        return int.TryParse(text, out var delay) && delay > 0 ? $"{delay} мс" : "нет";
+        return int.TryParse(text, out var delay) && delay > 0 ? $"{delay} мс" : "—";
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => null;

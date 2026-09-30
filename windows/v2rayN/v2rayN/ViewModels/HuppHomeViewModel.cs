@@ -323,6 +323,75 @@ public sealed class HuppHomeViewModel : HuppObservable
         await Profiles.ServerSpeedtest(ESpeedActionType.FastRealping);
     }
 
+    /// <summary>Just the number: "123 мс", or a dash when there is no answer.</summary>
+    private static string FormatPing(long ms) => ms > 0 ? $"{ms} мс" : "—";
+
+    private int _pingTick;
+    private bool _pingBusy;
+
+    /// <summary>Measures the connected server without any prompt and shows the number.</summary>
+    private async void RefreshPingQuietly()
+    {
+        if (_pingBusy || IsBusy || !IsConnected)
+        {
+            return;
+        }
+        _pingBusy = true;
+        try
+        {
+            var result = await Status.TestServerAvailability();
+            PingText = FormatPing(result?.Time ?? 0);
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(nameof(HuppHomeViewModel), ex);
+        }
+        finally
+        {
+            _pingBusy = false;
+        }
+    }
+
+    private readonly HashSet<string> _autoPinged = [];
+    private bool _autoPingScheduled;
+
+    /// <summary>New servers (first start, after a subscription update) get their ping without a click.</summary>
+    private async void ScheduleAutoPingAll()
+    {
+        if (_autoPingScheduled || IsBusy)
+        {
+            return;
+        }
+        var fresh = Profiles.ProfileItems.Where(p => !_autoPinged.Contains(p.IndexId)).ToList();
+        if (fresh.Count == 0)
+        {
+            return;
+        }
+        _autoPingScheduled = true;
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2.5));
+            fresh = Profiles.ProfileItems.Where(p => !_autoPinged.Contains(p.IndexId)).ToList();
+            if (fresh.Count == 0)
+            {
+                return;
+            }
+            foreach (var p in fresh)
+            {
+                _autoPinged.Add(p.IndexId);
+            }
+            await PingAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(nameof(HuppHomeViewModel), ex);
+        }
+        finally
+        {
+            _autoPingScheduled = false;
+        }
+    }
+
     public async Task TestCurrentAsync()
     {
         if (IsBusy)
@@ -334,9 +403,7 @@ public sealed class HuppHomeViewModel : HuppObservable
         try
         {
             var result = await Status.TestServerAvailability();
-            PingText = result == null
-                ? "Нет сервера"
-                : result.Time > 0 ? $"Работает · {result.Time} мс" : "Нет соединения";
+            PingText = FormatPing(result?.Time ?? 0);
         }
         catch (Exception ex)
         {
@@ -376,6 +443,7 @@ public sealed class HuppHomeViewModel : HuppObservable
     private void OnProfilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         UpdateSelectedServer();
+        ScheduleAutoPingAll();
     }
 
     private void UpdateConnection()
@@ -389,8 +457,19 @@ public sealed class HuppHomeViewModel : HuppObservable
         {
             _connectedSince = null;
         }
+        var justConnected = connected && !IsConnected;
         IsConnected = connected;
         StatusText = connected ? "Подключено" : "Отключено";
+        if (justConnected)
+        {
+            _pingTick = 0;
+            PingText = string.Empty;
+            _ = Task.Delay(TimeSpan.FromSeconds(3)).ContinueWith(_ => Application.Current?.Dispatcher.BeginInvoke(new Action(RefreshPingQuietly)));
+        }
+        else if (!connected)
+        {
+            PingText = string.Empty;
+        }
         if (connected && Status.EnableTun && !IsTunMode(_mode))
         {
             // TUN switched on elsewhere (classic view, hotkey): show it without reconnecting.
@@ -412,6 +491,10 @@ public sealed class HuppHomeViewModel : HuppObservable
 
     private void UpdateTimer()
     {
+        if (_connectedSince != null && ++_pingTick % 30 == 0)
+        {
+            RefreshPingQuietly();
+        }
         var elapsed = _connectedSince is { } since ? DateTime.Now - since : TimeSpan.Zero;
         TimerText = $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
     }
