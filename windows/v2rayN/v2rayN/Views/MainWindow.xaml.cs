@@ -258,6 +258,22 @@ public partial class MainWindow
         ProcUtils.ProcessStart(Utils.GetBinPath("EnableLoopback.exe"));
     }
 
+    /// <summary>The add-subscription dialog; [prefill] is a link taken from the clipboard, if there is one.</summary>
+    public void ShowAddSubscription(string? prefill = null)
+    {
+        if (ViewModel == null)
+        {
+            return;
+        }
+        var link = prefill;
+        if (link == null)
+        {
+            var clip = WindowsUtils.GetClipboardData()?.Trim();
+            link = clip != null && (clip.StartsWith("http", StringComparison.OrdinalIgnoreCase) || clip.StartsWith("flowveil:", StringComparison.OrdinalIgnoreCase)) ? clip : null;
+        }
+        _ = DialogHost.Show(new AddSubscriptionView(ViewModel, link, () => ShowReceiveQr(ViewModel)), "RootDialog");
+    }
+
     public async Task AddServerViaClipboardAsync()
     {
         var clipboardData = WindowsUtils.GetClipboardData();
@@ -467,7 +483,7 @@ public partial class MainWindow
         void Exec(ICommand command) => command.Execute(null);
 
         var main = Section("Подписки");
-        Row(main, PackIconKind.ContentPaste, "Добавить подписку или сервер", "Скопируйте ссылку и нажмите сюда (Ctrl+V)", () => Exec(vm.AddServerViaClipboardCmd));
+        Row(main, PackIconKind.Plus, "Добавить подписку", "Ссылка, название, как часто обновлять; файл или QR-код", () => ShowAddSubscription());
         Row(main, PackIconKind.Refresh, "Обновить все подписки", "Скачать свежий список серверов", () => Exec(vm.SubUpdateCmd));
         Row(main, PackIconKind.Autorenew, "Автообновление подписок", SubAutoUpdate.Title(SubAutoUpdate.Get()), () => OpenSubUpdateMenu(vm));
 

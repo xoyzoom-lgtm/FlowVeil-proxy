@@ -83,15 +83,11 @@ public partial class HuppHomeView : UserControl
             : "Не удалось загрузить серверы: неизвестная ошибка");
     }
 
-    private async Task PasteAsync()
+    /// <summary>Opens the add-subscription dialog (a link from the clipboard is already in it).</summary>
+    private Task PasteAsync()
     {
-        var data = WindowsUtils.GetClipboardData();
-        if (data.IsNullOrEmpty() || _main == null)
-        {
-            NoticeManager.Instance.Enqueue("Сначала скопируйте ссылку на подписку (Ctrl+C), потом нажмите «Добавить»");
-            return;
-        }
-        await Run(() => _main.AddServerViaClipboardAsync(data));
+        (Window.GetWindow(this) as MainWindow)?.ShowAddSubscription();
+        return Task.CompletedTask;
     }
 
     /// <summary>Grouped mode list like Happ: Прокси / TUN (sing-box, gVisor, Xray) / Другое.</summary>
