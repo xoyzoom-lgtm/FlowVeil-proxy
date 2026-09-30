@@ -10,6 +10,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.Lifecycle
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import java.io.File
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.v2ray.ang.AngApplication
@@ -122,6 +127,15 @@ class MainActivity : HelperBaseComponentActivity() {
     override fun ScreenContent() {
         BackHandler { moveTaskToBack(false) }
         WhatsNewDialog()
+        var showMigration by remember { mutableStateOf(false) }
+        if (showMigration) {
+            MigrationDialog(
+                onClipboard = { importClipboard() },
+                onQr = { importQRcode() },
+                onBackup = { importV2rayNgBackup() },
+                onDismiss = { showMigration = false },
+            )
+        }
         MainScreen(
             mainViewModel = mainViewModel,
             onAction = { action ->
@@ -130,6 +144,7 @@ class MainActivity : HelperBaseComponentActivity() {
                     MainAction.TestCurrentServer -> handleLayoutTestClick()
                     MainAction.ImportQRcode -> importQRcode()
                     MainAction.ImportClipboard -> importClipboard()
+                    MainAction.OpenMigration -> showMigration = true
                     MainAction.ImportConfigLocal -> importConfigLocal()
                     is MainAction.ImportManually -> importManually(action.type)
                     MainAction.RestartService -> LauncherManager.restartServiceOrStart(this, ::requestServiceStart)
@@ -272,6 +287,33 @@ class MainActivity : HelperBaseComponentActivity() {
             mainViewModel.onAction(MainAction.ImportBatchConfig(text))
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to import config from clipboard", e)
+        }
+    }
+
+    /** Subscription links from a v2rayNG backup zip; nothing else of that backup is restored. */
+    private fun importV2rayNgBackup() {
+        launchFileChooser { uri ->
+            if (uri == null) return@launchFileChooser
+            lifecycleScope.launch(Dispatchers.IO) {
+                val tmp = File(cacheDir, "migrate_${System.nanoTime()}.zip")
+                val urls = try {
+                    contentResolver.openInputStream(uri)?.use { input -> tmp.outputStream().use { input.copyTo(it) } }
+                    V2rayNgBackupReader.subscriptionUrls(cacheDir, tmp)
+                } catch (e: Exception) {
+                    LogUtil.e(AppConfig.TAG, "Failed to read the backup", e)
+                    emptyList()
+                } finally {
+                    tmp.delete()
+                }
+                withContext(Dispatchers.Main) {
+                    if (urls.isEmpty()) {
+                        toastError(R.string.migrate_backup_none)
+                    } else {
+                        toastSuccess(getString(R.string.migrate_backup_found, urls.size))
+                        mainViewModel.onAction(MainAction.ImportBatchConfig(urls.joinToString("\n")))
+                    }
+                }
+            }
         }
     }
 

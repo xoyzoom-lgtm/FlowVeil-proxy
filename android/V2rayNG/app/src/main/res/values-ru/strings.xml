@@ -652,6 +652,15 @@
     <string name="settings_section_connection">Подключение</string>
     <string name="title_pref_ru_direct">Российские сайты напрямую</string>
     <string name="summary_pref_ru_direct">Российские сайты и банки открываются напрямую, остальное — через сервер</string>
+    <string name="menu_item_migrate">Перенос из другого приложения</string>
+    <string name="migrate_title">Перенос из другого приложения</string>
+    <string name="migrate_hint">Подписку нельзя вытащить из другого приложения автоматически. Скопируйте её ссылку там (или покажите QR-код) и принесите сюда в одно нажатие.</string>
+    <string name="migrate_clipboard">Вставить ссылку из буфера обмена</string>
+    <string name="migrate_qr">Отсканировать QR-код</string>
+    <string name="migrate_backup">Из файла резервной копии v2rayNG</string>
+    <string name="migrate_note">Резервная копия v2rayNG (там: Настройки → Резервное копирование) читается только ради ссылок подписок, ничего вашего здесь не заменяется. Зашифрованные ссылки других приложений открыть нельзя.</string>
+    <string name="migrate_backup_none">В этом файле нет ссылок на подписки</string>
+    <string name="migrate_backup_found">Найдено подписок: %1$d</string>
     <string name="title_pref_noise">Шумы (мусорный трафик)</string>
     <string name="summary_pref_noise">Случайные пакеты перед соединением, чтобы его начало труднее было опознать. Работает с UDP-серверами (Hysteria2, mKCP), чуть увеличивает трафик. Применится при следующем подключении</string>
     <string name="title_pref_noise_rand">Размер шумового пакета (байт, диапазон)</string>

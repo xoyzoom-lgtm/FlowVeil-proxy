@@ -318,6 +318,31 @@ public partial class MainWindow
     /// Settings as grouped rows (icon, title, hint, chevron) like Happ: everyday items on top,
     /// technical ones in "Для опытных".
     /// </summary>
+    private async void RunMigration(MainWindowViewModel vm, string? dbPath)
+    {
+        try
+        {
+            if (dbPath.IsNullOrEmpty())
+            {
+                NoticeManager.Instance.Enqueue("v2rayN на этом компьютере не найден. Выберите файл guiNDB.db вручную");
+                return;
+            }
+            var (found, added) = await SubMigration.ImportSubscriptions(AppManager.Instance.Config, dbPath!);
+            NoticeManager.Instance.Enqueue(found == 0
+                ? "В этой базе нет ссылок на подписки"
+                : added == 0 ? $"Подписок найдено: {found}, все они уже есть" : $"Подписок найдено: {found}, добавлено новых: {added}");
+            if (added > 0)
+            {
+                ((System.Windows.Input.ICommand)vm.SubUpdateCmd).Execute(null);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("Migration", ex);
+            NoticeManager.Instance.Enqueue("Не получилось прочитать файл");
+        }
+    }
+
     private void BuildSettingsPage(MainWindowViewModel vm)
     {
         settingsList.Children.Clear();
@@ -401,6 +426,17 @@ public partial class MainWindow
         Row(main, PackIconKind.ContentPaste, "Добавить подписку или сервер", "Скопируйте ссылку и нажмите сюда (Ctrl+V)", () => Exec(vm.AddServerViaClipboardCmd));
         Row(main, PackIconKind.Refresh, "Обновить все подписки", "Скачать свежий список серверов", () => Exec(vm.SubUpdateCmd));
         Row(main, PackIconKind.Autorenew, "Автообновление подписок", SubAutoUpdate.Title(SubAutoUpdate.Get()), () => OpenSubUpdateMenu(vm));
+
+        var migrate = Section("Перенос из другого приложения");
+        Row(migrate, PackIconKind.FolderSearchOutline, "Из v2rayN на этом компьютере", "Найдёт его подписки сам (ничего не удаляет и не заменяет)", () => RunMigration(vm, SubMigration.FindV2rayNDb()));
+        Row(migrate, PackIconKind.FileFindOutline, "Из файла guiNDB.db…", "Если v2rayN лежит в другом месте: папка guiConfigs внутри него", () =>
+        {
+            if (UI.OpenFileDialog(out var fileName, "v2rayN database|guiNDB.db|All|*.*") == true)
+            {
+                RunMigration(vm, fileName);
+            }
+        });
+        Row(migrate, PackIconKind.ContentPaste, "Из Happ и других приложений", "Скопируйте ссылку подписки там и нажмите сюда. Зашифрованные ссылки открыть нельзя", () => Exec(vm.AddServerViaClipboardCmd));
 
         var noiseOn = AppManager.Instance.Config.CoreBasicItem.EnableNoise;
         var connection = Section("Подключение");

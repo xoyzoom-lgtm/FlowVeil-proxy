@@ -68,6 +68,8 @@ sealed interface MainAction {
 
     data object ImportQRcode : MainAction
     data object ImportClipboard : MainAction
+    /** Opens the "move from another app" dialog. */
+    data object OpenMigration : MainAction
     data object ImportConfigLocal : MainAction
     data class ImportManually(val type: Int) : MainAction
     data object RestartService : MainAction
