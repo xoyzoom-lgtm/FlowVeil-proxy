@@ -378,6 +378,52 @@ public partial class MainWindow
         }
     }
 
+    private void OpenPingUrlMenu(MainWindowViewModel vm)
+    {
+        var config = AppManager.Instance.Config;
+        var current = config.SpeedTestItem.SpeedPingTestUrl;
+        var menu = new ContextMenu();
+        foreach (var url in Global.SpeedPingTestUrls)
+        {
+            var item = new MenuItem { Header = url, IsCheckable = true, IsChecked = url == current };
+            var chosen = url;
+            item.Click += async (_, _) =>
+            {
+                config.SpeedTestItem.SpeedPingTestUrl = chosen;
+                await ConfigHandler.SaveConfig(config);
+                BuildSettingsPage(vm);
+            };
+            menu.Items.Add(item);
+        }
+        menu.IsOpen = true;
+    }
+
+    /// <summary>Settings back to defaults (the config file is removed and FlowVeil restarts); the database with subscriptions and servers is not touched.</summary>
+    private async void ResetSettings()
+    {
+        if (UI.ShowYesNo("Сбросить настройки к исходным? Подписки и серверы останутся, программа перезапустится.") != MessageBoxResult.Yes)
+        {
+            return;
+        }
+        try
+        {
+            await AppManager.Instance.AppExitAsync(false);
+            var file = Utils.GetConfigPath(Global.ConfigFileName);
+            if (File.Exists(file))
+            {
+                File.Copy(file, file + ".bak", true);
+                File.Delete(file);
+            }
+            ProcUtils.RebootAsAdmin(false);
+            AppManager.Instance.Shutdown(true);
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("Reset", ex);
+            NoticeManager.Instance.Enqueue("Не получилось сбросить настройки");
+        }
+    }
+
     private async void RunMigration(MainWindowViewModel vm, string? dbPath)
     {
         try
@@ -499,25 +545,47 @@ public partial class MainWindow
         Row(migrate, PackIconKind.Qrcode, "Добавить по QR-коду (со второго устройства)", "FlowVeil покажет код: откройте его на телефоне и отправьте ссылку подписки сюда", () => ShowReceiveQr(vm));
         Row(migrate, PackIconKind.ContentPaste, "Из Happ и других приложений", "Скопируйте ссылку подписки там и нажмите сюда. Зашифрованные ссылки открыть нельзя", () => Exec(vm.AddServerViaClipboardCmd));
 
-        var noiseOn = AppManager.Instance.Config.CoreBasicItem.EnableNoise;
-        var connection = Section("Подключение");
-        Row(connection, PackIconKind.Waves,
-            noiseOn ? "Шумы: включены" : "Шумы: выключены",
-            "Случайные пакеты перед соединением, чтобы запутать анализ трафика. Работает с UDP-серверами (Hysteria2, mKCP), чуть увеличивает трафик. Применится при следующем подключении",
-            () =>
+        var settings = AppManager.Instance.Config;
+        var tunnel = Section("Туннель");
+        void Toggle(PackIconKind icon, string title, string tip, Func<bool> get, Action<bool> set)
+        {
+            var on = get();
+            Row(tunnel, icon, $"{title}: {(on ? "включено" : "выключено")}", tip, () =>
             {
-                var config = AppManager.Instance.Config;
-                config.CoreBasicItem.EnableNoise = !config.CoreBasicItem.EnableNoise;
-                _ = ConfigHandler.SaveConfig(config);
+                set(!on);
+                _ = ConfigHandler.SaveConfig(settings);
+                NoticeManager.Instance.Enqueue("Применится при следующем подключении");
                 BuildSettingsPage(vm);
             });
+        }
+        Toggle(PackIconKind.Waves, "Шумы (мусорный трафик)",
+            "Случайные пакеты перед соединением, чтобы запутать анализ трафика. Работает с UDP-серверами (Hysteria2, mKCP), чуть увеличивает трафик",
+            () => settings.CoreBasicItem.EnableNoise, v => settings.CoreBasicItem.EnableNoise = v);
+        Toggle(PackIconKind.ContentCut, "Фрагментация",
+            "Разбивает начало соединения на части, чтобы его труднее было опознать. Для серверов с TLS и Reality; может немного снизить скорость",
+            () => settings.CoreBasicItem.EnableFragment, v => settings.CoreBasicItem.EnableFragment = v);
+        Toggle(PackIconKind.LanConnect, "Подключения из локальной сети",
+            "Другие устройства дома смогут использовать прокси этого компьютера (адрес и порт в «Параметры ядра и портов»). Включайте только в доверенной сети",
+            () => settings.Inbound.FirstOrDefault()?.AllowLANConn == true,
+            v =>
+            {
+                if (settings.Inbound.FirstOrDefault() is { } inbound)
+                {
+                    inbound.AllowLANConn = v;
+                }
+            });
+        var pingUrl = settings.SpeedTestItem.SpeedPingTestUrl.IsNullOrEmpty() ? Global.SpeedPingTestUrls[0] : settings.SpeedTestItem.SpeedPingTestUrl;
+        Row(tunnel, PackIconKind.Speedometer, "Адрес для пинга", pingUrl, () => OpenPingUrlMenu(vm));
 
         var app = Section("Приложение");
         Row(app, PackIconKind.Update, "Проверить обновления", $"Сейчас: build {HuppUpdater.CurrentBuild()}", () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));
         Row(app, PackIconKind.BackupRestore, "Резервная копия", "Сохранить или восстановить настройки и подписки", () => MenuBackupAndRestore_Click(this, new RoutedEventArgs()));
         Row(app, PackIconKind.TrayArrowDown, "Свернуть в трей", "FlowVeil продолжит работать у часов", () => MenuClose_Click(this, new RoutedEventArgs()));
+        Row(app, PackIconKind.Restore, "Сбросить настройки", "Вернёт настройки к исходным. Подписки и серверы останутся", () => ResetSettings());
 
         var about = Section("О приложении");
+        Row(about, PackIconKind.HelpCircleOutline, "Частые вопросы", "Что такое подписка, как поставить, как проверить файл", () => ProcUtils.ProcessStart("https://xoyzoom-lgtm.github.io/FlowVeil-proxy/#faq"));
+        Row(about, PackIconKind.Link, "Ссылки-приглашения", "flowveil://add?url=… добавляет подписку в один клик; ссылку и QR-код собирает страница проекта", () => UI.Show("Ссылка вида flowveil://add?url=<адрес подписки> открывает FlowVeil и сразу добавляет подписку. Провайдеры могут собрать такую ссылку и QR-код на странице проекта, в разделе «Для провайдеров»."));
         Row(about, PackIconKind.Send, "Автор", "Telegram @GxoyzoomG", () => ProcUtils.ProcessStart("https://t.me/GxoyzoomG"));
         Row(about, PackIconKind.ShieldLockOutline, "Политика конфиденциальности", "Какие данные есть у приложения и куда уходят", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/FlowVeil-proxy/blob/main/PRIVACY.md"));
         Row(about, PackIconKind.Github, "Исходный код", "github.com/xoyzoom-lgtm/FlowVeil-proxy", () => ProcUtils.ProcessStart("https://github.com/xoyzoom-lgtm/FlowVeil-proxy"));
