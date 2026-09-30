@@ -11,6 +11,11 @@
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<CETCompat>false</CETCompat>
+		<Product>FlowVeil</Product>
+		<AssemblyTitle>FlowVeil</AssemblyTitle>
+		<Description>FlowVeil</Description>
+		<Company>FlowVeil</Company>
+		<Copyright>FlowVeil. Based on v2rayN (2dust), GPL-3.0</Copyright>
 	</PropertyGroup>
 
 	<ItemGroup>
