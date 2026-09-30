@@ -691,10 +691,10 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
+        <item>New “Why does it not work?” button on the main screen: checks the network, phone clock, subscription and server and says in plain words what to do; the report can be copied without links or keys</item>
+        <item>Clear messages when a subscription has expired, the traffic ended or the provider's device limit was reached</item>
         <item>Send a subscription to your computer: scan the QR code that FlowVeil shows on the PC (menu → Move from another app)</item>
         <item>Share a link from any app and choose “Send to computer”</item>
-        <item>Noise (junk traffic) for UDP servers such as Hysteria 2</item>
-        <item>Move a subscription from v2rayNG: by QR code, from the clipboard or from a backup file</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
