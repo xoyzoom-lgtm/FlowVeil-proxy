@@ -24,6 +24,7 @@ public partial class HuppHomeView : UserControl
         btnAdd.Click += async (_, _) => await PasteAsync();
         btnEmptyPaste.Click += async (_, _) => await PasteAsync();
         btnMode.Click += (_, _) => OpenModeMenu();
+        btnDiagnose.Click += (_, _) => (Window.GetWindow(this) as MainWindow)?.ShowDiagnosis();
     }
 
     public void Attach(MainWindowViewModel main)

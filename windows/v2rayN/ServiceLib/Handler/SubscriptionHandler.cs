@@ -5,6 +5,9 @@ public static class SubscriptionHandler
     /// <summary>Why the last subscription update got no servers, in plain words for the UI.</summary>
     public static string? LastError { get; private set; }
 
+    /// <summary>Machine-readable twin of <see cref="LastError"/> for the diagnosis.</summary>
+    public static SubIssue LastIssue { get; private set; }
+
     public static async Task UpdateProcess(Config config, string subId, bool blProxy, Func<bool, string, Task> updateFunc)
     {
         LastError = null;
@@ -34,6 +37,7 @@ public static class SubscriptionHandler
                     continue;
                 }
 
+                LastIssue = SubIssue.None;
                 // Create download handler
                 var downloadHandle = CreateDownloadHandler(item, hashCode, updateFunc);
                 await updateFunc?.Invoke(false, $"{hashCode}{ResUI.MsgStartGettingSubscriptions}");
@@ -45,11 +49,16 @@ public static class SubscriptionHandler
                 if (await ProcessDownloadResult(config, item.Id, result, hashCode, updateFunc))
                 {
                     successCount++;
+                    SubscriptionIssues.Set(item.Id, SubIssue.None);
                 }
-                else if (LastError.IsNotEmpty() && !LastError!.StartsWith('«'))
+                else
                 {
-                    // Name it, so with several subscriptions the user knows which one failed.
-                    LastError = $"«{item.Remarks}»: {LastError}";
+                    SubscriptionIssues.Set(item.Id, LastIssue == SubIssue.None ? SubIssue.Unreachable : LastIssue);
+                    if (LastError.IsNotEmpty() && !LastError!.StartsWith('«'))
+                    {
+                        // Name it, so with several subscriptions the user knows which one failed.
+                        LastError = $"«{item.Remarks}»: {LastError}";
+                    }
                 }
 
                 await updateFunc?.Invoke(false, "-------------------------------------------------------");
@@ -133,6 +142,7 @@ public static class SubscriptionHandler
         if (result.IsNullOrEmpty())
         {
             LastError = downloadHandle.LastError ?? "сервер подписки ничего не вернул";
+            LastIssue = downloadHandle.LastStatusCode is int status ? SubscriptionHealth.ByHttpStatus(status) : SubIssue.Unreachable;
         }
         return result ?? string.Empty;
     }
@@ -249,9 +259,13 @@ public static class SubscriptionHandler
         var ret = await ConfigHandler.AddBatchServers(config, result, id, true);
         if (ret <= 0)
         {
-            LastError = HtmlPageFmt.IsHtmlPage(result)
-                ? "по ссылке открывается сайт, а не подписка — скопируйте ссылку для приложения"
-                : "в ответе провайдера нет серверов (возможно, превышен лимит устройств)";
+            LastIssue = SubscriptionHealth.ByBody(result);
+            LastError = LastIssue switch
+            {
+                SubIssue.WebPage => "по ссылке открывается сайт, а не подписка — скопируйте ссылку для приложения",
+                SubIssue.HappCrypt => "это зашифрованная ссылка Happ: её открывает только приложение Happ, попросите у провайдера обычную ссылку",
+                _ => "в ответе провайдера нет серверов (возможно, превышен лимит устройств)",
+            };
             Logging.SaveLog("FailedImportSubscription");
             Logging.SaveLog(result);
         }

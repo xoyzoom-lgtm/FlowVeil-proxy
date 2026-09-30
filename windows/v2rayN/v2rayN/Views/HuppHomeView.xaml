@@ -562,6 +562,14 @@
                         Content="⚡ Подключиться к лучшему"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         ToolTip="Проверить серверы подписки и подключиться к самому быстрому" />
+                    <Button
+                        x:Name="btnDiagnose"
+                        Height="36"
+                        Margin="0,6,0,0"
+                        Content="Почему не работает?"
+                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        ToolTip="Проверит сеть, время, подписку и сервер и подскажет, что делать" />
                 </StackPanel>
             </DockPanel>
         </Border>

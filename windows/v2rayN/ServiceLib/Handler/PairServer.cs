@@ -51,6 +51,9 @@ public sealed class PairServer : IDisposable
 
     private static readonly string[] VirtualNames = ["virtual", "vmware", "vbox", "hyper-v", "vethernet", "tap", "tun", "wintun", "wireguard", "tailscale", "zerotier", "loopback", "vpn", "npcap", "pseudo", "bluetooth", "docker", "wsl"];
 
+    /// <summary>True for tunnel, virtual and VPN adapters (by name), which are never "the real network".</summary>
+    public static bool IsVirtualAdapter(string name, string description) => VirtualNames.Any((name + " " + description).ToLowerInvariant().Contains);
+
     /// <summary>Wi-Fi and cable adapters with a private IPv4 address; virtual, tunnel and VPN adapters are left out.</summary>
     public static List<PairAdapter> Adapters()
     {

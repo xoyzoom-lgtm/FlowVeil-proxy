@@ -281,6 +281,16 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>The "Почему не работает?" dialog; also reachable from the settings page.</summary>
+    public void ShowDiagnosis()
+    {
+        if (ViewModel == null)
+        {
+            return;
+        }
+        _ = DialogHost.Show(new DiagnosisView(ViewModel, homeView.HomeViewModel?.IsConnected == true), "RootDialog");
+    }
+
     public async Task AddServerViaClipboardAsync()
     {
         var clipboardData = WindowsUtils.GetClipboardData();
@@ -459,6 +469,7 @@ public partial class MainWindow
 
         var main = Section("Подписки");
         Row(main, PackIconKind.Refresh, "Обновить все подписки", "Скачать свежий список серверов", () => Exec(vm.SubUpdateCmd));
+        Row(main, PackIconKind.Stethoscope, "Почему не работает?", "Проверит сеть, время, подписку и сервер и подскажет, что делать", () => ShowDiagnosis());
         Row(main, PackIconKind.Autorenew, "Автообновление подписок", SubAutoUpdate.Title(SubAutoUpdate.Get()), () => OpenSubUpdateMenu(vm));
 
         var settings = AppManager.Instance.Config;

@@ -21,6 +21,9 @@ public class DownloadService
     /// <summary>Human-readable reason of the last failed string download, for the UI.</summary>
     public string? LastError { get; private set; }
 
+    /// <summary>HTTP status of the last failed answer (null when nothing came back or it succeeded).</summary>
+    public int? LastStatusCode { get; private set; }
+
     private static readonly string _tag = "DownloadService";
 
     /// <summary>
@@ -218,6 +221,7 @@ public class DownloadService
         try
         {
             LastError = null;
+            LastStatusCode = null;
             var result1 = await DownloadStringAsync(url, webProxy, userAgent, cancellationToken);
             if (result1.IsNotEmpty())
             {
@@ -325,6 +329,7 @@ public class DownloadService
             if (!response.IsSuccessStatusCode)
             {
                 var code = (int)response.StatusCode;
+                LastStatusCode = code;
                 // Plain words for the usual provider answers (the prefix keeps it from being overwritten below).
                 LastError = "сервер подписки ответил " + code switch
                 {
