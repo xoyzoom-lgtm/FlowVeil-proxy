@@ -691,10 +691,10 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
-        <item>Better automatic choice of a working server on mobile networks: suitable servers first, each one checked before switching</item>
-        <item>If the check fails, the connection stays on the previous server instead of an unchecked one</item>
-        <item>In Settings you can test the servers on the mobile network and see which of them worked</item>
-        <item>A request to work in the background: without it some phones put the app to sleep</item>
+        <item>Send a subscription to your computer: scan the QR code that FlowVeil shows on the PC (menu → Move from another app)</item>
+        <item>Share a link from any app and choose “Send to computer”</item>
+        <item>Noise (junk traffic) for UDP servers such as Hysteria 2</item>
+        <item>Move a subscription from v2rayNG: by QR code, from the clipboard or from a backup file</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
@@ -828,4 +828,26 @@
     <string name="sub_error_http_403">the provider refused access (403) - the subscription may be disabled or the device limit is reached</string>
     <string name="sub_error_http_429">the provider asks to wait (429) - too many requests, try again in a few minutes</string>
     <string name="sub_error_http_5xx">the provider\'s server has a problem (%1$d) - try again later</string>
+    <string name="pair_title">Send to computer</string>
+    <string name="pair_to">Computer: %1$s</string>
+    <string name="pair_send">Send</string>
+    <string name="pair_done">Sent. Confirm adding on the computer.</string>
+    <string name="pair_shared_link">The shared link will be sent.</string>
+    <string name="pair_no_subs">There are no subscriptions with a link to send.</string>
+    <string name="pair_manual_hint">On the computer open Add → From phone and enter the address and code shown there. Both devices must be on the same network.</string>
+    <string name="pair_address">Address (192.168.1.5:5123)</string>
+    <string name="pair_code">6-digit code</string>
+    <string name="pair_err_token">Wrong code. Show a new code on the computer.</string>
+    <string name="pair_err_expired">Time is up. Press “Refresh code” on the computer.</string>
+    <string name="pair_err_used">This code was already used. Refresh it on the computer.</string>
+    <string name="pair_err_locked">Too many wrong attempts. Refresh the code on the computer.</string>
+    <string name="pair_err_rejected">The computer did not accept the data.</string>
+    <string name="pair_err_private">This is not a home-network address. Sending is only allowed inside your own network.</string>
+    <string name="pair_err_route">Cannot reach the computer. Check that both devices are on the same Wi-Fi and that the firewall allows a private network.</string>
+    <string name="pair_not_qr">This is not a QR code from FlowVeil on a computer.</string>
+    <string name="pair_scan_pc">Send to computer (scan its QR)</string>
+    <string name="pair_manual">Send to computer by code…</string>
+    <string name="share_title">Shared link</string>
+    <string name="share_add_here">Add on this phone</string>
+    <string name="share_send_pc">Send to computer</string>
 </resources>

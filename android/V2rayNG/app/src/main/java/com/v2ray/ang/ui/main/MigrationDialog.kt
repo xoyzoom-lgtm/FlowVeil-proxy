@@ -28,6 +28,8 @@ fun MigrationDialog(
     onClipboard: () -> Unit,
     onBackup: () -> Unit,
     onLink: (String) -> Unit,
+    onSendToPc: () -> Unit,
+    onSendManual: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     var qrOpen by remember { mutableStateOf(false) }
@@ -47,6 +49,12 @@ fun MigrationDialog(
                 }
                 OutlinedButton(onClick = { onDismiss(); onBackup() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     Text(stringResource(R.string.migrate_backup))
+                }
+                OutlinedButton(onClick = onSendToPc, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Text(stringResource(R.string.pair_scan_pc))
+                }
+                OutlinedButton(onClick = onSendManual, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Text(stringResource(R.string.pair_manual))
                 }
                 Text(
                     stringResource(R.string.migrate_note),

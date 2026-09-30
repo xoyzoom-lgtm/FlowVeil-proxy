@@ -33,7 +33,10 @@ class UrlSchemeActivity : BaseComponentActivity() {
         startActivity(
             Intent(this, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .apply { if (!text.isNullOrBlank()) putExtra(MainActivity.EXTRA_IMPORT_TEXT, text) }
+                .apply {
+                    if (!text.isNullOrBlank()) putExtra(MainActivity.EXTRA_IMPORT_TEXT, text)
+                    if (intent.action == Intent.ACTION_SEND) putExtra(MainActivity.EXTRA_SHARED, true)
+                }
         )
         finish()
     }

@@ -695,10 +695,10 @@
     <string name="whats_new_title">Что нового</string>
     <string name="whats_new_ok">Понятно</string>
     <string-array name="whats_new_items">
-        <item>Улучшен автоподбор рабочего сервера в мобильных сетях: сначала выбираются подходящие серверы, каждый проверяется до переключения</item>
-        <item>Если проверка не прошла, подключение остаётся на прежнем сервере, а не на непроверенном</item>
-        <item>В настройках можно проверить серверы на мобильной сети и увидеть, какие из них работали</item>
-        <item>Появился запрос на работу в фоне: без него некоторые прошивки «усыпляют» приложение</item>
+        <item>Отправка подписки на компьютер: отсканируйте QR-код, который FlowVeil показывает на ПК (меню → Перенос из другого приложения)</item>
+        <item>Поделитесь ссылкой из любого приложения и выберите «Отправить на компьютер»</item>
+        <item>Шумы (мусорный трафик) для UDP-серверов, например Hysteria 2</item>
+        <item>Перенос подписки из v2rayNG: по QR-коду, из буфера обмена или из файла резервной копии</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>
@@ -824,4 +824,26 @@
     <string name="sub_error_http_403">провайдер закрыл доступ (403) — подписка отключена или превышен лимит устройств</string>
     <string name="sub_error_http_429">провайдер просит подождать (429) — слишком много запросов, попробуйте через пару минут</string>
     <string name="sub_error_http_5xx">сбой на сервере провайдера (%1$d) — попробуйте позже</string>
+    <string name="pair_title">Отправить на компьютер</string>
+    <string name="pair_to">Компьютер: %1$s</string>
+    <string name="pair_send">Отправить</string>
+    <string name="pair_done">Отправлено. Подтвердите добавление на компьютере.</string>
+    <string name="pair_shared_link">Будет отправлена ссылка, которой вы поделились.</string>
+    <string name="pair_no_subs">Нет подписок со ссылкой, которые можно отправить.</string>
+    <string name="pair_manual_hint">На компьютере откройте «Добавить» → «С телефона» и введите адрес и код с экрана. Оба устройства должны быть в одной сети.</string>
+    <string name="pair_address">Адрес (192.168.1.5:5123)</string>
+    <string name="pair_code">Код из 6 цифр</string>
+    <string name="pair_err_token">Неверный код. Покажите новый код на компьютере.</string>
+    <string name="pair_err_expired">Время вышло. Нажмите «Обновить код» на компьютере.</string>
+    <string name="pair_err_used">Этот код уже использован. Обновите его на компьютере.</string>
+    <string name="pair_err_locked">Слишком много неверных попыток. Обновите код на компьютере.</string>
+    <string name="pair_err_rejected">Компьютер не принял данные.</string>
+    <string name="pair_err_private">Это не адрес домашней сети. Отправка работает только внутри вашей сети.</string>
+    <string name="pair_err_route">Не удаётся связаться с компьютером. Проверьте, что оба устройства в одной Wi-Fi сети и что брандмауэр разрешает частную сеть.</string>
+    <string name="pair_not_qr">Это не QR-код FlowVeil с компьютера.</string>
+    <string name="pair_scan_pc">Отправить на компьютер (QR с экрана ПК)</string>
+    <string name="pair_manual">Отправить на компьютер по коду…</string>
+    <string name="share_title">Полученная ссылка</string>
+    <string name="share_add_here">Добавить на телефон</string>
+    <string name="share_send_pc">Отправить на компьютер</string>
 </resources>

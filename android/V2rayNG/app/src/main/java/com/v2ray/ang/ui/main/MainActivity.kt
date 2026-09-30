@@ -1,6 +1,11 @@
 package com.v2ray.ang.ui.main
 
 import android.content.Intent
+import com.v2ray.ang.net.PairProtocol
+import androidx.compose.ui.res.stringResource
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
@@ -69,7 +74,15 @@ class MainActivity : HelperBaseComponentActivity() {
     companion object {
         /** Text to import on open: an invite link or shared subscription/config text. */
         const val EXTRA_IMPORT_TEXT = "com.flowveil.extra.IMPORT_TEXT"
+
+        /** Set when the text came from the system share sheet: the user chooses between this phone and a computer. */
+        const val EXTRA_SHARED = "com.flowveil.extra.SHARED"
     }
+
+    private var pairQr by mutableStateOf<PairProtocol.Qr?>(null)
+    private var pairPreset by mutableStateOf<List<String>?>(null)
+    private var pairManual by mutableStateOf(false)
+    private var sharedText by mutableStateOf<String?>(null)
 
 
     private val mainViewModel: MainViewModel by viewModels {
@@ -129,11 +142,31 @@ class MainActivity : HelperBaseComponentActivity() {
         BackHandler { moveTaskToBack(false) }
         WhatsNewDialog()
         var showMigration by remember { mutableStateOf(false) }
+        if (pairQr != null || pairManual) {
+            PairSendDialog(qr = pairQr, preset = pairPreset, onDismiss = { pairQr = null; pairManual = false; pairPreset = null })
+        }
+        sharedText?.let { text ->
+            AlertDialog(
+                onDismissRequest = { sharedText = null },
+                title = { Text(stringResource(R.string.share_title)) },
+                text = { Text(text.take(120)) },
+                confirmButton = {
+                    TextButton(onClick = { sharedText = null; mainViewModel.onAction(MainAction.ImportBatchConfig(text)) }) { Text(stringResource(R.string.share_add_here)) }
+                },
+                dismissButton = {
+                    if (PairProtocol.isAllowedLink(text.trim())) {
+                        TextButton(onClick = { sharedText = null; pairPreset = listOf(text.trim()); scanForPc() }) { Text(stringResource(R.string.share_send_pc)) }
+                    }
+                },
+            )
+        }
         if (showMigration) {
             MigrationDialog(
                 onClipboard = { importClipboard() },
                 onBackup = { importV2rayNgBackup() },
                 onLink = { link -> mainViewModel.onAction(MainAction.ImportBatchConfig(link)) },
+                onSendToPc = { showMigration = false; scanForPc() },
+                onSendManual = { showMigration = false; pairManual = true },
                 onDismiss = { showMigration = false },
             )
         }
@@ -201,7 +234,12 @@ class MainActivity : HelperBaseComponentActivity() {
     private fun handleImportIntent(intent: Intent?) {
         val text = intent?.getStringExtra(EXTRA_IMPORT_TEXT)?.takeIf { it.isNotBlank() } ?: return
         intent.removeExtra(EXTRA_IMPORT_TEXT)
-        mainViewModel.onAction(MainAction.ImportBatchConfig(text))
+        if (intent.getBooleanExtra(EXTRA_SHARED, false)) {
+            intent.removeExtra(EXTRA_SHARED)
+            sharedText = text
+        } else {
+            mainViewModel.onAction(MainAction.ImportBatchConfig(text))
+        }
     }
 
     /** "Connect to the best": select the fastest server and connect (or switch to it). */
@@ -277,8 +315,19 @@ class MainActivity : HelperBaseComponentActivity() {
     private fun importQRcode() {
         launchQRCodeScanner { scanResult ->
             if (scanResult != null) {
-                mainViewModel.onAction(MainAction.ImportBatchConfig(scanResult))
+                // a code shown by FlowVeil on a computer is not a config: offer to send a subscription there
+                val qr = PairProtocol.parseQr(scanResult)
+                if (qr != null) pairQr = qr else mainViewModel.onAction(MainAction.ImportBatchConfig(scanResult))
             }
+        }
+    }
+
+    /** "Send to computer": scan the QR code the computer shows. */
+    private fun scanForPc() {
+        launchQRCodeScanner { scanResult ->
+            if (scanResult == null) return@launchQRCodeScanner
+            val qr = PairProtocol.parseQr(scanResult)
+            if (qr != null) pairQr = qr else toast(R.string.pair_not_qr)
         }
     }
 

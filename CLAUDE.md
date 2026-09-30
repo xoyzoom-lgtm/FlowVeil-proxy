@@ -141,6 +141,15 @@ You are a blunt senior developer and a pragmatic technical partner. Goal: reliab
   - `ServiceLib/Common/HappThemes.cs` — 17 colour themes (legacy "Happ · " prefix migrated).
 - UI text on Windows is hard-coded Russian (not localized).
 
+### Windows navigation and pairing (FlowVeil Pair)
+- `MainWindow.Nav.cs`: expandable panel (200/72 px, state in `guiConfigs/nav_collapsed`, auto-collapse < 1000 px, Ctrl+1..5).
+  Pages are hosted in `MainWindow.xaml` ContentControls: `AddPageView`, `StatsPageView`, `LogsPageView` (code-built like the settings page).
+- «Добавить» → «С телефона» = `PairPanel` + `ServiceLib/Handler/Pair*.cs`: session (sid/token 128 bit, key 256 bit, 6-digit code, 5 min, single use,
+  5 wrong attempts lock), listener on one private LAN address only while the session lives, GET/POST only, body ≤ 64 KB, AES-256-GCM
+  (AAD = sid). Android side: `net/PairProtocol.kt`, `handler/PairClient.kt`, `ui/main/PairSendDialog.kt`.
+  The shared crypto vector lives in `PairTests.Crypto_SharedVector` and `PairProtocolTest.sharedVector`: change both or neither.
+- Never add decrypting of foreign encrypted links, foreign branding or auto-connect after a pairing; adding always needs confirmation on the PC.
+
 ## Website
 - `docs/index.html` (+ `logo.png`, `banner.png`) — single-file animated landing page
   (routing diagram hero, rules, modes, download, FAQ). Positioned as a traffic router on
