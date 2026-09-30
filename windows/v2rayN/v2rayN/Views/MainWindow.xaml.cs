@@ -43,6 +43,9 @@ public partial class MainWindow
                 BuildSettingsPage(ViewModel);
                 _addPage = new AddPageView(ViewModel, GoToServers);
                 addPage.Content = _addPage;
+                statsPage.Content = new StatsPageView(ViewModel);
+                logsPage.Content = new LogsPageView();
+                _ = OpenStartPageAsync();
             }
 
             //servers
@@ -651,6 +654,23 @@ public partial class MainWindow
         RestoreUI();
         _ = ImportPendingLinkAsync();
         _ = SubAutoUpdate.EnsureDefaultAsync();
+    }
+
+    /// <summary>Start page: «Серверы», or «Добавить» when there is nothing to show yet.</summary>
+    private async Task OpenStartPageAsync()
+    {
+        try
+        {
+            var subs = await AppManager.Instance.SubItems();
+            if (subs == null || subs.Count == 0)
+            {
+                await Dispatcher.InvokeAsync(() => navAdd.IsChecked = true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(nameof(MainWindow), ex);
+        }
     }
 
     /// <summary>Adds the subscription from a flowveil:// link that opened the app.</summary>

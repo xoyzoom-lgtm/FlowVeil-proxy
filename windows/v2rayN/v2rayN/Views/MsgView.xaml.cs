@@ -36,7 +36,7 @@ public partial class MsgView
             ClearMsg();
         }
 
-        txtMsg.AppendText(msg.ToString());
+        txtMsg.AppendText(LogMask.Apply(msg.ToString() ?? string.Empty));
         if (togScrollToEnd.IsChecked ?? true)
         {
             txtMsg.ScrollToEnd();
