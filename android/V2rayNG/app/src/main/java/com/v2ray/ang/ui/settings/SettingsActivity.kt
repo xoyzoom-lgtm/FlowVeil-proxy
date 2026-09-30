@@ -324,7 +324,8 @@ fun SettingsScreen(
                 }
             }
 
-            NetStatusCard(devMode = devMode)
+            // Network diagnostics are for troubleshooting: developer mode only (the auto bypass itself is unaffected).
+            if (devMode) NetStatusCard(devMode = true)
 
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_connection))
             SettingsGroupCard {
