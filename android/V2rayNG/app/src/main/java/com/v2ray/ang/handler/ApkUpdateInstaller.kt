@@ -7,6 +7,9 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.dto.UrlContentRequest
+import com.v2ray.ang.net.Sha256Sums
+import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.LogUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -70,6 +73,26 @@ object ApkUpdateInstaller {
         }
         @Suppress("UNREACHABLE_CODE")
         target
+    }
+
+    /**
+     * Checks the downloaded file against the release's `SHA256SUMS.txt`: true = matches, false = differs (do not install),
+     * null = no sums or the file is not listed (do not block). A failed download of the sums file does not block either.
+     */
+    suspend fun verify(apk: File, assetName: String?, sumsUrl: String?): Boolean? = withContext(Dispatchers.IO) {
+        if (assetName == null || sumsUrl == null) return@withContext null
+        val text = runCatching { HttpUtil.getUrlContent(UrlContentRequest(url = sumsUrl, timeout = 15000)) }.getOrNull()
+            ?: return@withContext null
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        apk.inputStream().use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                digest.update(buffer, 0, read)
+            }
+        }
+        Sha256Sums.verify(Sha256Sums.parse(text), assetName, digest.digest().joinToString("") { "%02x".format(it) })
     }
 
     /** True when Android still needs the user to allow installs from FlowVeil (Android 8+). */

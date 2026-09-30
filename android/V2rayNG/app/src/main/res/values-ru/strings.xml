@@ -918,4 +918,13 @@
     <string name="diag_battery_oppo">Настройки → Аккумулятор → FlowVeil → «Разрешить работу в фоне»; включите автозапуск.</string>
     <string name="diag_battery_other">Настройки → Приложения → FlowVeil → Батарея → «Без ограничений».</string>
     <string name="diag_warning_prefix">Ещё</string>
+    <string name="notification_channel_app_updates">Обновления приложения</string>
+    <string name="update_notify_title">Вышла версия %1$s</string>
+    <string name="update_notify_text_fallback">Нажмите, чтобы посмотреть, что нового</string>
+    <string name="update_banner_text">Доступна новая версия %1$s</string>
+    <string name="update_later">Позже</string>
+    <string name="update_skip">Пропустить эту версию</string>
+    <string name="update_notify_switch">Сообщать о новых версиях</string>
+    <string name="update_notify_summary">Примерно дважды в сутки проверяет GitHub, есть ли новая версия. Это единственный запрос, который приложение делает само; в нём нет идентификаторов устройства и аккаунта. Ничего не устанавливается, пока вы не нажмёте «Обновить».</string>
+    <string name="update_checksum_failed">Файл обновления повреждён или изменён, установка отменена</string>
 </resources>

@@ -104,6 +104,7 @@ object AppConfig {
     const val PREF_HUPP_DEFAULTS_V2_APPLIED = "pref_hupp_defaults_v2_applied"
     const val PREF_FLOWVEIL_DEFAULTS_V3_APPLIED = "pref_flowveil_defaults_v3_applied"
     const val PREF_SUB_REMINDERS = "pref_sub_reminders"
+    const val PREF_UPDATE_NOTIFY = "pref_update_notify"
     /** Subscriptions refresh themselves this often unless the user sets another interval. */
     const val SUB_DEFAULT_UPDATE_MINUTES = 360L
     const val PREF_REAL_PING_CONCURRENCY = "pref_real_ping_concurrency"

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.UpdateNotifier
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.ui.compose.DeleteConfirmDialog
 import com.v2ray.ang.ui.compose.QRCodeDialog
@@ -147,6 +148,13 @@ fun MainScreen(
         .firstOrNull { it.id == uiState.selectedGroupId && it.id != AppConfig.DEFAULT_SUBSCRIPTION_ID }
         ?.subscription
     val context = LocalContext.current
+    // New build: check when the app opens (throttled to every 6 h, silent on failure) and show a quiet banner.
+    var updateBanner by remember { mutableStateOf(UpdateNotifier.bannerCandidate()) }
+    LaunchedEffect(Unit) {
+        UpdateNotifier.schedule(context)
+        UpdateNotifier.checkIfDue(context)
+        updateBanner = UpdateNotifier.bannerCandidate()
+    }
     val rowActions = remember(onAction) {
         ServerRowActions(
             select = { guid -> onAction(MainAction.SelectServer(guid)) },
@@ -163,6 +171,7 @@ fun MainScreen(
         if (rowIndex >= 0) {
             // Items before the server rows, in the same order listContent emits them.
             val headerCount = listOf(
+                updateBanner != null && !showSearch,
                 showHeroInList && !showSearch,
                 selectedSubscription != null && !showSearch,
                 true,
@@ -195,6 +204,18 @@ fun MainScreen(
     }
 
     val listContent: LazyListScope.(includeHero: Boolean) -> Unit = { includeHero ->
+        updateBanner?.takeIf { !showSearch }?.let { update ->
+            item(key = "update_banner") {
+                UpdateBanner(
+                    version = "build-${update.build}",
+                    onUpdate = { context.startActivity(android.content.Intent(context, com.v2ray.ang.ui.checkupdate.CheckUpdateActivity::class.java)) },
+                    onLater = {
+                        UpdateNotifier.later()
+                        updateBanner = null
+                    },
+                )
+            }
+        }
         if (includeHero && !showSearch) {
             item(key = KEY_HERO) {
                 Column {

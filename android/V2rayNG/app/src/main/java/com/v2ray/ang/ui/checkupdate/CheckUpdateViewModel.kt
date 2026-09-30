@@ -7,6 +7,7 @@ import com.v2ray.ang.dto.CheckUpdateResult
 import com.v2ray.ang.handler.ApkUpdateInstaller
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.UpdateCheckerManager
+import com.v2ray.ang.handler.UpdateNotifier
 import com.v2ray.ang.ui.base.BaseViewModel
 import com.v2ray.ang.util.LogUtil
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,6 +78,14 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
             _downloadProgress.value = 0
             try {
                 val apk = ApkUpdateInstaller.download(app, url) { _downloadProgress.value = it }
+                val result = _updateResult.value
+                // false = the file differs from the published sum: never install it. null = no sums published: do not block.
+                if (ApkUpdateInstaller.verify(apk, result?.assetName, result?.sumsUrl) == false) {
+                    apk.delete()
+                    _downloadProgress.value = null
+                    toastError(R.string.update_checksum_failed)
+                    return@launch
+                }
                 downloadedApk = apk
                 _downloadProgress.value = null
                 _showUpdateDialog.value = false
@@ -101,6 +110,18 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
         }
         ApkUpdateInstaller.install(app, apk)
         return true
+    }
+
+    /** "Later": the dialog closes and the reminder comes back in 3 days. */
+    fun later() {
+        UpdateNotifier.later()
+        dismissUpdateDialog()
+    }
+
+    /** "Skip this version": no notification or banner for it; the next build brings them back. */
+    fun skipVersion() {
+        _updateResult.value?.build?.takeIf { it > 0 }?.let { UpdateNotifier.skip(it) }
+        dismissUpdateDialog()
     }
 
     fun dismissUpdateDialog() {

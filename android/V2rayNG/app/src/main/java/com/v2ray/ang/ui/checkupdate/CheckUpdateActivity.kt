@@ -1,6 +1,15 @@
 package com.v2ray.ang.ui.checkupdate
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
+import com.v2ray.ang.handler.UpdateNotifier
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -31,6 +40,7 @@ import com.v2ray.ang.ui.base.BaseComponentActivity
 import com.v2ray.ang.ui.compose.AppTopBar
 import com.v2ray.ang.ui.compose.NavigationBarsSpacer
 import com.v2ray.ang.ui.compose.SettingsMenuItem
+import com.v2ray.ang.ui.compose.SettingsSwitchItem
 import com.v2ray.ang.ui.compose.VersionInfoBlock
 import com.v2ray.ang.ui.compose.verticalScrollbar
 import com.v2ray.ang.util.Utils
@@ -38,6 +48,15 @@ import com.v2ray.ang.util.Utils
 class CheckUpdateActivity : BaseComponentActivity() {
 
     private val viewModel: CheckUpdateViewModel by viewModels()
+
+    private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    /** Asked when the switch is turned on (a clear moment), never at the first start. A refusal only removes the system notification; the banner in the app stays. */
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,16 +73,18 @@ class CheckUpdateActivity : BaseComponentActivity() {
 
     @Composable
     override fun ScreenContent() {
-        CheckUpdateScreen(viewModel = viewModel, onBackClick = { finish() })
+        CheckUpdateScreen(viewModel = viewModel, onBackClick = { finish() }, onNotifyEnabled = { askNotificationPermission() })
     }
 }
 
 @Composable
 fun CheckUpdateScreen(
     viewModel: CheckUpdateViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onNotifyEnabled: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    var notifyOn by remember { mutableStateOf(UpdateNotifier.isEnabled()) }
 
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val showUpdateDialog by viewModel.showUpdateDialog.collectAsStateWithLifecycle()
@@ -94,6 +115,16 @@ fun CheckUpdateScreen(
                 title = stringResource(R.string.update_check_for_update),
                 onClick = { viewModel.checkForUpdates() }
             )
+            SettingsSwitchItem(
+                title = stringResource(R.string.update_notify_switch),
+                summary = stringResource(R.string.update_notify_summary),
+                checked = notifyOn,
+                onCheckedChange = { on ->
+                    notifyOn = on
+                    UpdateNotifier.setEnabled(context, on)
+                    if (on) onNotifyEnabled()
+                }
+            )
             VersionInfoBlock(versionText = versionText)
             NavigationBarsSpacer()
         }
@@ -118,13 +149,19 @@ fun CheckUpdateScreen(
                     }
                 } else {
                     val scrollState = rememberScrollState()
-                    Text(
-                        text = result.releaseNotes.orEmpty(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(scrollState)
-                            .verticalScrollbar(scrollState)
-                    )
+                    Column {
+                        Text(
+                            text = result.releaseNotes.orEmpty(),
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .fillMaxWidth()
+                                .verticalScroll(scrollState)
+                                .verticalScrollbar(scrollState)
+                        )
+                        TextButton(onClick = { viewModel.skipVersion() }) {
+                            Text(stringResource(R.string.update_skip))
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -136,8 +173,8 @@ fun CheckUpdateScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.dismissUpdateDialog() }) {
-                    Text(stringResource(R.string.action_cancel))
+                TextButton(onClick = { viewModel.later() }) {
+                    Text(stringResource(R.string.update_later))
                 }
             },
             containerColor = MaterialTheme.colorScheme.surface

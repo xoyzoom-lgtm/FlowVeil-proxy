@@ -922,4 +922,13 @@
     <string name="diag_battery_oppo">Settings → Battery → FlowVeil → “Allow background activity”; enable autostart.</string>
     <string name="diag_battery_other">Settings → Apps → FlowVeil → Battery → “Unrestricted”.</string>
     <string name="diag_warning_prefix">Also</string>
+    <string name="notification_channel_app_updates">App updates</string>
+    <string name="update_notify_title">Version %1$s is out</string>
+    <string name="update_notify_text_fallback">Tap to see what is new</string>
+    <string name="update_banner_text">A new version %1$s is available</string>
+    <string name="update_later">Later</string>
+    <string name="update_skip">Skip this version</string>
+    <string name="update_notify_switch">Tell me about new versions</string>
+    <string name="update_notify_summary">Checks GitHub for a new version about twice a day. This is the only request the app makes on its own; it carries no device or account identifiers. Nothing is installed until you press “Update”.</string>
+    <string name="update_checksum_failed">The update file is damaged or was changed, installation cancelled</string>
 </resources>
