@@ -582,6 +582,11 @@ public partial class MainWindowViewModel : MyReactiveObject
         {
             NoticeManager.Instance.Enqueue(ResUI.NoValidQRcodeFound);
         }
+        else if (PairQr.Parse(result) != null)
+        {
+            // our own "send from phone" code is not a subscription
+            NoticeManager.Instance.Enqueue("Это QR для передачи с телефона: откройте его камерой или в приложении на телефоне");
+        }
         else
         {
             var ret = await ConfigHandler.AddBatchServers(_config, result, _config.SubIndexId, false);

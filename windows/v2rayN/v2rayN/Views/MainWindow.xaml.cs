@@ -11,6 +11,8 @@ public partial class MainWindow
     private static Config _config;
     private readonly SingleReplaceableDisposable _layoutBindingsDisposable = new();
     private BackupAndRestoreView? _backupAndRestoreView;
+    private AddPageView? _addPage;
+    private bool _tunnelAdvancedOpen;
 
     public MainWindow()
     {
@@ -39,6 +41,8 @@ public partial class MainWindow
             {
                 homeView.Attach(ViewModel);
                 BuildSettingsPage(ViewModel);
+                _addPage = new AddPageView(ViewModel, GoToServers);
+                addPage.Content = _addPage;
             }
 
             //servers
@@ -264,20 +268,14 @@ public partial class MainWindow
         ProcUtils.ProcessStart(Utils.GetBinPath("EnableLoopback.exe"));
     }
 
-    /// <summary>The add-subscription dialog; [prefill] is a link taken from the clipboard, if there is one.</summary>
+    /// <summary>Opens the "Добавить" page; [prefill] is a link to put into the field.</summary>
     public void ShowAddSubscription(string? prefill = null)
     {
-        if (ViewModel == null)
+        GoToAdd();
+        if (prefill != null)
         {
-            return;
+            _addPage?.Prefill(prefill);
         }
-        var link = prefill;
-        if (link == null)
-        {
-            var clip = WindowsUtils.GetClipboardData()?.Trim();
-            link = clip != null && (clip.StartsWith("http", StringComparison.OrdinalIgnoreCase) || clip.StartsWith("flowveil:", StringComparison.OrdinalIgnoreCase)) ? clip : null;
-        }
-        _ = DialogHost.Show(new AddSubscriptionView(ViewModel, link, () => ShowReceiveQr(ViewModel)), "RootDialog");
     }
 
     public async Task AddServerViaClipboardAsync()
@@ -331,50 +329,6 @@ public partial class MainWindow
     /// Settings as grouped rows (icon, title, hint, chevron) like Happ: everyday items on top,
     /// technical ones in "Для опытных".
     /// </summary>
-    /// <summary>Shows a QR code that leads to a one-time page on the home network; the other device sends its subscription link through it.</summary>
-    private async void ShowReceiveQr(MainWindowViewModel vm)
-    {
-        SubReceiver? receiver = null;
-        try
-        {
-            receiver = new SubReceiver(link => Dispatcher.BeginInvoke(new Action(async () =>
-            {
-                DialogHost.Close("RootDialog");
-                var exists = await ServiceLib.Helper.SQLiteHelper.Instance.TableAsync<SubItem>().CountAsync(e => e.Url == link) > 0;
-                if (exists)
-                {
-                    NoticeManager.Instance.Enqueue("Эта подписка уже есть");
-                    return;
-                }
-                if (await ConfigHandler.AddSubItem(AppManager.Instance.Config, link) == 0)
-                {
-                    NoticeManager.Instance.Enqueue("Подписка получена");
-                    ((System.Windows.Input.ICommand)vm.SubUpdateCmd).Execute(null);
-                }
-            })));
-            var address = receiver.Start();
-            if (address == null)
-            {
-                NoticeManager.Instance.Enqueue("Компьютер не в домашней сети (Wi-Fi или кабель). Подключите его к той же сети, что и телефон");
-                return;
-            }
-            var dialog = new QrcodeView()
-            {
-                imgQrcode = { Source = QRCodeWindowsUtils.GetQRCode(address) },
-                txtContent = { Text = address.Split('?')[0] + "\nОткройте код камерой телефона (оба устройства в одной сети) и вставьте ссылку подписки" },
-            };
-            await DialogHost.Show(dialog, "RootDialog");
-        }
-        catch (Exception ex)
-        {
-            Logging.SaveLog("Migration", ex);
-        }
-        finally
-        {
-            receiver?.Dispose();
-        }
-    }
-
     private void OpenPingUrlMenu(MainWindowViewModel vm)
     {
         var config = AppManager.Instance.Config;
@@ -418,31 +372,6 @@ public partial class MainWindow
         {
             Logging.SaveLog("Reset", ex);
             NoticeManager.Instance.Enqueue("Не получилось сбросить настройки");
-        }
-    }
-
-    private async void RunMigration(MainWindowViewModel vm, string? dbPath)
-    {
-        try
-        {
-            if (dbPath.IsNullOrEmpty())
-            {
-                NoticeManager.Instance.Enqueue("v2rayN на этом компьютере не найден. Выберите файл guiNDB.db вручную");
-                return;
-            }
-            var (found, added) = await SubMigration.ImportSubscriptions(AppManager.Instance.Config, dbPath!);
-            NoticeManager.Instance.Enqueue(found == 0
-                ? "В этой базе нет ссылок на подписки"
-                : added == 0 ? $"Подписок найдено: {found}, все они уже есть" : $"Подписок найдено: {found}, добавлено новых: {added}");
-            if (added > 0)
-            {
-                ((System.Windows.Input.ICommand)vm.SubUpdateCmd).Execute(null);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.SaveLog("Migration", ex);
-            NoticeManager.Instance.Enqueue("Не получилось прочитать файл");
         }
     }
 
@@ -526,24 +455,11 @@ public partial class MainWindow
         void Exec(ICommand command) => command.Execute(null);
 
         var main = Section("Подписки");
-        Row(main, PackIconKind.Plus, "Добавить подписку", "Ссылка, название, как часто обновлять; файл или QR-код", () => ShowAddSubscription());
         Row(main, PackIconKind.Refresh, "Обновить все подписки", "Скачать свежий список серверов", () => Exec(vm.SubUpdateCmd));
         Row(main, PackIconKind.Autorenew, "Автообновление подписок", SubAutoUpdate.Title(SubAutoUpdate.Get()), () => OpenSubUpdateMenu(vm));
 
-        var migrate = Section("Перенос из другого приложения");
-        Row(migrate, PackIconKind.FolderSearchOutline, "Из v2rayN на этом компьютере", "Найдёт его подписки сам (ничего не удаляет и не заменяет)", () => RunMigration(vm, SubMigration.FindV2rayNDb()));
-        Row(migrate, PackIconKind.FileFindOutline, "Из файла guiNDB.db…", "Если v2rayN лежит в другом месте: папка guiConfigs внутри него", () =>
-        {
-            if (UI.OpenFileDialog(out var fileName, "v2rayN database|guiNDB.db|All|*.*") == true)
-            {
-                RunMigration(vm, fileName);
-            }
-        });
-        Row(migrate, PackIconKind.Qrcode, "Добавить по QR-коду (со второго устройства)", "FlowVeil покажет код: откройте его на телефоне и отправьте ссылку подписки сюда", () => ShowReceiveQr(vm));
-        Row(migrate, PackIconKind.ContentPaste, "Из Happ и других приложений", "Скопируйте ссылку подписки там и нажмите сюда. Зашифрованные ссылки открыть нельзя", () => Exec(vm.AddServerViaClipboardCmd));
-
         var settings = AppManager.Instance.Config;
-        var tunnel = Section("Туннель");
+        var tunnel = Section("Туннель и сеть");
         void Toggle(PackIconKind icon, string title, string tip, Func<bool> get, Action<bool> set)
         {
             var on = get();
@@ -555,12 +471,6 @@ public partial class MainWindow
                 BuildSettingsPage(vm);
             });
         }
-        Toggle(PackIconKind.Waves, "Шумы (мусорный трафик)",
-            "Случайные пакеты перед соединением, чтобы запутать анализ трафика. Работает с UDP-серверами (Hysteria2, mKCP), чуть увеличивает трафик",
-            () => settings.CoreBasicItem.EnableNoise, v => settings.CoreBasicItem.EnableNoise = v);
-        Toggle(PackIconKind.ContentCut, "Фрагментация",
-            "Разбивает начало соединения на части, чтобы его труднее было опознать. Для серверов с TLS и Reality; может немного снизить скорость",
-            () => settings.CoreBasicItem.EnableFragment, v => settings.CoreBasicItem.EnableFragment = v);
         Toggle(PackIconKind.LanConnect, "Подключения из локальной сети",
             "Другие устройства дома смогут использовать прокси этого компьютера (адрес и порт в «Параметры ядра и портов»). Включайте только в доверенной сети",
             () => settings.Inbound.FirstOrDefault()?.AllowLANConn == true,
@@ -580,6 +490,20 @@ public partial class MainWindow
             () => _ = DialogHost.Show(new AppProxyView(() => NoticeManager.Instance.Enqueue("Применится при следующем подключении")), "RootDialog").ContinueWith(_ => Dispatcher.BeginInvoke(new Action(() => BuildSettingsPage(vm)))));
         var pingUrl = settings.SpeedTestItem.SpeedPingTestUrl.IsNullOrEmpty() ? Global.SpeedPingTestUrls[0] : settings.SpeedTestItem.SpeedPingTestUrl;
         Row(tunnel, PackIconKind.Speedometer, "Адрес для пинга", pingUrl, () => OpenPingUrlMenu(vm));
+        Row(tunnel, _tunnelAdvancedOpen ? PackIconKind.ChevronUp : PackIconKind.ChevronDown, "Дополнительно", "Шумы и фрагментация: для случаев, когда соединение блокируют", () =>
+        {
+            _tunnelAdvancedOpen = !_tunnelAdvancedOpen;
+            BuildSettingsPage(vm);
+        });
+        if (_tunnelAdvancedOpen)
+        {
+            Toggle(PackIconKind.Waves, "Шумы (мусорный трафик)",
+                "Случайные пакеты перед соединением, чтобы запутать анализ трафика. Работает с UDP-серверами (Hysteria2, mKCP), чуть увеличивает трафик",
+                () => settings.CoreBasicItem.EnableNoise, v => settings.CoreBasicItem.EnableNoise = v);
+            Toggle(PackIconKind.ContentCut, "Фрагментация",
+                "Разбивает начало соединения на части, чтобы его труднее было опознать. Для серверов с TLS и Reality; может немного снизить скорость",
+                () => settings.CoreBasicItem.EnableFragment, v => settings.CoreBasicItem.EnableFragment = v);
+        }
 
         var app = Section("Приложение");
         Row(app, PackIconKind.Update, "Проверить обновления", $"Сейчас: build {HuppUpdater.CurrentBuild()}", () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));
@@ -588,6 +512,11 @@ public partial class MainWindow
         Row(app, PackIconKind.Restore, "Сбросить настройки", "Вернёт настройки к исходным. Подписки и серверы останутся", () => ResetSettings());
 
         var about = Section("О приложении");
+        Row(about, PackIconKind.InformationOutline, "Версия", $"FlowVeil {BuildName()}. Нажмите, чтобы скопировать", () =>
+        {
+            WindowsUtils.SetClipboardData($"FlowVeil {BuildName()}");
+            NoticeManager.Instance.Enqueue("Версия скопирована");
+        });
         Row(about, PackIconKind.HelpCircleOutline, "Частые вопросы", "Что такое подписка, как поставить, как проверить файл", () => ProcUtils.ProcessStart("https://xoyzoom-lgtm.github.io/FlowVeil-proxy/#faq"));
         Row(about, PackIconKind.Link, "Ссылки-приглашения", "flowveil://add?url=… добавляет подписку в один клик; ссылку и QR-код собирает страница проекта", () => UI.Show("Ссылка вида flowveil://add?url=<адрес подписки> открывает FlowVeil и сразу добавляет подписку. Провайдеры могут собрать такую ссылку и QR-код на странице проекта, в разделе «Для провайдеров»."));
         Row(about, PackIconKind.Send, "Автор", "Telegram @GxoyzoomG", () => ProcUtils.ProcessStart("https://t.me/GxoyzoomG"));
@@ -734,6 +663,7 @@ public partial class MainWindow
         }
         ShowHideWindow(true);
         await ViewModel.AddServerViaClipboardAsync(link);
+        GoToServers();
     }
 
     private void RestoreUI()
