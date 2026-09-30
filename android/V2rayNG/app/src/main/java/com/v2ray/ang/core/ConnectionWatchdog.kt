@@ -115,6 +115,13 @@ object ConnectionWatchdog {
         checkNowJob = scope.launch { switchLock.withLock { BypassController.checkNow() } }
     }
 
+    /** The UI asked to test the candidate servers on the mobile network now (nothing is switched). */
+    fun requestTestAll() {
+        if (!CoreServiceManager.isRunning()) return
+        checkNowJob?.cancel()
+        checkNowJob = scope.launch { switchLock.withLock { BypassController.testAll() } }
+    }
+
     /** True while reloading too (0 = not measured), so a reload never triggers a switch. */
     private fun currentServerWorks(): Boolean = CoreServiceManager.measureCurrentDelay() >= 0L
 

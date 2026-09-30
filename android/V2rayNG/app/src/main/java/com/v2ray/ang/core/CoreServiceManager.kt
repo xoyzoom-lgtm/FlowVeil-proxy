@@ -517,6 +517,7 @@ object CoreServiceManager {
                 }
 
                 AppConfig.MSG_NET_CHECK_NOW -> ConnectionWatchdog.requestCheckNow()
+                AppConfig.MSG_BYPASS_TEST_ALL -> ConnectionWatchdog.requestTestAll()
 
                 AppConfig.MSG_STATE_RESTART -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Restart service")

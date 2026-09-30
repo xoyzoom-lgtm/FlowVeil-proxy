@@ -28,6 +28,12 @@ object NetInfoCache {
         val bypass: BypassState,
         val reason: FailReason?,
         val returnTo: String?,
+        /** Servers checked so far / to check, while searching. */
+        val progress: Pair<Int, Int>?,
+        /** The server the connection is on after a verified switch. */
+        val target: String?,
+        /** Result of the last "test on the mobile network": ok/total. */
+        val testResult: Pair<Int, Int>?,
         val updatedAt: Long,
     )
 
@@ -45,6 +51,9 @@ object NetInfoCache {
             bypass = state,
             reason = reason,
             returnTo = MmkvManager.decodeSettingsString(AppConfig.CACHE_BYPASS_RETURN_TO)?.takeIf { it.isNotBlank() },
+            progress = pair(AppConfig.CACHE_BYPASS_PROGRESS),
+            target = MmkvManager.decodeSettingsString(AppConfig.CACHE_BYPASS_TARGET)?.takeIf { it.isNotBlank() },
+            testResult = pair(AppConfig.CACHE_BYPASS_TEST),
             updatedAt = MmkvManager.decodeSettingsString(KEY_UPDATED)?.toLongOrNull() ?: 0L,
         )
     }
@@ -68,7 +77,30 @@ object NetInfoCache {
         touch()
     }
 
+    private fun pair(key: String): Pair<Int, Int>? {
+        val parts = MmkvManager.decodeSettingsString(key).orEmpty().split('/')
+        val a = parts.getOrNull(0)?.toIntOrNull() ?: return null
+        val b = parts.getOrNull(1)?.toIntOrNull() ?: return null
+        return a to b
+    }
+
+    fun writeProgress(checked: Int, total: Int) {
+        MmkvManager.encodeSettings(AppConfig.CACHE_BYPASS_PROGRESS, "$checked/$total")
+        touch()
+    }
+
+    fun writeTarget(name: String?) {
+        MmkvManager.encodeSettings(AppConfig.CACHE_BYPASS_TARGET, name.orEmpty())
+        touch()
+    }
+
+    fun writeTestResult(ok: Int, total: Int) {
+        MmkvManager.encodeSettings(AppConfig.CACHE_BYPASS_TEST, "$ok/$total")
+        touch()
+    }
+
     fun writeBypass(state: BypassState, reason: FailReason? = null, returnTo: String? = null) {
+        if (state != BypassState.SEARCHING) MmkvManager.encodeSettings(AppConfig.CACHE_BYPASS_PROGRESS, "")
         MmkvManager.encodeSettings(AppConfig.CACHE_BYPASS_STATE, "${state.name}|${reason?.name.orEmpty()}")
         MmkvManager.encodeSettings(AppConfig.CACHE_BYPASS_RETURN_TO, returnTo.orEmpty())
         touch()

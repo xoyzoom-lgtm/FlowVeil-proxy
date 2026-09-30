@@ -21,6 +21,17 @@ object WhitelistBypass {
     const val PREF_STABLE_SECONDS = "pref_whitelist_bypass_stable_seconds"
     const val DEFAULT_BAD_MINUTES = 10
 
+    /** What to do when no server looks like a bypass server: stay as is ("none") or try the rest ("all"). */
+    const val PREF_FALLBACK = "pref_whitelist_bypass_fallback"
+    const val FALLBACK_NONE = "none"
+    const val FALLBACK_ALL = "all"
+
+    // Developer mode: slower pings are normal under a whitelist, and how long one search may take.
+    const val PREF_BYPASS_PING = "pref_whitelist_bypass_ping_bypass"
+    const val PREF_SEARCH_SECONDS = "pref_whitelist_bypass_search_seconds"
+    const val DEFAULT_BYPASS_PING_MS = 1500L
+    const val DEFAULT_SEARCH_SECONDS = 40
+
     const val MODE_AUTO = "auto"
     const val MODE_MANUAL = "manual"
 
@@ -37,6 +48,12 @@ object WhitelistBypass {
     fun isEnabled(): Boolean = MmkvManager.decodeSettingsBool(PREF_ENABLED, false)
 
     fun mode(): String = MmkvManager.decodeSettingsString(PREF_MODE, MODE_AUTO) ?: MODE_AUTO
+
+    fun tryRest(): Boolean = MmkvManager.decodeSettingsString(PREF_FALLBACK, FALLBACK_NONE) == FALLBACK_ALL
+
+    fun bypassPingMs(): Long = MmkvManager.decodeSettingsString(PREF_BYPASS_PING)?.toLongOrNull()?.takeIf { it in 300..10_000 } ?: DEFAULT_BYPASS_PING_MS
+
+    fun searchBudgetMs(): Long = (MmkvManager.decodeSettingsString(PREF_SEARCH_SECONDS)?.toIntOrNull()?.takeIf { it in 10..300 } ?: DEFAULT_SEARCH_SECONDS) * 1000L
 
     fun autoReturn(): Boolean = MmkvManager.decodeSettingsBool(PREF_AUTO_RETURN, true)
 

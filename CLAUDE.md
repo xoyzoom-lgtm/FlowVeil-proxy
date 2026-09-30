@@ -85,11 +85,20 @@ You are a blunt senior developer and a pragmatic technical partner. Goal: reliab
     stopped in `CoreServiceManager` (`launchCore`/`stopCoreLoop`); server tests use
     `SingboxBridge.scoped {}` (see `SpeedtestConfig.measure`) and are limited to 3 in parallel.
     Hysteria 2 needs no bridge: Xray has a native hysteria outbound. `fmt/TuicFmt.kt` parses `tuic://`.
-  - Whitelist bypass (off by default): settings/state/pure diagnosis in `handler/WhitelistBypass.kt`
-    (MMKV `pref_whitelist_bypass_*`), switching in `core/ConnectionWatchdog.kt` (network type via
-    `registerNetworkCallback` + scan of non-VPN networks; probes bound to the cellular `Network`;
-    `switchLock` shared with failover; backoff 1/2/5/10 min), picker `ui/settings/BypassServerPicker.kt`.
-    Russian servers are allowed as bypass candidates (unlike Best/failover).
+  - Auto bypass of mobile whitelists (off by default; public texts never say "bypass"): settings/state in
+    `handler/WhitelistBypass.kt` (MMKV `pref_whitelist_bypass_*`), decisions in `core/BypassController.kt`
+    (called by `ConnectionWatchdog`, one `switchLock` with failover). Rule: a server is switched to only after
+    an isolated test on the phone's real network (`SpeedtestConfig.measureStrict`: two hosts; the app is
+    excluded from its own VPN, so its sockets use the default network), stays only after a live check
+    through the profile's REAL local port (`handler/LocalProxy.kt`; custom JSON profiles have their own
+    inbounds, none = core delay test), and a search that ends unverified rolls back (`net/BypassSearch.kt`,
+    pure + tested). Candidates: `net/BypassClassifier.kt` (pure scoring: name markers, transport, mask SNI,
+    history; all weights in `BypassData`, version field) via `handler/BypassRating.kt`; auto = STRONG+LIKELY
+    only (WEAK if "try the rest"), manual = the user's list; history per server fingerprint + operator
+    MCC/MNC bucket, only from mobile-network tests (`handler/BypassHistory.kt`, `net/BypassHistoryLogic.kt`).
+    Decision log for developer mode: `handler/BypassLog.kt`. Russian servers ARE allowed for bypass, never for
+    the return to Wi-Fi. Network card and log are developer-mode only. `BatteryOptimization.kt` asks for the
+    battery exemption (OEM ROMs kill the background watchdog).
   - `handler/SubscriptionReminders.kt`, `SubscriptionUpdater.kt` (interval for all subs),
     `DirectSites.kt` (user + ~80 default Russian domains as one locked routing rule),
     `FavoriteServers.kt`, `ServerCountry.kt` (skip Russian servers for "Best"/failover),

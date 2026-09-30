@@ -30,11 +30,28 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.v2ray.ang.R
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.handler.BypassHistory
+import com.v2ray.ang.handler.BypassRating
 import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.WhitelistBypass
+import com.v2ray.ang.net.BypassLevel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-private data class PickerServer(val guid: String, val name: String, val type: String, val delay: Long)
+private enum class BadgeKind { MARKED, FITS, WORKED, FAILED, UNTESTED }
+
+private data class Badge(val kind: BadgeKind, val at: Long = 0L)
+
+private data class PickerServer(
+    val guid: String,
+    val name: String,
+    val type: String,
+    val delay: Long,
+    val badges: List<Badge>,
+    val unlikely: Boolean,
+)
 private data class PickerGroup(val title: String, val servers: List<PickerServer>)
 
 /**
@@ -101,6 +118,24 @@ fun BypassServerPickerDialog(onDismiss: () -> Unit, onSaved: (Int) -> Unit) {
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
+                                        server.badges.forEach { badge ->
+                                            Text(
+                                                badgeText(badge),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = when (badge.kind) {
+                                                    BadgeKind.WORKED, BadgeKind.MARKED -> MaterialTheme.colorScheme.primary
+                                                    BadgeKind.FAILED -> MaterialTheme.colorScheme.error
+                                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                }
+                                            )
+                                        }
+                                        if (checked && server.unlikely) {
+                                            Text(
+                                                stringResource(R.string.bypass_warn_unlikely),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -119,15 +154,45 @@ fun BypassServerPickerDialog(onDismiss: () -> Unit, onSaved: (Int) -> Unit) {
     }
 }
 
+@Composable
+private fun badgeText(badge: Badge): String = when (badge.kind) {
+    BadgeKind.MARKED -> stringResource(R.string.bypass_badge_marked)
+    BadgeKind.FITS -> stringResource(R.string.bypass_badge_fits)
+    BadgeKind.WORKED -> stringResource(R.string.bypass_badge_worked, formatDate(badge.at))
+    BadgeKind.FAILED -> stringResource(R.string.bypass_badge_failed, formatDate(badge.at))
+    BadgeKind.UNTESTED -> stringResource(R.string.bypass_badge_untested)
+}
+
+private fun formatDate(at: Long): String = SimpleDateFormat("dd.MM HH:mm", Locale.getDefault()).format(Date(at))
+
+/** What the classifier and the history of tests on the mobile network say about a server. */
+private fun badgesOf(guid: String): Pair<List<Badge>, Boolean> {
+    val rated = BypassRating.rate(guid, bucket = null) ?: return emptyList<Badge>() to false
+    val codes = rated.rating.reasons.map { it.code }.toSet()
+    val badges = ArrayList<Badge>()
+    if (codes.any { it == "name_label" || it == "name_mobile" || it == "name_bridge" }) badges += Badge(BadgeKind.MARKED)
+    if (codes.any { it in setOf("reality_vision", "reality", "xhttp", "cdn_transport", "mask_sni", "mask_host") }) badges += Badge(BadgeKind.FITS)
+    val history = BypassHistory.latest(rated.fingerprint)
+    when {
+        history == null || (history.lastOkAt == 0L && history.lastFailAt == 0L) -> badges += Badge(BadgeKind.UNTESTED)
+        history.lastOkAt >= history.lastFailAt -> badges += Badge(BadgeKind.WORKED, history.lastOkAt)
+        else -> badges += Badge(BadgeKind.FAILED, history.lastFailAt)
+    }
+    return badges to (rated.rating.level == BypassLevel.UNLIKELY)
+}
+
 private fun loadGroups(favoritesTitle: String): List<PickerGroup> {
     fun toServer(guid: String): PickerServer? {
         val profile = MmkvManager.decodeServerConfig(guid) ?: return null
         if (profile.configType == EConfigType.POLICYGROUP || profile.configType == EConfigType.PROXYCHAIN) return null
+        val (badges, unlikely) = badgesOf(guid)
         return PickerServer(
             guid = guid,
             name = profile.remarks.ifBlank { guid.take(8) },
             type = profile.configType.name,
             delay = MmkvManager.decodeServerAffiliationInfo(guid)?.testDelayMillis ?: 0L,
+            badges = badges,
+            unlikely = unlikely,
         )
     }
 

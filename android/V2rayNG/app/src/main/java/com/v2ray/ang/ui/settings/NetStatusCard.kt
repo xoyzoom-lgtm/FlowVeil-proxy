@@ -142,3 +142,42 @@ private fun returnText(returnTo: String?): String? = when (returnTo) {
     NetInfoCache.RETURN_BEST -> stringResource(R.string.net_return_to_best)
     else -> stringResource(R.string.net_return_to, returnTo)
 }
+
+/**
+ * Inside the auto-bypass settings: what the search is doing now, and the button that tests the
+ * servers on the mobile network (available only there, while connected). Reads [NetInfoCache].
+ */
+@Composable
+fun BypassStatusItems() {
+    val context = LocalContext.current
+    val info by produceState(initialValue = NetInfoCache.read()) {
+        while (true) {
+            value = NetInfoCache.read()
+            delay(1_500L)
+        }
+    }
+    val connected = MmkvManager.decodeSettingsLong(AppConfig.CACHE_CONNECTED_SINCE, 0L) > 0L
+    val progress = info.progress
+    val target = info.target
+    val status = when (info.bypass) {
+        BypassState.SEARCHING -> if (progress != null) stringResource(R.string.bypass_status_searching, progress.first, progress.second) else stringResource(R.string.net_bypass_searching)
+        BypassState.CHECKING -> stringResource(R.string.net_bypass_checking)
+        BypassState.OK -> if (target != null && WhitelistBypass.active != null) stringResource(R.string.bypass_status_connected, target) else null
+        BypassState.FAIL -> stringResource(R.string.bypass_status_failed)
+        else -> null
+    }
+    if (connected && status != null) {
+        SettingsMenuItem(title = status, onClick = {})
+    }
+    val onMobile = connected && info.type == NetType.CELLULAR
+    val done = info.testResult
+    SettingsMenuItem(
+        title = stringResource(R.string.title_bypass_test_now),
+        subtitle = when {
+            !onMobile -> stringResource(R.string.summary_bypass_test_unavailable)
+            done != null -> stringResource(R.string.summary_bypass_test_done, done.first, done.second)
+            else -> stringResource(R.string.summary_bypass_test_now)
+        },
+        onClick = { if (onMobile) MessageHelper.sendMsg2Service(context, AppConfig.MSG_BYPASS_TEST_ALL, "") }
+    )
+}

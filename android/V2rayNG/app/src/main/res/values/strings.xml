@@ -674,10 +674,10 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
-        <item>New “Network” card in Settings: your real network and IP, the IP through the proxy, and the state of the automatic switching</item>
-        <item>Automatic switching now really checks a new server (gstatic, a small download, the exit IP and again a few seconds later) and skips ones that only look connected</item>
-        <item>Back on Wi-Fi, FlowVeil returns to your previous server, or picks a good one (never in Russia) if it went bad</item>
-        <item>Ping now goes to gstatic by default, with a fallback address</item>
+        <item>Better automatic choice of a working server on mobile networks: suitable servers first, each one checked before switching</item>
+        <item>If the check fails, the connection stays on the previous server instead of an unchecked one</item>
+        <item>In Settings you can test the servers on the mobile network and see which of them worked</item>
+        <item>A request to work in the background: without it some phones put the app to sleep</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>
@@ -696,7 +696,7 @@
     <string name="title_whitelist_bypass">Auto bypass of mobile whitelists</string>
     <string name="summary_whitelist_bypass">Mobile data only. If the operator lets only whitelisted sites through and the server stops working, FlowVeil finds a server that gets through and switches to it</string>
     <string name="title_whitelist_bypass_mode">Bypass servers</string>
-    <string name="whitelist_bypass_mode_auto">Automatic (all servers)</string>
+    <string name="whitelist_bypass_mode_auto">Automatic (servers that look made for mobile networks)</string>
     <string name="whitelist_bypass_mode_manual">Only the ones I choose</string>
     <string name="title_whitelist_bypass_servers">Choose bypass servers</string>
     <string name="summary_whitelist_bypass_servers">Selected: %1$d. The fastest working one is used</string>
@@ -714,6 +714,31 @@
     <string name="bypass_log_empty">Nothing yet. The log fills when the auto bypass checks or switches a server</string>
     <string name="bypass_log_copy">Copy</string>
     <string name="bypass_log_clear">Clear</string>
+    <string name="whitelist_bypass_notify_no_match">No server looks like a bypass server. Pick servers by hand (Settings → Connection) or allow trying the rest</string>
+    <string name="whitelist_bypass_notify_all_bad">The suitable servers all failed a moment ago. I will try again later</string>
+    <string name="title_bypass_fallback">If no suitable server is found</string>
+    <string name="bypass_fallback_none">Do nothing and tell me</string>
+    <string name="bypass_fallback_all">Try the other servers (takes longer)</string>
+    <string name="summary_whitelist_bypass_auto">Auto picks among servers that look made for mobile networks: by name, transport and past results</string>
+    <string name="bypass_status_searching">Looking for a working server… (checked %1$d of %2$d)</string>
+    <string name="bypass_status_connected">Connected to %1$s (checked)</string>
+    <string name="bypass_status_failed">Found no working server, will try again later</string>
+    <string name="title_bypass_test_now">Check servers on the mobile network</string>
+    <string name="summary_bypass_test_now">Tests the servers without switching and remembers which work</string>
+    <string name="summary_bypass_test_unavailable">Available on the mobile network while connected</string>
+    <string name="summary_bypass_test_done">Last check: %1$d of %2$d servers work here</string>
+    <string name="bypass_badge_marked">Marked by the provider</string>
+    <string name="bypass_badge_fits">Fits by its settings</string>
+    <string name="bypass_badge_worked">Worked on mobile ✓ %1$s</string>
+    <string name="bypass_badge_failed">Did not work ✗ %1$s</string>
+    <string name="bypass_badge_untested">Not checked</string>
+    <string name="bypass_warn_unlikely">This server most likely does not work on a mobile network</string>
+    <string name="title_bypass_ping_bypass">Slow ping limit for bypass (ms)</string>
+    <string name="title_bypass_search_seconds">Search time limit (s)</string>
+    <string name="title_bypass_masks">Allowed domains (masks)</string>
+    <string name="summary_bypass_masks">One per line; empty = the built-in list of Russian services</string>
+    <string name="title_bypass_labels">Extra words in server names</string>
+    <string name="summary_bypass_labels">One per line: a server whose name has such a word counts as made for the mobile network</string>
     <string name="whitelist_bypass_search_hint">Search servers</string>
     <string name="whitelist_bypass_favorites">Favorites</string>
     <string name="whitelist_bypass_no_servers">No servers yet. Add a subscription first</string>

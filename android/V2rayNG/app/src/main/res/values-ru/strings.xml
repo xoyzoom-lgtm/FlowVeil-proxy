@@ -678,10 +678,10 @@
     <string name="whats_new_title">Что нового</string>
     <string name="whats_new_ok">Понятно</string>
     <string-array name="whats_new_items">
-        <item>Новая карточка «Сеть» в настройках: реальная сеть и IP, IP через прокси и состояние автопереключения</item>
-        <item>Автопереключение теперь по-настоящему проверяет новый сервер (gstatic, небольшая загрузка, внешний IP и повторно через несколько секунд) и пропускает те, что только числятся подключёнными</item>
-        <item>На Wi-Fi FlowVeil возвращается на прежний сервер или выбирает хороший (не российский), если прежний испортился</item>
-        <item>Пинг по умолчанию идёт через gstatic, есть запасной адрес</item>
+        <item>Улучшен автоподбор рабочего сервера в мобильных сетях: сначала выбираются подходящие серверы, каждый проверяется до переключения</item>
+        <item>Если проверка не прошла, подключение остаётся на прежнем сервере, а не на непроверенном</item>
+        <item>В настройках можно проверить серверы на мобильной сети и увидеть, какие из них работали</item>
+        <item>Появился запрос на работу в фоне: без него некоторые прошивки «усыпляют» приложение</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>
@@ -700,7 +700,7 @@
     <string name="title_whitelist_bypass">Авто-обход белых списков</string>
     <string name="summary_whitelist_bypass">Только на мобильной сети. Если оператор пускает лишь на сайты из белого списка и сервер перестал работать, FlowVeil найдёт сервер, который проходит, и переключится на него</string>
     <string name="title_whitelist_bypass_mode">Серверы обхода</string>
-    <string name="whitelist_bypass_mode_auto">Автоматически (все серверы)</string>
+    <string name="whitelist_bypass_mode_auto">Автоматически (похожие на серверы обхода)</string>
     <string name="whitelist_bypass_mode_manual">Только выбранные мной</string>
     <string name="title_whitelist_bypass_servers">Выбрать серверы обхода</string>
     <string name="summary_whitelist_bypass_servers">Выбрано: %1$d. Используется самый быстрый рабочий</string>
@@ -718,6 +718,31 @@
     <string name="bypass_log_empty">Пока пусто. Журнал заполняется, когда авто-обход проверяет или переключает сервер</string>
     <string name="bypass_log_copy">Скопировать</string>
     <string name="bypass_log_clear">Очистить</string>
+    <string name="whitelist_bypass_notify_no_match">Ни один сервер не похож на сервер обхода. Выберите серверы вручную (Настройки → Подключение) или разрешите пробовать остальные</string>
+    <string name="whitelist_bypass_notify_all_bad">Все подходящие серверы только что не сработали. Попробую позже</string>
+    <string name="title_bypass_fallback">Если подходящих серверов не нашлось</string>
+    <string name="bypass_fallback_none">Ничего не делать и сообщить</string>
+    <string name="bypass_fallback_all">Пробовать остальные серверы (дольше)</string>
+    <string name="summary_whitelist_bypass_auto">Авто подбирает среди серверов, похожих на серверы для мобильных сетей: по названию, транспорту и прошлым результатам</string>
+    <string name="bypass_status_searching">Ищу рабочий сервер… (проверено %1$d из %2$d)</string>
+    <string name="bypass_status_connected">Подключён к %1$s (проверено)</string>
+    <string name="bypass_status_failed">Не нашёл рабочий сервер, попробую позже</string>
+    <string name="title_bypass_test_now">Проверить серверы на мобильной сети</string>
+    <string name="summary_bypass_test_now">Проверяет серверы без переключения и запоминает, какие работают</string>
+    <string name="summary_bypass_test_unavailable">Доступно на мобильной сети при включённом подключении</string>
+    <string name="summary_bypass_test_done">Последняя проверка: работает %1$d из %2$d серверов</string>
+    <string name="bypass_badge_marked">Помечен провайдером</string>
+    <string name="bypass_badge_fits">Подходит по настройкам</string>
+    <string name="bypass_badge_worked">Работал на мобильной сети ✓ %1$s</string>
+    <string name="bypass_badge_failed">Не сработал ✗ %1$s</string>
+    <string name="bypass_badge_untested">Не проверялся</string>
+    <string name="bypass_warn_unlikely">Этот сервер, скорее всего, не работает на мобильной сети</string>
+    <string name="title_bypass_ping_bypass">Порог медленного пинга для обхода (мс)</string>
+    <string name="title_bypass_search_seconds">Лимит времени поиска (с)</string>
+    <string name="title_bypass_masks">Разрешённые домены (маски)</string>
+    <string name="summary_bypass_masks">По одному в строке; пусто — встроенный список российских сервисов</string>
+    <string name="title_bypass_labels">Свои слова в названиях серверов</string>
+    <string name="summary_bypass_labels">По одному в строке: сервер с таким словом в названии считается сделанным для мобильной сети</string>
     <string name="whitelist_bypass_search_hint">Поиск серверов</string>
     <string name="whitelist_bypass_favorites">Избранные</string>
     <string name="whitelist_bypass_no_servers">Серверов пока нет. Сначала добавьте подписку</string>

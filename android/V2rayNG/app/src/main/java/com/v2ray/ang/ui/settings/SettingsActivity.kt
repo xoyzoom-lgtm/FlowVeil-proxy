@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.v2ray.ang.handler.BatteryOptimization
+import com.v2ray.ang.handler.BypassRating
 import com.v2ray.ang.ui.compose.ConfirmDialog
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
@@ -226,6 +227,11 @@ fun SettingsScreen(
     var showBypassPicker by remember { mutableStateOf(false) }
     var showBatteryDialog by remember { mutableStateOf(false) }
     var showBypassLog by remember { mutableStateOf(false) }
+    var bypassFallback by rememberMmkvString(WhitelistBypass.PREF_FALLBACK, WhitelistBypass.FALLBACK_NONE)
+    var bypassPingBypass by rememberMmkvString(WhitelistBypass.PREF_BYPASS_PING, WhitelistBypass.DEFAULT_BYPASS_PING_MS.toString())
+    var bypassSearchSeconds by rememberMmkvString(WhitelistBypass.PREF_SEARCH_SECONDS, WhitelistBypass.DEFAULT_SEARCH_SECONDS.toString())
+    var bypassMasks by rememberMmkvString(BypassRating.PREF_MASKS, "")
+    var bypassLabels by rememberMmkvString(BypassRating.PREF_LABELS, "")
     var batteryAllowed by remember { mutableStateOf(true) }
     var bypassBadMinutes by rememberMmkvString(WhitelistBypass.PREF_BAD_MINUTES, WhitelistBypass.DEFAULT_BAD_MINUTES.toString())
     var bypassPingLimit by rememberMmkvString(WhitelistBypass.PREF_PING_LIMIT, ReturnLogic.DEFAULT_PING_LIMIT_MS.toString())
@@ -422,6 +428,19 @@ fun SettingsScreen(
                         selectedValue = whitelistBypassMode,
                         onSelected = { whitelistBypassMode = it }
                     )
+                    if (whitelistBypassMode == WhitelistBypass.MODE_AUTO) {
+                        SettingsListItem(
+                            title = stringResource(R.string.title_bypass_fallback),
+                            entries = listOf(
+                                stringResource(R.string.bypass_fallback_none),
+                                stringResource(R.string.bypass_fallback_all),
+                            ),
+                            values = listOf(WhitelistBypass.FALLBACK_NONE, WhitelistBypass.FALLBACK_ALL),
+                            selectedValue = bypassFallback,
+                            onSelected = { bypassFallback = it }
+                        )
+                    }
+                    BypassStatusItems()
                     if (whitelistBypassMode == WhitelistBypass.MODE_MANUAL) {
                         SettingsMenuItem(
                             title = stringResource(R.string.title_whitelist_bypass_servers),
@@ -440,6 +459,30 @@ fun SettingsScreen(
                             title = stringResource(R.string.title_bypass_log),
                             subtitle = stringResource(R.string.summary_bypass_log),
                             onClick = { showBypassLog = true }
+                        )
+                        SettingsListItem(
+                            title = stringResource(R.string.title_bypass_ping_bypass),
+                            entries = listOf("1000", "1500", "2500", "4000"),
+                            values = listOf("1000", "1500", "2500", "4000"),
+                            selectedValue = bypassPingBypass,
+                            onSelected = { bypassPingBypass = it }
+                        )
+                        SettingsListItem(
+                            title = stringResource(R.string.title_bypass_search_seconds),
+                            entries = listOf("20", "40", "60", "120"),
+                            values = listOf("20", "40", "60", "120"),
+                            selectedValue = bypassSearchSeconds,
+                            onSelected = { bypassSearchSeconds = it }
+                        )
+                        SettingsEditItem(
+                            title = stringResource(R.string.title_bypass_masks),
+                            value = bypassMasks,
+                            onValueChanged = { bypassMasks = it }
+                        )
+                        SettingsEditItem(
+                            title = stringResource(R.string.title_bypass_labels),
+                            value = bypassLabels,
+                            onValueChanged = { bypassLabels = it }
                         )
                         SettingsListItem(
                             title = stringResource(R.string.title_bypass_bad_minutes),

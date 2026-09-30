@@ -4,7 +4,9 @@ import android.app.Service
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.handler.BypassHistory
 import com.v2ray.ang.handler.BypassLog
+import com.v2ray.ang.handler.BypassRating
 import com.v2ray.ang.handler.BypassState
 import com.v2ray.ang.handler.LocalProxy
 import com.v2ray.ang.handler.DevMode
@@ -16,9 +18,13 @@ import com.v2ray.ang.handler.ServerCountry
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.handler.WhitelistBypass.Diagnosis
 import com.v2ray.ang.helper.MessageHelper
+import com.v2ray.ang.net.BypassLevel
+import com.v2ray.ang.net.BypassSearch
 import com.v2ray.ang.net.BypassSnapshot
 import com.v2ray.ang.net.BypassVerdict
 import com.v2ray.ang.net.FailReason
+import com.v2ray.ang.net.IsoResult
+import com.v2ray.ang.net.LiveOutcome
 import com.v2ray.ang.net.NetType
 import com.v2ray.ang.net.Outcome
 import com.v2ray.ang.net.PingUrls
@@ -26,10 +32,14 @@ import com.v2ray.ang.net.OriginState
 import com.v2ray.ang.net.ProbeStep
 import com.v2ray.ang.net.ReturnAction
 import com.v2ray.ang.net.ReturnLogic
+import com.v2ray.ang.net.SearchCandidate
+import com.v2ray.ang.net.SearchEnv
+import com.v2ray.ang.net.SearchLimits
 import com.v2ray.ang.net.Verdict
 import com.v2ray.ang.receiver.WidgetProvider
 import com.v2ray.ang.service.RealPingExecutionLimiter
 import com.v2ray.ang.service.SpeedtestConfig
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -63,6 +73,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 object BypassController {
     private const val BYPASS_PARALLEL = 8
     private const val BYPASS_MAX_CANDIDATES = 48
+    private const val PER_CANDIDATE_MS = 15_000L
+    private const val TEST_ALL_BUDGET_MS = 90_000L
+    private const val TEST_ALL_MAX = 60
     private const val RETURN_MAX_CANDIDATES = 24
     private const val RETURN_CHECK_INTERVAL_MS = 150_000L
     private const val IDENTITY_INTERVAL_MS = 60_000L
@@ -426,81 +439,162 @@ object BypassController {
     // Searching and switching
     // ------------------------------------------------------------------
 
-    private data class TryResult(val found: String?, val lastReason: FailReason?, val aborted: Boolean)
+    private data class TryResult(val found: String?, val lastReason: FailReason?, val aborted: Boolean, val tested: Int = 0, val passed: Int = 0)
+
+    /** What the candidate list was made of, for the log and the messages. */
+    private data class Plan(
+        val tier1: List<BypassRating.Rated>,
+        val tier2: List<BypassRating.Rated>,
+        val skippedBad: Int,
+        val total: Int,
+    )
+
+    private fun limits(testOnly: Boolean = false) = SearchLimits(
+        parallel = BYPASS_PARALLEL,
+        earlyExit = if (testOnly) Int.MAX_VALUE else 2,
+        totalMs = if (testOnly) TEST_ALL_BUDGET_MS else WhitelistBypass.searchBudgetMs(),
+        perCandidateMs = PER_CANDIDATE_MS,
+        pingLimitMs = WhitelistBypass.bypassPingMs(),
+        maxLive = 3,
+        testOnly = testOnly,
+    )
 
     /**
-     * Tests [candidates] in parallel batches (8 at a time, TUIC 3 through [RealPingExecutionLimiter]),
-     * then switches to the fastest that answers and verifies it in use; a server that fails the
-     * check is marked bad for a while and the next one is tried.
+     * One search over [candidates] (best first): the isolated test of each on the phone's real
+     * network, then a switch to the best that passed and the live check; whatever does not pass is
+     * marked bad, and a search that ends without a verified server puts the connection back (see
+     * [BypassSearch]). [rated] carries the fingerprint and score of each server for the history and
+     * the log; the return flow has none and writes no history.
      */
-    private suspend fun tryCandidates(
+    private suspend fun runSearch(
         service: Service,
-        candidates: List<String>,
+        candidates: List<SearchCandidate>,
+        rated: Map<String, BypassRating.Rated>,
         full: Boolean,
+        testOnly: Boolean,
         stillNeeded: () -> Boolean,
     ): TryResult {
-        var lastReason: FailReason? = null
         val startGuid = CoreServiceManager.currentServerGuid()
         lastOurs = startGuid
-        // Whatever happens, a candidate that did not pass must not stay active: go back to where we started.
-        fun leave(result: TryResult): TryResult {
-            if (result.found == null && startGuid != null && CoreServiceManager.isRunning() &&
-                CoreServiceManager.currentServerGuid() != startGuid && !userChangedServer()
-            ) {
-                BypassLog.add("search ended without a verified server, back to the previous one")
-                ourSwitch(startGuid)
-            }
-            return result
-        }
-        for (batch in candidates.chunked(BYPASS_PARALLEL)) {
-            currentCoroutineContext().ensureActive()
-            if (!CoreServiceManager.isRunning() || !stillNeeded() || userChangedServer()) return leave(TryResult(null, lastReason, aborted = true))
-            val results = coroutineScope {
-                batch.map { guid ->
-                    async {
-                        guid to runCatching {
-                            RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(guid)) { SpeedtestConfig.measureStrict(service, guid) }
-                        }.getOrDefault(-1L)
+        val bucket = BypassHistory.bucket(service)
+        var lastReason: FailReason? = null
+        fun onCellular() = PhysicalNetwork.snapshot.type == NetType.CELLULAR
+        val alive = { CoreServiceManager.isRunning() && stillNeeded() && !userChangedServer() }
+
+        val env = object : SearchEnv {
+            override suspend fun isolated(id: String): IsoResult {
+                val ping = try {
+                    withContext(Dispatchers.IO) {
+                        RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(id)) { SpeedtestConfig.measureStrict(service, id) }
                     }
-                }.awaitAll()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    -1L
+                }
+                return IsoResult(ping > 0, ping)
             }
-            results.forEach { (guid, d) ->
-                MmkvManager.encodeServerTestDelayMillis(guid, d)
-                BypassLog.add("test on the network: ${serverName(guid)} -> ${if (d > 0) "$d ms" else "no answer"}")
-            }
-            for ((guid, delayMs) in results.filter { it.second > 0 }.sortedBy { it.second }) {
-                if (!CoreServiceManager.isRunning() || !stillNeeded() || userChangedServer()) return leave(TryResult(null, lastReason, aborted = true))
-                if (!ourSwitch(guid)) continue
+
+            override suspend fun switchTo(id: String): Boolean {
+                if (!ourSwitch(id)) return false
                 delay(VERIFY_DELAY_MS)
-                val verdict = verifyAfterSwitch(full) { CoreServiceManager.isRunning() && stillNeeded() }
-                when (verdict.outcome) {
-                    Outcome.OK -> {
-                        BypassLog.add("$guid passed the check ($delayMs ms)")
-                        return TryResult(guid, null, aborted = false)
-                    }
-                    Outcome.UNKNOWN -> return leave(TryResult(null, lastReason, aborted = true))
-                    Outcome.FAIL -> {
-                        WhitelistBypass.markBad(guid)
-                        lastReason = verdict.reason
-                        BypassLog.add("$guid failed the check (${verdict.reason}), marked bad, next")
-                    }
+                return true
+            }
+
+            override suspend fun verify(id: String): LiveOutcome {
+                val verdict = verifyAfterSwitch(full, alive)
+                if (verdict.outcome == Outcome.FAIL) lastReason = verdict.reason
+                BypassLog.add("live check of ${serverName(id)}: ${verdict.outcome}${verdict.reason?.let { " (${it.name})" }.orEmpty()}")
+                return when (verdict.outcome) {
+                    Outcome.OK -> LiveOutcome.OK
+                    Outcome.FAIL -> LiveOutcome.FAIL
+                    Outcome.UNKNOWN -> LiveOutcome.UNKNOWN
                 }
             }
+
+            override suspend fun rollback() {
+                if (startGuid != null && CoreServiceManager.isRunning() &&
+                    CoreServiceManager.currentServerGuid() != startGuid && !userChangedServer()
+                ) {
+                    BypassLog.add("no verified server: back to ${serverName(startGuid)}")
+                    ourSwitch(startGuid)
+                }
+            }
+
+            override fun stillNeeded(): Boolean = alive()
+
+            override fun log(message: String) = BypassLog.add(message)
+
+            override fun onIsolated(id: String, result: IsoResult) {
+                MmkvManager.encodeServerTestDelayMillis(id, result.pingMs)
+                val meta = rated[id]
+                BypassLog.add(
+                    "test on the network: ${serverName(id)}${meta?.let { " [score ${it.rating.score} ${it.rating.level}]" }.orEmpty()} -> " +
+                        (if (result.ok) "passed ${result.pingMs} ms" else "no answer")
+                )
+                if (meta != null) {
+                    if (result.ok) BypassHistory.recordOk(meta.fingerprint, bucket, result.pingMs, onCellular())
+                    else BypassHistory.recordFail(meta.fingerprint, bucket, onCellular())
+                }
+                if (!result.ok) WhitelistBypass.markBad(id)
+            }
+
+            override fun onLiveFail(id: String) {
+                WhitelistBypass.markBad(id)
+                rated[id]?.let { BypassHistory.recordFail(it.fingerprint, bucket, onCellular()) }
+            }
+
+            override fun onProgress(checked: Int, total: Int) = NetInfoCache.writeProgress(checked, total)
         }
-        return leave(TryResult(null, lastReason, aborted = false))
+        val result = BypassSearch.run(candidates, limits(testOnly), env)
+        return TryResult(result.found, lastReason, result.aborted, result.tested, result.passed)
     }
 
-    private fun bypassCandidates(current: String): List<String> {
+    /** Return flow: the ordered [guids] (best first), no classifier and no history. */
+    private suspend fun tryCandidates(service: Service, guids: List<String>, full: Boolean, stillNeeded: () -> Boolean): TryResult =
+        runSearch(
+            service,
+            guids.mapIndexed { i, g -> SearchCandidate(g, score = guids.size - i, order = i) },
+            emptyMap(), full, testOnly = false, stillNeeded = stillNeeded,
+        )
+
+    /**
+     * Who may be tried on the mobile network. Auto: only servers that look like bypass servers
+     * (STRONG, LIKELY); the weak ones only when the user allowed "try the rest"; never the
+     * unlikely ones. Manual: what the user picked, in any case, best score first, ties by list order.
+     * Servers that failed recently on this operator are left out.
+     */
+    private fun buildPlan(service: Service, current: String?, includeCurrent: Boolean = false): Plan {
         val now = System.currentTimeMillis()
-        val base = if (WhitelistBypass.mode() == WhitelistBypass.MODE_MANUAL) {
-            WhitelistBypass.servers()
-        } else {
-            // Automatic: every server, Russian ones included. Groups and chains are skipped.
-            val all = MmkvManager.decodeAllServerList().filter { isSimple(it) }
-            WhitelistBypass.orderCandidates(all, FavoriteServers.all(), WhitelistBypass.recentSuccess()) { delayOf(it) }
+        val bucket = BypassHistory.bucket(service)
+        val manual = WhitelistBypass.mode() == WhitelistBypass.MODE_MANUAL
+        val guids = if (manual) WhitelistBypass.servers() else MmkvManager.decodeAllServerList()
+        val rated = guids.mapIndexedNotNull { i, g ->
+            if (!includeCurrent && g == current) null else BypassRating.rate(g, bucket, now, order = if (manual) i else null)
         }
-        return base.filter { it != current && !WhitelistBypass.isBad(it, now) }.take(BYPASS_MAX_CANDIDATES)
+        BypassHistory.prune(MmkvManager.decodeAllServerList().mapNotNull { BypassRating.fingerprintOf(it) }.toSet())
+        val usable = rated.filter { !WhitelistBypass.isBad(it.guid, now) && !BypassHistory.isBad(it.fingerprint, bucket, now) }
+        fun best(list: List<BypassRating.Rated>) = list.sortedWith(compareBy({ -it.rating.score }, { it.order })).take(BYPASS_MAX_CANDIDATES)
+        val plan = if (manual) {
+            Plan(best(usable), emptyList(), rated.size - usable.size, rated.size)
+        } else {
+            Plan(
+                best(usable.filter { BypassRating.looksLikeBypass(it.rating) }),
+                best(usable.filter { it.rating.level == BypassLevel.WEAK }),
+                rated.size - usable.size, rated.size,
+            )
+        }
+        val by = rated.groupingBy { it.rating.level }.eachCount()
+        BypassLog.add(
+            "candidates (${if (manual) "manual" else "auto"}): ${plan.tier1.size} first choice, ${plan.tier2.size} rest; " +
+                "of ${plan.total}: strong ${by[BypassLevel.STRONG] ?: 0}, likely ${by[BypassLevel.LIKELY] ?: 0}, " +
+                "weak ${by[BypassLevel.WEAK] ?: 0}, unlikely ${by[BypassLevel.UNLIKELY] ?: 0}; skipped as recently failed: ${plan.skippedBad}"
+        )
+        plan.tier1.take(10).forEach { BypassLog.add("  ${serverName(it.guid)}: ${it.rating.score} ${it.rating.level} (${it.rating.explain()})") }
+        return plan
     }
+
+    private fun toCandidates(list: List<BypassRating.Rated>) = list.mapIndexed { i, r -> SearchCandidate(r.guid, r.rating.score, i) }
 
     private fun isSimple(guid: String): Boolean = MmkvManager.decodeServerConfig(guid)?.configType?.let {
         it != EConfigType.POLICYGROUP && it != EConfigType.PROXYCHAIN
@@ -515,23 +609,40 @@ object BypassController {
             BypassLog.add("backing off for ${(nextSearchAt - now) / 1000}s")
             return
         }
-        val candidates = bypassCandidates(current)
-        if (candidates.isEmpty()) {
-            val manual = WhitelistBypass.mode() == WhitelistBypass.MODE_MANUAL
+        val manual = WhitelistBypass.mode() == WhitelistBypass.MODE_MANUAL
+        val plan = buildPlan(service, current)
+        val restAllowed = !manual && WhitelistBypass.tryRest() && plan.tier2.isNotEmpty()
+        if (plan.tier1.isEmpty() && !restAllowed) {
+            // Nothing to try: say so and keep the connection as it is. No silent fall back to "all servers".
+            val text = when {
+                manual && plan.total == 0 -> R.string.whitelist_bypass_notify_empty_manual
+                plan.total > 0 && plan.skippedBad == plan.total -> R.string.whitelist_bypass_notify_all_bad
+                else -> R.string.whitelist_bypass_notify_no_match
+            }
+            BypassLog.add("nothing to try (${service.getString(text)})")
             NetInfoCache.writeBypass(BypassState.FAIL, FailReason.NO_GSTATIC, returnToName())
-            postEvent(
-                service, "empty",
-                service.getString(if (manual) R.string.whitelist_bypass_notify_empty_manual else R.string.whitelist_bypass_notify_not_found),
-                NOTIFY_PROBLEM_GAP_MS,
-            )
+            failedSearches++
+            nextSearchAt = System.currentTimeMillis() + WhitelistBypass.backoffMillis(failedSearches)
+            postEvent(service, "empty", service.getString(text), NOTIFY_PROBLEM_GAP_MS)
             return
         }
-        BypassLog.add("restricted network, testing ${candidates.size} servers")
         NetInfoCache.writeBypass(BypassState.SEARCHING, returnTo = returnToName())
+        NetInfoCache.writeProgress(0, plan.tier1.size.coerceAtLeast(plan.tier2.size))
 
         // One snapshot per episode, taken before the first switch: a chain of bypass servers keeps it.
         val createdSnapshot = ensureSnapshot(current)
-        val result = tryCandidates(service, candidates, full = true) { applies() }
+        val stillOnCellular = { applies() }
+        val rated = (plan.tier1 + plan.tier2).associateBy { it.guid }
+        var result = if (plan.tier1.isNotEmpty()) {
+            runSearch(service, toCandidates(plan.tier1), rated, full = true, testOnly = false, stillNeeded = stillOnCellular)
+        } else {
+            TryResult(null, null, aborted = false)
+        }
+        if (result.found == null && !result.aborted && restAllowed) {
+            BypassLog.add("the first choice gave nothing: trying the rest of the servers")
+            NetInfoCache.writeProgress(0, plan.tier2.size)
+            result = runSearch(service, toCandidates(plan.tier2), rated, full = true, testOnly = false, stillNeeded = stillOnCellular)
+        }
         if (result.found != null) {
             val guid = result.found
             WhitelistBypass.active = guid
@@ -540,7 +651,9 @@ object BypassController {
             nextSearchAt = 0L
             lastPeriodicReturnAt = System.currentTimeMillis()
             announceSwitch(service, guid)
+            NetInfoCache.writeTarget(serverName(guid))
             NetInfoCache.writeBypass(BypassState.OK, returnTo = returnToName())
+            BypassLog.add("connected to ${serverName(guid)}: verified")
             postEvent(service, "switched", service.getString(R.string.whitelist_bypass_notify_switched, serverName(guid)), NOTIFY_SWITCH_GAP_MS)
             return
         }
@@ -549,15 +662,46 @@ object BypassController {
             if (createdSnapshot && WhitelistBypass.active == null) WhitelistBypass.snapshot = null
             return
         }
-        // Nothing carried traffic: go back to where we were (the tunnel stays up) and wait before retrying.
-        if (CoreServiceManager.currentServerGuid() != current) ourSwitch(current)
+        // Nothing carried traffic: the search already put the connection back; wait before retrying.
         if (createdSnapshot) WhitelistBypass.snapshot = null
         failedSearches++
         val wait = WhitelistBypass.backoffMillis(failedSearches)
         nextSearchAt = System.currentTimeMillis() + wait
-        BypassLog.add("no working server, retry in ${wait / 1000}s")
+        BypassLog.add("no working server (${result.tested} tested, ${result.passed} passed the test), retry in ${wait / 1000}s")
         NetInfoCache.writeBypass(BypassState.FAIL, result.lastReason ?: FailReason.NO_GSTATIC, returnToName())
         postEvent(service, "not_found", service.getString(R.string.whitelist_bypass_notify_not_found), NOTIFY_PROBLEM_GAP_MS)
+    }
+
+    /**
+     * "Check on the mobile network now": tests every server that could be a bypass server (and the
+     * ones the user picked) in isolation and records the result in the history. Nothing is switched.
+     */
+    suspend fun testAll() {
+        val service = ConnectionWatchdog.currentService() ?: return
+        PhysicalNetwork.refreshNow()
+        if (PhysicalNetwork.snapshot.type != NetType.CELLULAR) {
+            BypassLog.add("test of all servers skipped: the phone is not on the mobile network")
+            return
+        }
+        val manual = WhitelistBypass.mode() == WhitelistBypass.MODE_MANUAL
+        val bucket = BypassHistory.bucket(service)
+        val now = System.currentTimeMillis()
+        val chosen = WhitelistBypass.servers()
+        val guids = (chosen + MmkvManager.decodeAllServerList().filter { it !in chosen }).distinct()
+        val rated = guids.mapIndexedNotNull { i, g -> BypassRating.rate(g, bucket, now, order = i) }
+            .filter { it.guid in chosen || it.rating.level != BypassLevel.UNLIKELY }
+            .sortedWith(compareBy({ -it.rating.score }, { it.order }))
+            .take(TEST_ALL_MAX)
+        BypassLog.add("test of all servers on the mobile network: ${rated.size} servers (${if (manual) "manual" else "auto"} mode)")
+        NetInfoCache.writeBypass(BypassState.SEARCHING, returnTo = returnToName())
+        NetInfoCache.writeProgress(0, rated.size)
+        val result = runSearch(
+            service, toCandidates(rated), rated.associateBy { it.guid },
+            full = false, testOnly = true, stillNeeded = { PhysicalNetwork.snapshot.type == NetType.CELLULAR },
+        )
+        NetInfoCache.writeTestResult(result.passed, result.tested)
+        NetInfoCache.writeBypass(if (WhitelistBypass.active != null) BypassState.OK else BypassState.IDLE, returnTo = returnToName())
+        BypassLog.add("test of all servers: ${result.passed} of ${result.tested} work on this network")
     }
 
     /** Takes the snapshot when none exists; returns true when this call created it. */

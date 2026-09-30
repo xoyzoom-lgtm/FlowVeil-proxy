@@ -118,6 +118,9 @@ object AppConfig {
     const val CACHE_EXIT_IP = "cache_exit_ip"
     const val CACHE_BYPASS_STATE = "cache_bypass_state"
     const val CACHE_BYPASS_RETURN_TO = "cache_bypass_return_to"
+    const val CACHE_BYPASS_PROGRESS = "cache_bypass_progress"
+    const val CACHE_BYPASS_TARGET = "cache_bypass_target"
+    const val CACHE_BYPASS_TEST = "cache_bypass_test"
 
     /** Protocol identifiers. */
     const val PROTOCOL_FREEDOM = "freedom"
@@ -225,6 +228,8 @@ object AppConfig {
     const val MSG_MEASURE_CONFIG_CANCEL = 71
     /** UI asks the core process to re-check the network now (real IP, exit IP, bypass state). */
     const val MSG_NET_CHECK_NOW = 8
+    /** UI asks the core process to test the candidate servers on the mobile network now (no switching). */
+    const val MSG_BYPASS_TEST_ALL = 9
     const val MSG_MEASURE_CONFIG_SUCCESS = 72
     const val MSG_MEASURE_CONFIG_NOTIFY = 73
     const val MSG_MEASURE_CONFIG_FINISH = 74
