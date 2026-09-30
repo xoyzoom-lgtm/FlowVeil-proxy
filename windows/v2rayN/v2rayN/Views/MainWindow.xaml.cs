@@ -318,48 +318,48 @@ public partial class MainWindow
     /// Settings as grouped rows (icon, title, hint, chevron) like Happ: everyday items on top,
     /// technical ones in "Для опытных".
     /// </summary>
-    /// <summary>QR of one of our subscriptions (a plain link, so any app's scanner takes it); a menu when there are several.</summary>
-    private async void ShowSubscriptionQr()
+    /// <summary>Shows a QR code that leads to a one-time page on the home network; the other device sends its subscription link through it.</summary>
+    private async void ShowReceiveQr(MainWindowViewModel vm)
     {
+        SubReceiver? receiver = null;
         try
         {
-            var subs = (await AppManager.Instance.SubItems() ?? [])
-                .Where(s => s.Url?.StartsWith("http", StringComparison.OrdinalIgnoreCase) == true)
-                .ToList();
-            if (subs.Count == 0)
+            receiver = new SubReceiver(link => Dispatcher.BeginInvoke(new Action(async () =>
             {
-                NoticeManager.Instance.Enqueue("Нет подписок, чтобы показать QR-код");
+                DialogHost.Close("RootDialog");
+                var exists = await ServiceLib.Helper.SQLiteHelper.Instance.TableAsync<SubItem>().CountAsync(e => e.Url == link) > 0;
+                if (exists)
+                {
+                    NoticeManager.Instance.Enqueue("Эта подписка уже есть");
+                    return;
+                }
+                if (await ConfigHandler.AddSubItem(AppManager.Instance.Config, link) == 0)
+                {
+                    NoticeManager.Instance.Enqueue("Подписка получена");
+                    ((System.Windows.Input.ICommand)vm.SubUpdateCmd).Execute(null);
+                }
+            })));
+            var address = receiver.Start();
+            if (address == null)
+            {
+                NoticeManager.Instance.Enqueue("Компьютер не в домашней сети (Wi-Fi или кабель). Подключите его к той же сети, что и телефон");
                 return;
             }
-            if (subs.Count == 1)
+            var dialog = new QrcodeView()
             {
-                await ShowQr(subs[0].Url);
-                return;
-            }
-            var menu = new ContextMenu();
-            foreach (var sub in subs)
-            {
-                var item = new MenuItem { Header = sub.Remarks.IsNullOrEmpty() ? sub.Url : sub.Remarks };
-                var url = sub.Url;
-                item.Click += async (_, _) => await ShowQr(url);
-                menu.Items.Add(item);
-            }
-            menu.IsOpen = true;
+                imgQrcode = { Source = QRCodeWindowsUtils.GetQRCode(address) },
+                txtContent = { Text = address.Split('?')[0] + "\nОткройте код камерой телефона (оба устройства в одной сети) и вставьте ссылку подписки" },
+            };
+            await DialogHost.Show(dialog, "RootDialog");
         }
         catch (Exception ex)
         {
             Logging.SaveLog("Migration", ex);
         }
-    }
-
-    private static async Task ShowQr(string url)
-    {
-        var dialog = new QrcodeView()
+        finally
         {
-            imgQrcode = { Source = QRCodeWindowsUtils.GetQRCode(url) },
-            txtContent = { Text = url },
-        };
-        await DialogHost.Show(dialog, "RootDialog");
+            receiver?.Dispose();
+        }
     }
 
     private async void RunMigration(MainWindowViewModel vm, string? dbPath)
@@ -480,7 +480,7 @@ public partial class MainWindow
                 RunMigration(vm, fileName);
             }
         });
-        Row(migrate, PackIconKind.Qrcode, "Показать QR-код моей подписки", "Чтобы отсканировать её на телефоне или другом устройстве", () => ShowSubscriptionQr());
+        Row(migrate, PackIconKind.Qrcode, "Добавить по QR-коду (со второго устройства)", "FlowVeil покажет код: откройте его на телефоне и отправьте ссылку подписки сюда", () => ShowReceiveQr(vm));
         Row(migrate, PackIconKind.ContentPaste, "Из Happ и других приложений", "Скопируйте ссылку подписки там и нажмите сюда. Зашифрованные ссылки открыть нельзя", () => Exec(vm.AddServerViaClipboardCmd));
 
         var noiseOn = AppManager.Instance.Config.CoreBasicItem.EnableNoise;

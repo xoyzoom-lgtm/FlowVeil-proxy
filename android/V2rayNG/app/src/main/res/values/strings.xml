@@ -650,13 +650,11 @@
     <string name="summary_pref_ru_direct">Russian sites and banks open directly, everything else goes through the server</string>
     <string name="menu_item_migrate">Move from another app</string>
     <string name="migrate_title">Move from another app</string>
-    <string name="migrate_hint">A subscription cannot be taken out of another app automatically. Copy its link there and paste it here. To move a subscription from here to another device, show its QR code and scan it there.</string>
+    <string name="migrate_hint">A subscription cannot be taken out of another app automatically. Show a QR code here and open it on the other device (phone, another app) to send the subscription link; or copy the link there and paste it here.</string>
     <string name="migrate_clipboard">Paste the link from the clipboard</string>
-    <string name="migrate_qr">Show my subscription QR code</string>
-    <string name="migrate_no_subs">There are no subscriptions to show</string>
+    <string name="migrate_qr">Add by QR code (from another device)</string>
     <string name="migrate_backup">From a v2rayNG backup file</string>
     <string name="migrate_note">A v2rayNG backup (Settings → Backup there) is only read for subscription links; nothing of yours here is replaced. Encrypted links from other apps cannot be opened.</string>
-    <string name="migrate_tv">Receive a subscription from a phone (for TV)</string>
     <string name="tv_title">Add to this TV</string>
     <string name="tv_hint">Scan the code with your phone camera. A page opens: paste the subscription link there and it arrives here. Both devices must be on the same home network.</string>
     <string name="tv_no_network">This device is not on a home Wi-Fi or cable network. Connect it to the same network as your phone and try again.</string>
