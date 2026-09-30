@@ -27,10 +27,10 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Popupbox.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-            <!--  Navigation item: accent bar on the left, icon in a fixed 56 px column, label after it  -->
+            <!--  Navigation item: a rounded icon tile that fills with the accent colour when selected; no grey pill  -->
             <Style x:Key="FlowNavItem" TargetType="RadioButton">
-                <Setter Property="Height" Value="44" />
-                <Setter Property="Margin" Value="8,2" />
+                <Setter Property="Height" Value="46" />
+                <Setter Property="Margin" Value="6,3" />
                 <Setter Property="Cursor" Value="Hand" />
                 <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
@@ -40,38 +40,50 @@
                             <Grid SnapsToDevicePixels="True">
                                 <Border
                                     x:Name="bg"
-                                    Background="{DynamicResource MaterialDesign.Brush.Primary}"
-                                    CornerRadius="12"
+                                    Background="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                    CornerRadius="16"
                                     Opacity="0" />
-                                <Border
-                                    x:Name="accent"
-                                    Width="3"
-                                    Height="22"
-                                    Margin="-8,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Background="{DynamicResource MaterialDesign.Brush.Primary}"
-                                    CornerRadius="2"
-                                    Visibility="Collapsed" />
                                 <ContentPresenter VerticalAlignment="Center" />
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bg" Property="Opacity" Value="0.08" />
+                                    <Setter TargetName="bg" Property="Opacity" Value="0.06" />
                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
                                 </Trigger>
                                 <Trigger Property="IsKeyboardFocused" Value="True">
                                     <Setter TargetName="bg" Property="Opacity" Value="0.1" />
                                 </Trigger>
                                 <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="bg" Property="Opacity" Value="0.16" />
-                                    <Setter TargetName="accent" Property="Visibility" Value="Visible" />
                                     <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+            </Style>
+            <Style x:Key="FlowNavTile" TargetType="Border">
+                <Setter Property="Width" Value="34" />
+                <Setter Property="Height" Value="34" />
+                <Setter Property="CornerRadius" Value="11" />
+                <Setter Property="Margin" Value="11,0,12,0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="FlowNavIcon" TargetType="materialDesign:PackIcon">
+                <Setter Property="Width" Value="20" />
+                <Setter Property="Height" Value="20" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Foreground}" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
         </ResourceDictionary>
     </Window.Resources>
@@ -102,24 +114,24 @@
                         Margin="8,0,8,0"
                         Padding="0"
                         HorizontalContentAlignment="Left"
-                        DockPanel.Dock="Top"
+                        DockPanel.Dock="Bottom"
                         FocusVisualStyle="{x:Null}"
                         Style="{StaticResource MaterialDesignFlatButton}">
                         <materialDesign:PackIcon
                             x:Name="navToggleIcon"
                             Width="22"
                             Height="22"
-                            Margin="17,0,0,0"
-                            Kind="ArrowLeft" />
+                            Margin="15,0,0,0"
+                            Kind="ChevronDoubleLeft" />
                     </Button>
                     <StackPanel
-                        Margin="8,6,8,14"
+                        Margin="10,4,8,16"
                         DockPanel.Dock="Top"
                         Orientation="Horizontal">
                         <Image
                             Width="40"
                             Height="40"
-                            Margin="8,0,10,0"
+                            Margin="4,0,10,0"
                             RenderOptions.BitmapScalingMode="HighQuality"
                             SnapsToDevicePixels="True"
                             Source="/Resources/logo.png"
@@ -150,11 +162,7 @@
                             GroupName="nav"
                             Style="{StaticResource FlowNavItem}">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="22"
-                                    Height="22"
-                                    Margin="17,0,17,0"
-                                    Kind="PlusBoxOutline" />
+                                <Border Style="{StaticResource FlowNavTile}"><materialDesign:PackIcon Style="{StaticResource FlowNavIcon}" Kind="PlusBoxOutline" /></Border>
                                 <TextBlock
                                     x:Name="navAddLabel"
                                     VerticalAlignment="Center"
@@ -168,11 +176,7 @@
                             GroupName="nav"
                             Style="{StaticResource FlowNavItem}">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="22"
-                                    Height="22"
-                                    Margin="17,0,17,0"
-                                    Kind="Web" />
+                                <Border Style="{StaticResource FlowNavTile}"><materialDesign:PackIcon Style="{StaticResource FlowNavIcon}" Kind="Web" /></Border>
                                 <TextBlock
                                     x:Name="navHomeLabel"
                                     VerticalAlignment="Center"
@@ -186,11 +190,7 @@
                             GroupName="nav"
                             Style="{StaticResource FlowNavItem}">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="22"
-                                    Height="22"
-                                    Margin="17,0,17,0"
-                                    Kind="CogOutline" />
+                                <Border Style="{StaticResource FlowNavTile}"><materialDesign:PackIcon Style="{StaticResource FlowNavIcon}" Kind="CogOutline" /></Border>
                                 <TextBlock
                                     x:Name="navSettingsLabel"
                                     VerticalAlignment="Center"
@@ -204,11 +204,7 @@
                             GroupName="nav"
                             Style="{StaticResource FlowNavItem}">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="22"
-                                    Height="22"
-                                    Margin="17,0,17,0"
-                                    Kind="ChartLine" />
+                                <Border Style="{StaticResource FlowNavTile}"><materialDesign:PackIcon Style="{StaticResource FlowNavIcon}" Kind="ChartLine" /></Border>
                                 <TextBlock
                                     x:Name="navStatsLabel"
                                     VerticalAlignment="Center"
@@ -222,11 +218,7 @@
                             GroupName="nav"
                             Style="{StaticResource FlowNavItem}">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="22"
-                                    Height="22"
-                                    Margin="17,0,17,0"
-                                    Kind="TextBoxOutline" />
+                                <Border Style="{StaticResource FlowNavTile}"><materialDesign:PackIcon Style="{StaticResource FlowNavIcon}" Kind="TextBoxOutline" /></Border>
                                 <TextBlock
                                     x:Name="navLogsLabel"
                                     VerticalAlignment="Center"
@@ -240,11 +232,7 @@
                             GroupName="nav"
                             Style="{StaticResource FlowNavItem}" Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="22"
-                                    Height="22"
-                                    Margin="17,0,17,0"
-                                    Kind="ViewList" />
+                                <Border Style="{StaticResource FlowNavTile}"><materialDesign:PackIcon Style="{StaticResource FlowNavIcon}" Kind="ViewList" /></Border>
                                 <TextBlock
                                     x:Name="navAdvancedLabel"
                                     VerticalAlignment="Center"

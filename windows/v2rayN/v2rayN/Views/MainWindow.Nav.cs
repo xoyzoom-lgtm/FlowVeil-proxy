@@ -118,7 +118,7 @@ public partial class MainWindow
             navBrand.Opacity = fadeTo;
         }
 
-        navToggleIcon.Kind = _navCollapsed ? PackIconKind.ArrowRight : PackIconKind.ArrowLeft;
+        navToggleIcon.Kind = _navCollapsed ? PackIconKind.ChevronDoubleRight : PackIconKind.ChevronDoubleLeft;
         btnNavToggle.ToolTip = _navCollapsed ? "Развернуть панель" : "Свернуть панель";
     }
 

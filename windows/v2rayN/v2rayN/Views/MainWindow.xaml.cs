@@ -548,7 +548,7 @@ public partial class MainWindow
         Row(expert, PackIconKind.Tune, "Параметры ядра и портов", "Порты, автозапуск, TUN, звук и прочее", () => Exec(vm.OptionSettingCmd));
         Row(expert, PackIconKind.ServerPlus, "Добавить сервер вручную", "VLESS, VMess, Trojan, Shadowsocks, JSON…", () => OpenAddServerMenu(vm));
         Row(expert, PackIconKind.FormatListBulleted, "Все подписки и группы", "Таблица подписок, фильтры, User-Agent", () => Exec(vm.SubSettingCmd));
-        Row(expert, PackIconKind.ViewList, "Расширенный режим", "Таблица серверов и журнал, как в v2rayN", () =>
+        Row(expert, PackIconKind.ViewList, "Расширенный режим", "Таблица серверов и журнал ядра", () =>
         {
             navAdvanced.Visibility = Visibility.Visible;
             navAdvanced.IsChecked = true;
