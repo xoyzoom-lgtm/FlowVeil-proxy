@@ -624,6 +624,7 @@
     <string name="sub_action_update">Update</string>
     <string name="sub_action_check">Check</string>
     <string name="sub_action_support">Support</string>
+    <string name="sub_action_site">Provider website</string>
     <string name="sub_frame_left">Left %1$s of %2$s</string>
     <string name="sub_frame_unlimited">∞ Unlimited · %1$s used</string>
     <string name="sub_frame_until">Until %1$s · %2$d d.</string>
@@ -691,9 +692,8 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
-        <item>FlowVeil now tells you about a new version: a quiet card above the list and one notification per version (switch: update screen). Nothing is installed without your “Update”</item>
-        <item>The “Why does it not work?” button on the main screen checks the network, phone clock, subscription and server and says what to do</item>
-        <item>Send a subscription to your computer: scan the QR code that FlowVeil shows on the PC (menu → Move from another app)</item>
+        <item>Provider invite links can now carry the service name, and the subscription card has a “Provider website” button</item>
+        <item>Turning on the whitelist bypass also turns on fragmentation when it is needed (everything is restored when you turn it off)</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>

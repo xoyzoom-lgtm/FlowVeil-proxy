@@ -732,13 +732,19 @@ public partial class MainWindow
     /// <summary>Adds the subscription from a flowveil:// link that opened the app.</summary>
     private async Task ImportPendingLinkAsync()
     {
-        var link = DeepLink.TakePending();
-        if (link == null || ViewModel == null)
+        var invite = DeepLink.TakePending();
+        if (invite == null || ViewModel == null)
         {
             return;
         }
         ShowHideWindow(true);
-        await ViewModel.AddServerViaClipboardAsync(link);
+        if (_addPage != null)
+        {
+            // The same path as the "Add" page: duplicate check, the provider's name, download, switch to the new subscription.
+            await _addPage.AddInviteAsync(invite.Link, invite.Name);
+            return;
+        }
+        await ViewModel.AddServerViaClipboardAsync(invite.Link);
         GoToServers();
     }
 

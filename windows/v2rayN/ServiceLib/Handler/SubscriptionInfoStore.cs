@@ -103,6 +103,18 @@ public static class SubscriptionInfoStore
         return _cache ??= new Dictionary<string, SubscriptionInfo>();
     }
 
+    /// <summary>Only web (and, for support, Telegram) addresses are opened: a header must not start a file or a program.</summary>
+    private static string? SafeUrl(string? url, bool allowTelegram)
+    {
+        if (url.IsNullOrEmpty())
+        {
+            return null;
+        }
+        var ok = url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || (allowTelegram && url.StartsWith("tg://", StringComparison.OrdinalIgnoreCase));
+        return ok ? url : null;
+    }
+
     /// <summary>Parses provider headers; returns null when none of the known headers are present.</summary>
     public static SubscriptionInfo? Parse(IReadOnlyDictionary<string, string>? headers)
     {
@@ -116,8 +128,8 @@ public static class SubscriptionInfoStore
         {
             Title = DecodeMaybeBase64(H("profile-title")),
             Announce = DecodeMaybeBase64(H("announce")),
-            SupportUrl = H("support-url"),
-            WebPageUrl = H("profile-web-page-url"),
+            SupportUrl = SafeUrl(H("support-url"), allowTelegram: true),
+            WebPageUrl = SafeUrl(H("profile-web-page-url"), allowTelegram: false),
             UpdatedAt = DateTimeOffset.Now.ToUnixTimeSeconds(),
         };
         if (int.TryParse(H("profile-update-interval"), out var hours))

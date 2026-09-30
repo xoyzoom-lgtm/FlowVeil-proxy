@@ -21,4 +21,5 @@ data class SubscriptionItem(
     var profileTitle: String? = null,
     var announce: String? = null,
     var supportUrl: String? = null,
+    var webPageUrl: String? = null,
 )

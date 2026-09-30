@@ -683,7 +683,7 @@ object AngConfigManager {
      */
     private fun importUrlAsSubscription(url: String): Int {
         // The same link pasted again (maybe with a trailing slash or spaces) must not become a second subscription.
-        fun norm(u: String) = u.trim().trimEnd('/')
+        fun norm(u: String) = u.trim().substringBefore('#').trimEnd('/')
         if (MmkvManager.decodeSubscriptions().any { norm(it.subscription.url) == norm(url) }) {
             return 0
         }

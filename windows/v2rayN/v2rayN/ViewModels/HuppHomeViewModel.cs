@@ -34,6 +34,7 @@ public sealed class HuppSubCard : HuppObservable
     public string ExpireText { get; init; } = string.Empty;
     public string Announce { get; init; } = string.Empty;
     public string SupportUrl { get; init; } = string.Empty;
+    public string WebPageUrl { get; init; } = string.Empty;
     public double Progress { get; init; }
     public bool HasProgress { get; init; }
 
@@ -666,6 +667,7 @@ public sealed partial class HuppHomeViewModel : HuppObservable
             Announce = TextSanitizer.ForWpf(info.Announce),
             AnnounceIsLong = TextSanitizer.ForWpf(info.Announce).Length > 110 || TextSanitizer.ForWpf(info.Announce).Contains('\n'),
             SupportUrl = info.SupportUrl ?? string.Empty,
+            WebPageUrl = info.WebPageUrl ?? string.Empty,
             Progress = progress,
             HasProgress = info.Total > 0 && info.Total < 1L << 50,
             Health = health,

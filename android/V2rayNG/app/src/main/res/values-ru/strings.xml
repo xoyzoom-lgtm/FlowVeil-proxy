@@ -628,6 +628,7 @@
     <string name="sub_action_update">Обновить</string>
     <string name="sub_action_check">Проверить</string>
     <string name="sub_action_support">Поддержка</string>
+    <string name="sub_action_site">Сайт провайдера</string>
     <string name="sub_frame_left">Осталось %1$s из %2$s</string>
     <string name="sub_frame_unlimited">∞ Безлимит · %1$s</string>
     <string name="sub_frame_until">До %1$s · %2$d дн.</string>
@@ -695,9 +696,8 @@
     <string name="whats_new_title">Что нового</string>
     <string name="whats_new_ok">Понятно</string>
     <string-array name="whats_new_items">
-        <item>FlowVeil теперь сообщает о новой версии: тихая карточка над списком и одно уведомление на версию (переключатель на экране обновления). Ничего не ставится без вашего «Обновить»</item>
-        <item>Кнопка «Почему не работает?» на главном экране проверяет сеть, время на телефоне, подписку и сервер и подсказывает, что делать</item>
-        <item>Отправка подписки на компьютер: отсканируйте QR-код, который FlowVeil показывает на ПК (меню → Перенос из другого приложения)</item>
+        <item>Ссылки-приглашения от провайдера теперь могут нести название сервиса, а на карточке подписки появилась кнопка «Сайт провайдера»</item>
+        <item>Включение обхода белых списков само включает фрагментацию, если она нужна (при выключении всё возвращается как было)</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>

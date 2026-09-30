@@ -1,4 +1,6 @@
-﻿namespace v2rayN.Common;
+﻿using ServiceLib.Handler;
+
+namespace v2rayN.Common;
 
 /// <summary>
 /// flowveil:// invite links: flowveil://add?url=&lt;encoded link&gt;, flowveil://add/&lt;link&gt;,
@@ -9,53 +11,22 @@ public static class DeepLink
 {
     private const string PendingFile = "pending_import.txt";
 
-    /// <summary>The subscription or config link inside a flowveil:// argument, or null.</summary>
-    public static string? Parse(IEnumerable<string> args)
+    /// <summary>The invite (subscription or config link and the provider's title) inside a flowveil:// argument, or null.</summary>
+    public static InviteLink.Invite? ParseInvite(IEnumerable<string> args)
     {
         var arg = args.FirstOrDefault(a => a.StartsWith("flowveil:", StringComparison.OrdinalIgnoreCase));
-        if (arg == null)
-        {
-            return null;
-        }
-        try
-        {
-            var rest = arg["flowveil:".Length..].TrimStart('/');
-            var slash = rest.IndexOf('/');
-            var question = rest.IndexOf('?');
-            string? link = null;
-            if (question >= 0 && (slash < 0 || question < slash))
-            {
-                var query = rest[(question + 1)..];
-                foreach (var pair in query.Split('&'))
-                {
-                    if (pair.StartsWith("url=", StringComparison.OrdinalIgnoreCase))
-                    {
-                        link = Uri.UnescapeDataString(pair[4..]);
-                        break;
-                    }
-                }
-            }
-            else if (slash >= 0)
-            {
-                link = rest[(slash + 1)..];
-                if (link.Contains("%3A", StringComparison.OrdinalIgnoreCase))
-                {
-                    link = Uri.UnescapeDataString(link);
-                }
-            }
-            return link.IsNullOrEmpty() ? null : link!.Trim();
-        }
-        catch
-        {
-            return null;
-        }
+        return arg == null ? null : InviteLink.Parse(arg);
     }
 
-    public static void SavePending(string link)
+    /// <summary>The subscription or config link inside a flowveil:// argument, or null.</summary>
+    public static string? Parse(IEnumerable<string> args) => ParseInvite(args)?.Link;
+
+    /// <summary>Keeps the whole flowveil:// argument so the title survives the hand-over.</summary>
+    public static void SavePending(string arg)
     {
         try
         {
-            File.WriteAllText(Utils.GetConfigPath(PendingFile), link);
+            File.WriteAllText(Utils.GetConfigPath(PendingFile), arg);
         }
         catch (Exception ex)
         {
@@ -63,7 +34,7 @@ public static class DeepLink
         }
     }
 
-    public static string? TakePending()
+    public static InviteLink.Invite? TakePending()
     {
         try
         {
@@ -72,9 +43,9 @@ public static class DeepLink
             {
                 return null;
             }
-            var link = File.ReadAllText(path).Trim();
+            var text = File.ReadAllText(path).Trim();
             File.Delete(path);
-            return link.IsNullOrEmpty() ? null : link;
+            return text.IsNullOrEmpty() ? null : InviteLink.Parse(text) ?? new InviteLink.Invite(text, null);
         }
         catch (Exception ex)
         {

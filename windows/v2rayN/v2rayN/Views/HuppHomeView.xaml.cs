@@ -206,6 +206,15 @@ public partial class HuppHomeView : UserControl
         ((ICommand?)_main?.SubSettingCmd)?.Execute(null);
     }
 
+    private void CardSite_Click(object sender, RoutedEventArgs e)
+    {
+        var url = CardOf(sender)?.WebPageUrl;
+        if (url.IsNotEmpty() && (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)))
+        {
+            ProcUtils.ProcessStart(url);
+        }
+    }
+
     private void CardSupport_Click(object sender, RoutedEventArgs e)
     {
         var url = CardOf(sender)?.SupportUrl;

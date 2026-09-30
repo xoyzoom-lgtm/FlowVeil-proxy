@@ -87,6 +87,9 @@ public sealed class AddPageView : ScrollViewer
         _link.Focus();
     }
 
+    /// <summary>Adds what an invite link carries (opened from outside the app).</summary>
+    public Task<bool> AddInviteAsync(string link, string? name) => AddFromTextAsync(link, name, showInline: false);
+
     // ---------- cards ----------
 
     private UIElement BuildLinkCard()
@@ -302,7 +305,9 @@ public sealed class AddPageView : ScrollViewer
             Fail("В буфере пусто");
             return false;
         }
-        text = DeepLink.Parse([text]) ?? text.Trim();
+        var invite = DeepLink.ParseInvite([text]);
+        name ??= invite?.Name;
+        text = invite?.Link ?? text.Trim();
         if (!text.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !text.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             // share links of single servers (vless://, vmess://…), or a whole list

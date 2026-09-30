@@ -5,7 +5,7 @@ import okio.ByteString.Companion.decodeBase64
 
 /**
  * Reads the de-facto standard provider response headers (`subscription-userinfo`,
- * `profile-title`, `announce`, `support-url`) that most subscription panels send.
+ * `profile-title`, `announce`, `support-url`, `profile-web-page-url`) that most subscription panels send.
  */
 object SubscriptionInfoParser {
 
@@ -27,6 +27,9 @@ object SubscriptionInfoParser {
         headers["support-url"]?.trim()
             ?.takeIf { it.startsWith("https://") || it.startsWith("http://") || it.startsWith("tg://") }
             ?.let { item.supportUrl = it }
+        headers["profile-web-page-url"]?.trim()
+            ?.takeIf { it.startsWith("https://") || it.startsWith("http://") }
+            ?.let { item.webPageUrl = it }
     }
 
     /** Parses `upload=..; download=..; total=..; expire=..`; total/expire of 0 mean unlimited/none. */

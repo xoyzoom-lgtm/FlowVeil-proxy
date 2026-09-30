@@ -405,6 +405,24 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
 .prov svg{flex:none;width:22px;height:22px;fill:none;stroke:var(--mint);stroke-width:2;stroke-linecap:round}
 .prov span{min-width:0}.prov b{display:block;font-weight:700}.prov i{display:block;font:11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:680px){.chip small{display:none}.prov{left:6%;right:6%;padding:8px 10px}.prov i{display:none}.rule span{display:none}}
+
+.gen label.second{margin-top:16px}
+.gen .opt{font-weight:400;color:var(--dim)}
+.gen.guide{margin-top:20px}
+.gen.guide h3{font-size:18px;margin-bottom:8px}
+.gen.guide ul{margin:10px 0 10px 20px;line-height:1.7}
+.gen.guide p{color:var(--dim)}
+.sheet{display:none}
+@media print{
+  html,body{background:#fff!important}
+  body>*:not(#sheet){display:none!important}
+  #sheet{display:block;padding:24mm 20mm;background:#fff;color:#000;font:16px/1.6 system-ui,sans-serif}
+  #sheet h1{font-size:30px;margin:0 0 4px}
+  #sheet .lead{font-size:18px;margin:0 0 18px;color:#444}
+  #sheet canvas{width:90mm;height:90mm;image-rendering:pixelated;display:block;margin:0 0 18px}
+  #sheet ol{padding-left:20px;margin:0 0 16px}
+  #sheet .sheet-link{font:12px/1.5 monospace;word-break:break-all;color:#333}
+}
 </style>
 </head>
 <body>
@@ -713,6 +731,10 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
       <label for="genUrl">Адрес подписки</label>
       <div class="field">
         <input id="genUrl" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://provider.example/sub/…" aria-describedby="genErr">
+      </div>
+      <label for="genName" class="second">Название для клиентов <span class="opt">(необязательно)</span></label>
+      <div class="field">
+        <input id="genName" name="name" type="text" maxlength="60" autocomplete="off" placeholder="Название вашего сервиса" aria-describedby="genErr">
         <button class="btn primary" type="submit">Создать</button>
       </div>
       <p class="err" id="genErr" role="alert"></p>
@@ -723,13 +745,26 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
           <div class="acts">
             <button class="btn small" type="button" id="genCopy"><svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg><span>Скопировать</span></button>
             <button class="btn small" type="button" id="genSave"><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Сохранить QR</span></button>
+            <button class="btn small" type="button" id="genSheet"><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Лист для печати</span></button>
             <a class="btn small" id="genOpen" href="#providers">Открыть в FlowVeil</a>
           </div>
         </div>
         <canvas id="genQr" width="180" height="180" role="img" aria-label="QR-код ссылки-приглашения"></canvas>
       </div>
-      <p class="hint">Ссылка не проходит через какие-либо серверы: она собирается прямо на этой странице. Если ссылка длиннее ~2000 символов, она не поместится в QR-код.</p>
+      <p class="hint">Ссылка не проходит через какие-либо серверы: она собирается прямо на этой странице. Если ссылка длиннее ~2000 символов, она не поместится в QR-код. «Лист для печати» открывает страницу с QR-кодом и тремя шагами для клиента — её можно распечатать или сохранить в PDF.</p>
     </form>
+    <div class="gen guide reveal">
+      <h3>Что показать клиентам внутри приложения</h3>
+      <p>FlowVeil читает обычные заголовки ответа вашей панели подписок — ничего настраивать на стороне приложения не нужно:</p>
+      <ul>
+        <li><code>profile-title</code> — название вашего сервиса (показывается вместо адреса);</li>
+        <li><code>subscription-userinfo</code> — <code>upload=…; download=…; total=…; expire=…</code>: остаток трафика и срок;</li>
+        <li><code>announce</code> — короткое объявление (можно <code>base64:…</code>);</li>
+        <li><code>support-url</code> — кнопка «Поддержка» (https:// или tg://);</li>
+        <li><code>profile-web-page-url</code> — кнопка «Сайт провайдера» (https://).</li>
+      </ul>
+      <p>Если клиент получил ошибку (подписка закончилась, лимит устройств), приложение скажет об этом простыми словами и покажет вашу кнопку поддержки. Мы не собираем данные о клиентах и не ведём статистику: у FlowVeil нет серверов, куда она могла бы уходить.</p>
+    </div>
   </div>
 </section>
 
@@ -768,6 +803,18 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
   </div>
 </section>
 </main>
+<div class="sheet" id="sheet" aria-hidden="true">
+  <h1 id="sheetTitle"></h1>
+  <p class="lead">Подключение за минуту</p>
+  <canvas id="sheetQr" width="320" height="320"></canvas>
+  <ol>
+    <li>Установите FlowVeil: Android и Windows, адрес <span id="sheetSite"></span>.</li>
+    <li>Откройте приложение и отсканируйте этот QR-код (Android: «+» → «Сканировать QR») или нажмите ссылку ниже.</li>
+    <li>Выберите сервер и нажмите «Подключиться».</li>
+  </ol>
+  <div class="sheet-link" id="sheetLink"></div>
+</div>
+
 
 <footer>
   <div class="wrap foot">
@@ -1407,9 +1454,10 @@ if (typeof module !== 'undefined') module.exports = QR;
      9. Invite link + QR generator (runs in the browser, sends nothing)
      ================================================================ */
   const form = $('#genForm'), urlInput = $('#genUrl'), errEl = $('#genErr'), outEl = $('#genOut');
+  const nameInput = $('#genName'), sheetBtn = $('#genSheet');
   const linkEl = $('#genLink'), qrCanvas = $('#genQr'), openEl = $('#genOpen');
   const copyBtn = $('#genCopy'), saveBtn = $('#genSave'), statusEl = $('#genStatus');
-  let currentLink = '';
+  let currentLink = '', currentName = '';
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     errEl.textContent = ''; outEl.hidden = true;
@@ -1418,7 +1466,9 @@ if (typeof module !== 'undefined') module.exports = QR;
     try { u = new URL(value); } catch (_) { errEl.textContent = 'Введите полный адрес, например https://provider.example/sub/…'; return; }
     if (u.protocol !== 'https:' && u.protocol !== 'http:') { errEl.textContent = 'Адрес должен начинаться с https://'; return; }
     if (u.href.length > 2000) { errEl.textContent = 'Адрес слишком длинный (больше 2000 символов).'; return; }
-    currentLink = 'flowveil://add?url=' + encodeURIComponent(u.href);
+    const name = nameInput.value.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+    currentName = name;
+    currentLink = 'flowveil://add?url=' + encodeURIComponent(u.href) + (name ? '&name=' + encodeURIComponent(name) : '');
     linkEl.textContent = currentLink;
     openEl.setAttribute('href', currentLink);
     try {
@@ -1443,6 +1493,14 @@ if (typeof module !== 'undefined') module.exports = QR;
       t.remove();
     }
     flash('Ссылка скопирована');
+  });
+  sheetBtn.addEventListener('click', () => {
+    if (!currentLink) return;
+    $('#sheetTitle').textContent = currentName || 'Подключение';
+    $('#sheetSite').textContent = location.host || 'FlowVeil';
+    $('#sheetLink').textContent = currentLink;
+    try { QR.draw($('#sheetQr'), currentLink, { scale: 8 }); } catch (_) { errEl.textContent = 'Для листа ссылка слишком длинная: QR-код не поместился.'; return; }
+    window.print();
   });
   saveBtn.addEventListener('click', () => {
     qrCanvas.toBlob((blob) => {

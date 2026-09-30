@@ -5,15 +5,15 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.net.InviteLink
 import com.v2ray.ang.ui.base.BaseComponentActivity
 import com.v2ray.ang.ui.main.MainActivity
 import com.v2ray.ang.util.LogUtil
-import java.net.URLDecoder
 
 /**
  * Opens shared text and invite links and hands them to the main screen, which imports them
  * like a paste (downloads the servers and shows the result):
- *  - flowveil://add?url=<encoded link>   flowveil://add/<link>   flowveil://install-sub?url=...
+ *  - flowveil://add?url=<encoded link>[&name=<title>]   flowveil://add/<link>   flowveil://install-sub?url=...
  *  - v2rayng://install-sub?url=...  and  v2rayng://install-config?url=...
  */
 class UrlSchemeActivity : BaseComponentActivity() {
@@ -46,21 +46,9 @@ class UrlSchemeActivity : BaseComponentActivity() {
     }
 
     private fun linkFromUri(uri: Uri): String? {
-        val raw = uri.getQueryParameter("url")
-            ?: uri.encodedPath?.trimStart('/')?.takeIf { it.isNotBlank() }?.let { path ->
-                // flowveil://add/https://host/path -> everything after the first segment
-                val rest = uri.toString().substringAfter("://").substringAfter('/', "")
-                rest.ifBlank { path }
-            }
-            ?: return null
-        var decoded = if (raw.contains("%3A", ignoreCase = true) || raw.contains("%2F", ignoreCase = true)) {
-            URLDecoder.decode(raw, "UTF-8")
-        } else {
-            raw
-        }
-        val fragment = uri.fragment
-        if (!fragment.isNullOrEmpty() && !decoded.contains('#')) decoded += "#$fragment"
-        LogUtil.i(AppConfig.TAG, "Import link: $decoded")
-        return decoded
+        // The provider's name from &name= rides along as the link's #fragment: the importer names the new subscription with it.
+        val invite = InviteLink.parse(uri.toString()) ?: return null
+        LogUtil.i(AppConfig.TAG, "Import invite link")
+        return invite.link
     }
 }

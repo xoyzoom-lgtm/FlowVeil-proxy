@@ -135,6 +135,17 @@ internal fun SubscriptionCard(
                     modifier = Modifier.padding(start = 6.dp)
                 )
             }
+            if (!subscription.webPageUrl.isNullOrBlank()) {
+                CircleIconButton(
+                    iconRes = R.drawable.ic_language_24dp,
+                    contentDescription = stringResource(R.string.sub_action_site),
+                    onClick = { onOpenSupport(subscription.webPageUrl!!) },
+                    size = 36.dp,
+                    tint = accent,
+                    background = accent.copy(alpha = 0.14f),
+                    modifier = Modifier.padding(start = 6.dp)
+                )
+            }
             CircleIconButton(
                 iconRes = R.drawable.ic_speed_24dp,
                 contentDescription = stringResource(R.string.sub_action_check),
