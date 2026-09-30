@@ -21,6 +21,8 @@ data class SearchLimits(
     val parallel: Int = 8,
     /** Stop testing as soon as this many candidates passed. */
     val earlyExit: Int = 2,
+    /** ...or as soon as one with at least this score passed (a sure bet needs no rivals). */
+    val stopAtScore: Int = Int.MAX_VALUE,
     val totalMs: Long = 40_000L,
     val perCandidateMs: Long = 15_000L,
     /** A slower ping is not a failure, only a lower place in the choice. */
@@ -83,7 +85,7 @@ object BypassSearch {
                                 tested++
                                 done = tested
                                 if (r.ok) passers += c to r
-                                enough = passers.size >= limits.earlyExit
+                                enough = passers.size >= limits.earlyExit || (r.ok && c.score >= limits.stopAtScore)
                             }
                             env.onIsolated(c.id, r)
                             env.onProgress(done, candidates.size)

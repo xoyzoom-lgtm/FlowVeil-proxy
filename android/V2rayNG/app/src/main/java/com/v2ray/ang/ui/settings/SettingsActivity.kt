@@ -429,6 +429,10 @@ fun SettingsScreen(
                         onSelected = { whitelistBypassMode = it }
                     )
                     if (whitelistBypassMode == WhitelistBypass.MODE_AUTO) {
+                        SettingsMenuItem(
+                            title = stringResource(R.string.summary_whitelist_bypass_auto),
+                            onClick = {}
+                        )
                         SettingsListItem(
                             title = stringResource(R.string.title_bypass_fallback),
                             entries = listOf(

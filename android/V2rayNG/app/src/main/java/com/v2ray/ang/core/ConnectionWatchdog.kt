@@ -3,7 +3,9 @@ package com.v2ray.ang.core
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.IntentFilter
 import android.content.Intent
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
@@ -25,6 +27,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -50,6 +54,7 @@ import java.lang.ref.WeakReference
 object ConnectionWatchdog {
     private const val CHECK_INTERVAL_MS = 30_000L
     private const val RECHECK_DELAY_MS = 5_000L
+    private const val SCREEN_ON_DELAY_MS = 2_000L
     private const val MAX_CANDIDATES = 12
     private const val PARALLEL = 6
     private const val CHANNEL_ID = "connection_switch"
@@ -61,6 +66,10 @@ object ConnectionWatchdog {
     private var checkNowJob: Job? = null
     private var serviceRef: WeakReference<Service>? = null
 
+    /** Screen on = the user is about to use the phone: check now, do not wait out the interval. */
+    private val wake = Channel<Unit>(Channel.CONFLATED)
+    private var screenReceiver: BroadcastReceiver? = null
+
     internal val switchLock = Mutex()
 
     fun isEnabled(): Boolean = MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_FAILOVER, true)
@@ -70,10 +79,11 @@ object ConnectionWatchdog {
     fun start(service: Service) {
         serviceRef = WeakReference(service)
         BypassController.start(service)
+        registerScreenReceiver(service)
         if (job?.isActive == true) return
         job = scope.launch {
             while (isActive) {
-                delay(CHECK_INTERVAL_MS)
+                withTimeoutOrNull(CHECK_INTERVAL_MS) { wake.receive() }
                 if (!CoreServiceManager.isRunning() || !isScreenOn()) continue
                 val bypassOn = WhitelistBypass.isEnabled()
                 if (!isEnabled() && !bypassOn) continue
@@ -100,7 +110,26 @@ object ConnectionWatchdog {
         }
     }
 
+    private fun registerScreenReceiver(service: Service) {
+        if (screenReceiver != null) return
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                // Give the network a moment to wake up, then check once.
+                scope.launch {
+                    delay(SCREEN_ON_DELAY_MS)
+                    wake.trySend(Unit)
+                }
+            }
+        }
+        runCatching {
+            service.registerReceiver(receiver, IntentFilter(Intent.ACTION_SCREEN_ON))
+            screenReceiver = receiver
+        }
+    }
+
     fun stop() {
+        screenReceiver?.let { r -> runCatching { serviceRef?.get()?.unregisterReceiver(r) } }
+        screenReceiver = null
         job?.cancel()
         job = null
         checkNowJob?.cancel()

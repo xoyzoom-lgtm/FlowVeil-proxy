@@ -700,7 +700,7 @@
     <string name="title_whitelist_bypass">Авто-обход белых списков</string>
     <string name="summary_whitelist_bypass">Только на мобильной сети. Если оператор пускает лишь на сайты из белого списка и сервер перестал работать, FlowVeil найдёт сервер, который проходит, и переключится на него</string>
     <string name="title_whitelist_bypass_mode">Серверы обхода</string>
-    <string name="whitelist_bypass_mode_auto">Автоматически (похожие на серверы обхода)</string>
+    <string name="whitelist_bypass_mode_auto">Автоматически (возможны ошибки; лучше выберите серверы сами)</string>
     <string name="whitelist_bypass_mode_manual">Только выбранные мной</string>
     <string name="title_whitelist_bypass_servers">Выбрать серверы обхода</string>
     <string name="summary_whitelist_bypass_servers">Выбрано: %1$d. Используется самый быстрый рабочий</string>
@@ -723,7 +723,7 @@
     <string name="title_bypass_fallback">Если подходящих серверов не нашлось</string>
     <string name="bypass_fallback_none">Ничего не делать и сообщить</string>
     <string name="bypass_fallback_all">Пробовать остальные серверы (дольше)</string>
-    <string name="summary_whitelist_bypass_auto">Авто подбирает среди серверов, похожих на серверы для мобильных сетей: по названию, транспорту и прошлым результатам</string>
+    <string name="summary_whitelist_bypass_auto">Автоматический режим гадает по названию и типу сервера и может ошибиться. Во избежание ошибок лучше выберите серверы обхода сами: так надёжнее</string>
     <string name="bypass_status_searching">Ищу рабочий сервер… (проверено %1$d из %2$d)</string>
     <string name="bypass_status_connected">Подключён к %1$s (проверено)</string>
     <string name="bypass_status_failed">Не нашёл рабочий сервер, попробую позже</string>

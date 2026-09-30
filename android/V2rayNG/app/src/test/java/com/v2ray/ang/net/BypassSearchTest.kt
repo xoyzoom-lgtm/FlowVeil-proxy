@@ -172,4 +172,14 @@ class BypassSearchTest {
         assertTrue(env.switched.isEmpty())
         assertFalse(env.rolledBack)
     }
+
+    @Test
+    fun aSureBetEndsTheTestsAtOnce() = runBlocking {
+        val ids = (1..20).map { "s$it" }
+        val env = Env(iso = ids.associateWith { ok() }, isoDelayMs = 30)
+        val c = ids.mapIndexed { i, id -> SearchCandidate(id, score = if (i == 0) 80 else 40, order = i) }
+        val r = BypassSearch.run(c, SearchLimits(parallel = 2, earlyExit = 5, stopAtScore = 60), env)
+        assertEquals("s1", r.found)
+        assertTrue("tested ${env.isolatedCalls.get()}", env.isolatedCalls.get() <= 4)
+    }
 }

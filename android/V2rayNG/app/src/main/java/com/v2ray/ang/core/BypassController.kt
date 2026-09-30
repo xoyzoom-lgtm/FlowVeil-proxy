@@ -18,6 +18,8 @@ import com.v2ray.ang.handler.ServerCountry
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.handler.WhitelistBypass.Diagnosis
 import com.v2ray.ang.helper.MessageHelper
+import com.v2ray.ang.net.BypassData
+import com.v2ray.ang.net.BypassHistoryLogic
 import com.v2ray.ang.net.BypassLevel
 import com.v2ray.ang.net.BypassSearch
 import com.v2ray.ang.net.BypassSnapshot
@@ -209,7 +211,7 @@ object BypassController {
     private suspend fun quickCheckOnCellular() {
         if (!CoreServiceManager.isRunning() || !applies()) return
         if (CoreServiceManager.measureCurrentDelay() >= 0L) return
-        delay(5_000L)
+        delay(3_000L)
         if (!CoreServiceManager.isRunning() || !applies() || CoreServiceManager.measureCurrentDelay() >= 0L) return
         handleFailure()
     }
@@ -452,6 +454,7 @@ object BypassController {
     private fun limits(testOnly: Boolean = false) = SearchLimits(
         parallel = BYPASS_PARALLEL,
         earlyExit = if (testOnly) Int.MAX_VALUE else 2,
+        stopAtScore = if (testOnly) Int.MAX_VALUE else BypassData.STRONG_AT,
         totalMs = if (testOnly) TEST_ALL_BUDGET_MS else WhitelistBypass.searchBudgetMs(),
         perCandidateMs = PER_CANDIDATE_MS,
         pingLimitMs = WhitelistBypass.bypassPingMs(),
@@ -480,6 +483,8 @@ object BypassController {
         var lastReason: FailReason? = null
         fun onCellular() = PhysicalNetwork.snapshot.type == NetType.CELLULAR
         val alive = { CoreServiceManager.isRunning() && stillNeeded() && !userChangedServer() }
+        // Servers that worked here within a day skip the long stability wait: they proved themselves, and it is the slowest step.
+        val provedThemselves = rated.filter { (_, r) -> BypassHistoryLogic.isGood(BypassHistory.entry(r.fingerprint, bucket), System.currentTimeMillis()) }.keys
 
         val env = object : SearchEnv {
             override suspend fun isolated(id: String): IsoResult {
@@ -502,7 +507,7 @@ object BypassController {
             }
 
             override suspend fun verify(id: String): LiveOutcome {
-                val verdict = verifyAfterSwitch(full, alive)
+                val verdict = verifyAfterSwitch(full && id !in provedThemselves, alive)
                 if (verdict.outcome == Outcome.FAIL) lastReason = verdict.reason
                 BypassLog.add("live check of ${serverName(id)}: ${verdict.outcome}${verdict.reason?.let { " (${it.name})" }.orEmpty()}")
                 return when (verdict.outcome) {
