@@ -58,7 +58,30 @@ object NetProbe {
     val DOMESTIC_SITES = listOf("https://ya.ru", "https://vk.com", "https://mail.ru")
 
     /** Foreign reference hosts for the direct (whitelist) diagnosis. */
-    val FOREIGN_SITES = listOf(GSTATIC_204, PingUrls.FALLBACK)
+    val FOREIGN_SITES = listOf(
+        GSTATIC_204, // Google
+        PingUrls.FALLBACK, // Cloudflare
+        "https://www.msftconnecttest.com/connecttest.txt", // Microsoft
+        "https://captive.apple.com/hotspot-detect.html", // Apple
+        "https://detectportal.firefox.com/success.txt", // Mozilla
+    )
+
+    /** A plain TCP connect to [host]:[port] over [network] (null = the system's default), no HTTP: told apart from an HTTP answer. */
+    fun tcpReachable(network: Network?, host: String, port: Int = 443, timeoutMs: Long = PROBE_TIMEOUT_MS): Boolean = try {
+        val address = (network?.getAllByName(host) ?: InetAddress.getAllByName(host)).firstOrNull()
+        if (address == null) {
+            false
+        } else {
+            (network?.socketFactory?.createSocket() ?: java.net.Socket()).use { socket ->
+                socket.connect(InetSocketAddress(address, port), timeoutMs.toInt())
+                true
+            }
+        }
+    } catch (e: Exception) {
+        false
+    }
+
+    fun hostOf(url: String): String = url.substringAfter("://").substringBefore('/').substringBefore(':')
 
     private const val MAX_BODY = 16 * 1024
     private const val USER_AGENT = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36"

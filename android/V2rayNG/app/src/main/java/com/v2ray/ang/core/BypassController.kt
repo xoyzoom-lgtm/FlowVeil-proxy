@@ -16,7 +16,6 @@ import com.v2ray.ang.handler.NetInfoCache
 import com.v2ray.ang.handler.NetProbe
 import com.v2ray.ang.handler.ServerCountry
 import com.v2ray.ang.handler.WhitelistBypass
-import com.v2ray.ang.handler.WhitelistBypass.Diagnosis
 import com.v2ray.ang.helper.MessageHelper
 import com.v2ray.ang.net.BypassData
 import com.v2ray.ang.net.BypassHistoryLogic
@@ -31,6 +30,9 @@ import com.v2ray.ang.net.EpisodeResult
 import com.v2ray.ang.net.EpisodeStats
 import com.v2ray.ang.net.FailStreaks
 import com.v2ray.ang.net.FailReason
+import com.v2ray.ang.net.HostProbe
+import com.v2ray.ang.net.LinkDiagnosis
+import com.v2ray.ang.net.NetDiagnosis
 import com.v2ray.ang.net.IsoResult
 import com.v2ray.ang.net.LiveOutcome
 import com.v2ray.ang.net.NetType
@@ -234,12 +236,12 @@ object BypassController {
             return false
         }
         when (diagnoseNow()) {
-            Diagnosis.OK -> Unit
-            Diagnosis.NO_NETWORK -> {
+            LinkDiagnosis.OK -> Unit
+            LinkDiagnosis.NO_NETWORK -> {
                 NetInfoCache.writeBypass(BypassState.NO_NETWORK, returnTo = returnToName())
                 BypassLog.add("no network at all, not switching")
             }
-            Diagnosis.WHITELIST -> {
+            LinkDiagnosis.WHITELIST -> {
                 if (onOurBypass) {
                     // The bypass server we were on stopped carrying traffic while the network itself is up: that counts against it.
                     ConnectionWatchdog.currentService()?.let { s ->
@@ -249,7 +251,12 @@ object BypassController {
                 }
                 searchBypass(current)
             }
-            Diagnosis.SERVER_DOWN -> {
+            LinkDiagnosis.UNSURE -> {
+                // The probes disagree: no guessing about the network. (The quick path comes first once it exists; then the ordinary failover.)
+                BypassLog.add("the probes disagree: ordinary failover, the network is not blamed")
+                return true
+            }
+            LinkDiagnosis.SERVER_DOWN -> {
                 // The open internet works: this is a dead server, not a restriction.
                 if (onOurBypass && WhitelistBypass.autoReturn() && returnOnlyIfOriginWorks()) return false
                 if (onOurBypass) WhitelistBypass.clearState()
@@ -369,21 +376,32 @@ object BypassController {
      * Russian sites and a foreign reference, both directly over the mobile network (bound to it,
      * never through the tunnel). Domestic answers and foreign does not: a whitelist.
      */
-    private suspend fun diagnoseNow(): Diagnosis {
+    private suspend fun diagnoseNow(): LinkDiagnosis {
         val network = PhysicalNetwork.snapshot.network
         val (domestic, foreign) = withContext(Dispatchers.IO) {
             NetProbe.physical(network).use { client ->
-                coroutineScope {
-                    val d = async { NetProbe.DOMESTIC_SITES.map { url -> async { client.reachable(url) } }.awaitAll().any { it } }
-                    val f = async { NetProbe.FOREIGN_SITES.map { url -> async { client.reachable(url) } }.awaitAll().any { it } }
-                    d.await() to f.await()
+                cancellingWith({ client.cancelAll() }) {
+                    coroutineScope {
+                        val d = NetProbe.DOMESTIC_SITES.map { url -> async { HostProbe(NetProbe.hostOf(url), tcp = false, http = client.reachable(url)) } }
+                        val f = NetProbe.FOREIGN_SITES.map { url ->
+                            async {
+                                val host = NetProbe.hostOf(url)
+                                // TCP and HTTP are asked apart, in parallel: a path that connects but drops the request looks different from a dead one.
+                                val tcp = async { NetProbe.tcpReachable(network, host) }
+                                val http = client.reachable(url)
+                                HostProbe(host, tcp.await(), http)
+                            }
+                        }
+                        d.awaitAll() to f.awaitAll()
+                    }
                 }
             }
         }
-        val diagnosis = WhitelistBypass.diagnose(viaProxy = false, domesticDirect = domestic, foreignDirect = foreign)
-        WhitelistBypass.lastDiagnosis = "${diagnosis.name}: ru-direct=$domestic foreign-direct=$foreign @${System.currentTimeMillis()}"
-        BypassLog.add("diagnosis ${diagnosis.name} (ru-direct=$domestic foreign-direct=$foreign)")
-        return diagnosis
+        // The "one foreign host of several" rule only makes sense while the switch is on and the phone is on the mobile network.
+        val result = NetDiagnosis.diagnose(domestic, foreign, partialWhitelistRule = WhitelistBypass.isEnabled() && PhysicalNetwork.snapshot.type == NetType.CELLULAR)
+        WhitelistBypass.lastDiagnosis = "${result.diagnosis.name}: ${result.why} @${System.currentTimeMillis()}"
+        BypassLog.add("diagnosis ${result.diagnosis.name} (${result.why})")
+        return result.diagnosis
     }
 
     /** Wi-Fi may be up with no internet behind it (login page, broken router): then do not go back. */
