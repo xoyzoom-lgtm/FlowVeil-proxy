@@ -26,6 +26,7 @@ import com.v2ray.ang.net.BypassSnapshot
 import com.v2ray.ang.net.BypassVerdict
 import com.v2ray.ang.net.EpisodeResult
 import com.v2ray.ang.net.EpisodeStats
+import com.v2ray.ang.net.FailStreaks
 import com.v2ray.ang.net.FailReason
 import com.v2ray.ang.net.IsoResult
 import com.v2ray.ang.net.LiveOutcome
@@ -156,6 +157,25 @@ object BypassController {
         }
     }
 
+    /** Failures in a row of servers without a history (the way back), this process only. */
+    private val streaks = FailStreaks()
+
+    /**
+     * One more failure of [guid] on a network that was really up. The first one is only counted; from the second in a row
+     * the server is held back for a while (see [BypassHistoryLogic.BAN_AT_STREAK]).
+     */
+    private fun registerFailure(guid: String, meta: BypassRating.Rated?, bucket: String, onCellular: Boolean) {
+        val inProcess = streaks.fail(guid)
+        val streak = meta?.let { BypassHistory.recordFail(it.fingerprint, bucket, onCellular).takeIf { n -> n > 0 } } ?: inProcess
+        if (streak >= BypassHistoryLogic.BAN_AT_STREAK) {
+            WhitelistBypass.markBad(guid)
+            episode?.banned()
+            BypassLog.add("${serverName(guid)}: failed $streak times in a row, held back for a while")
+        } else {
+            BypassLog.add("${serverName(guid)}: first failure, counted but not held back")
+        }
+    }
+
     /** The server FlowVeil itself selected last; a different one in MMKV means the user stepped in. */
     @Volatile
     private var lastOurs: String? = null
@@ -199,7 +219,13 @@ object BypassController {
                 BypassLog.add("no network at all, not switching")
             }
             Diagnosis.WHITELIST -> {
-                if (onOurBypass) WhitelistBypass.markBad(current)
+                if (onOurBypass) {
+                    // The bypass server we were on stopped carrying traffic while the network itself is up: that counts against it.
+                    ConnectionWatchdog.currentService()?.let { s ->
+                        val bucket = BypassHistory.bucket(s)
+                        registerFailure(current, BypassRating.rate(current, bucket), bucket, true)
+                    }
+                }
                 searchBypass(current)
             }
             Diagnosis.SERVER_DOWN -> {
@@ -550,16 +576,29 @@ object BypassController {
                     "test on the network: ${serverName(id)}${meta?.let { " [score ${it.rating.score} ${it.rating.level}]" }.orEmpty()} -> " +
                         (if (result.ok) "passed ${result.pingMs} ms" else "no answer")
                 )
-                if (meta != null) {
-                    if (result.ok) BypassHistory.recordOk(meta.fingerprint, bucket, result.pingMs, onCellular())
-                    else BypassHistory.recordFail(meta.fingerprint, bucket, onCellular())
+                if (result.ok) {
+                    streaks.ok(id)
+                    if (meta != null) BypassHistory.recordOk(meta.fingerprint, bucket, result.pingMs, onCellular())
                 }
-                if (!result.ok) WhitelistBypass.markBad(id)
+            }
+
+            override fun recordIsolatedFailures(failed: List<SearchCandidate>, uncertain: Int, trusted: Boolean) {
+                if (!trusted) {
+                    if (failed.isNotEmpty() || uncertain > 0) {
+                        BypassLog.add("tests: ${failed.size} did not answer and $uncertain did not come back, but nothing passed or the network moved: not held against the servers")
+                    }
+                    episode?.notRecorded(failed.size + uncertain)
+                    return
+                }
+                if (uncertain > 0) {
+                    BypassLog.add("tests: $uncertain did not come back in time (not counted against them)")
+                    episode?.notRecorded(uncertain)
+                }
+                failed.forEach { registerFailure(it.id, rated[it.id], bucket, onCellular()) }
             }
 
             override fun onLiveFail(id: String) {
-                WhitelistBypass.markBad(id)
-                rated[id]?.let { BypassHistory.recordFail(it.fingerprint, bucket, onCellular()) }
+                registerFailure(id, rated[id], bucket, onCellular())
             }
 
             override fun onProgress(checked: Int, total: Int) = NetInfoCache.writeProgress(checked, total)

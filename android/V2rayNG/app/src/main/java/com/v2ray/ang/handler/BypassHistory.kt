@@ -63,13 +63,16 @@ object BypassHistory {
         }
     }
 
-    fun recordFail(fingerprint: String, bucket: String, onCellular: Boolean, now: Long = System.currentTimeMillis()) {
-        if (!onCellular) return
+    /** Returns how many failures in a row this server has now (0 when nothing was written). */
+    fun recordFail(fingerprint: String, bucket: String, onCellular: Boolean, now: Long = System.currentTimeMillis()): Int {
+        if (!onCellular) return 0
         synchronized(lock) {
             val map = load()
             val key = BypassHistoryLogic.key(fingerprint, bucket)
-            map[key] = BypassHistoryLogic.recordFail(map[key], now)
+            val updated = BypassHistoryLogic.recordFail(map[key], now)
+            map[key] = updated
             save(map)
+            return updated.streak
         }
     }
 

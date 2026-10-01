@@ -11,13 +11,15 @@ class BypassHistoryLogicTest {
     private val minute = 60_000L
 
     @Test
-    fun aFailureMarksTheServerBadForTheBaseTimeAndDoublesEachTime() {
+    fun oneFailureIsOnlyCountedTheSecondInARowBansAndTheBanDoublesEachTime() {
         var e = BypassHistoryLogic.recordFail(null, t0)
-        assertTrue(BypassHistoryLogic.isBad(e, t0 + 9 * minute, 10))
-        assertFalse(BypassHistoryLogic.isBad(e, t0 + 10 * minute, 10))
-        e = BypassHistoryLogic.recordFail(e, t0 + 11 * minute)
-        assertTrue(BypassHistoryLogic.isBad(e, t0 + 11 * minute + 19 * minute, 10))
-        assertFalse(BypassHistoryLogic.isBad(e, t0 + 11 * minute + 20 * minute, 10))
+        assertFalse(BypassHistoryLogic.isBad(e, t0 + minute, 10))
+        e = BypassHistoryLogic.recordFail(e, t0 + 2 * minute)
+        assertTrue(BypassHistoryLogic.isBad(e, t0 + 2 * minute + 9 * minute, 10))
+        assertFalse(BypassHistoryLogic.isBad(e, t0 + 2 * minute + 10 * minute, 10))
+        e = BypassHistoryLogic.recordFail(e, t0 + 13 * minute)
+        assertTrue(BypassHistoryLogic.isBad(e, t0 + 13 * minute + 19 * minute, 10))
+        assertFalse(BypassHistoryLogic.isBad(e, t0 + 13 * minute + 20 * minute, 10))
     }
 
     @Test
@@ -30,6 +32,7 @@ class BypassHistoryLogicTest {
     @Test
     fun aSuccessClearsTheBadMarkAndCountsAsGoodForADay() {
         var e = BypassHistoryLogic.recordFail(null, t0)
+        e = BypassHistoryLogic.recordFail(e, t0)
         e = BypassHistoryLogic.recordOk(e, t0 + minute, 300)
         assertFalse(BypassHistoryLogic.isBad(e, t0 + 2 * minute, 10))
         assertTrue(BypassHistoryLogic.isGood(e, t0 + 23 * 60 * minute))

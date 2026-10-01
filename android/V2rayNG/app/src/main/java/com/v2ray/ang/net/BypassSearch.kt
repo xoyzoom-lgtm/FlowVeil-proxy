@@ -47,6 +47,11 @@ interface SearchEnv {
     fun stillNeeded(): Boolean
     fun log(message: String)
     fun onIsolated(id: String, result: IsoResult) {}
+    /**
+     * Once per search, after the tests: the candidates that did not answer ([failed], timeouts left out: a test that
+     * did not come back says nothing about the server). [trusted] is false when they must not be held against anyone.
+     */
+    fun recordIsolatedFailures(failed: List<SearchCandidate>, uncertain: Int, trusted: Boolean) {}
     fun onLiveFail(id: String) {}
     fun onProgress(checked: Int, total: Int) {}
 }
@@ -69,6 +74,8 @@ object BypassSearch {
         if (candidates.isEmpty()) return SearchResult(null, aborted = false, tested = 0, passed = 0, timedOut = false)
         val lock = Any()
         val passers = ArrayList<Pair<SearchCandidate, IsoResult>>()
+        val failures = ArrayList<SearchCandidate>()
+        var uncertain = 0
         var tested = 0
         val sem = Semaphore(limits.parallel.coerceAtLeast(1))
 
@@ -85,7 +92,7 @@ object BypassSearch {
                             synchronized(lock) {
                                 tested++
                                 done = tested
-                                if (r.ok) passers += c to r
+                                if (r.ok) passers += c to r else if (r.timedOut) uncertain++ else failures += c
                                 enough = passers.size >= limits.earlyExit || (r.ok && c.score >= limits.stopAtScore)
                             }
                             env.onIsolated(c.id, r)
@@ -102,6 +109,9 @@ object BypassSearch {
         val done = synchronized(lock) { tested }
         if (timedOut) env.log("test budget ${limits.totalMs / 1000}s is over: $done of ${candidates.size} tested, ${passed.size} passed")
         if (!env.stillNeeded()) return SearchResult(null, aborted = true, tested = done, passed = passed.size, timedOut = timedOut)
+        val failed = synchronized(lock) { failures.toList() }
+        val unsure = synchronized(lock) { uncertain }
+        env.recordIsolatedFailures(failed, unsure, FailJudge.trusted(passed.size, env.stillNeeded()))
 
         if (limits.testOnly) return SearchResult(null, aborted = false, tested = done, passed = passed.size, timedOut = timedOut)
 

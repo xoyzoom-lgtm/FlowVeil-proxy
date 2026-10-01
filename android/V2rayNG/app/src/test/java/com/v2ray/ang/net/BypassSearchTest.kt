@@ -22,6 +22,7 @@ class BypassSearchTest {
         val isolatedCalls = AtomicInteger()
         val liveFails = CopyOnWriteArrayList<String>()
         val isoRecorded = CopyOnWriteArrayList<String>()
+        var judged: Triple<List<String>, Int, Boolean>? = null
         var rolledBack = false
         override suspend fun isolated(id: String): IsoResult {
             isolatedCalls.incrementAndGet()
@@ -35,6 +36,9 @@ class BypassSearchTest {
         override fun log(message: String) {}
         override fun onLiveFail(id: String) { liveFails += id }
         override fun onIsolated(id: String, result: IsoResult) { isoRecorded += id }
+        override fun recordIsolatedFailures(failed: List<SearchCandidate>, uncertain: Int, trusted: Boolean) {
+            judged = Triple(failed.map { it.id }.sorted(), uncertain, trusted)
+        }
     }
 
     private fun cands(vararg ids: String) = ids.mapIndexed { i, id -> SearchCandidate(id, score = 50, order = i) }
@@ -181,5 +185,44 @@ class BypassSearchTest {
         val r = BypassSearch.run(c, SearchLimits(parallel = 2, earlyExit = 5, stopAtScore = 60), env)
         assertEquals("s1", r.found)
         assertTrue("tested ${env.isolatedCalls.get()}", env.isolatedCalls.get() <= 4)
+    }
+
+    @Test
+    fun whenNobodyPassesTheFailuresAreNotHeldAgainstAnyone() = runBlocking {
+        val env = Env(iso = emptyMap())
+        BypassSearch.run(cands("a", "b", "c"), SearchLimits(), env)
+        assertEquals(Triple(listOf("a", "b", "c"), 0, false), env.judged)
+    }
+
+    @Test
+    fun whenSomeoneAnswersTheOthersCountAsFailed() = runBlocking {
+        val env = Env(iso = mapOf("b" to ok()))
+        BypassSearch.run(cands("a", "b", "c"), SearchLimits(earlyExit = 5), env)
+        assertEquals(Triple(listOf("a", "c"), 0, true), env.judged)
+    }
+
+    @Test
+    fun aTestThatDidNotComeBackIsNotAFailure() = runBlocking {
+        val env = Env(iso = mapOf("a" to ok(), "slow" to IsoResult(false, -1, timedOut = true)))
+        BypassSearch.run(cands("a", "slow", "dead"), SearchLimits(earlyExit = 5), env)
+        assertEquals(Triple(listOf("dead"), 1, true), env.judged)
+    }
+
+    @Test
+    fun aSearchThatIsNoLongerNeededJudgesNothing() = runBlocking {
+        val env = Env(iso = mapOf("a" to ok()), needed = { false })
+        val r = BypassSearch.run(cands("a", "b"), SearchLimits(), env)
+        assertTrue(r.aborted)
+        assertNull(env.judged)
+    }
+
+    @Test
+    fun failStreaksCountInARowAndASuccessResets() {
+        val s = FailStreaks()
+        assertEquals(1, s.fail("x"))
+        assertEquals(2, s.fail("x"))
+        s.ok("x")
+        assertEquals(1, s.fail("x"))
+        assertEquals(1, s.fail("y"))
     }
 }

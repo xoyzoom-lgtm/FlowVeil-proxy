@@ -19,12 +19,18 @@ object BypassHistoryLogic {
     private const val MAX_DOUBLINGS = 3
     const val MAX_ENTRIES = 300
 
-    /** A failure marks the server bad for [baseMinutes], doubled with every failure in a row (to 8x). */
+    /**
+     * One failure proves little (a busy phone, a bad moment on the network): a server is held back only from its
+     * second failure in a row. Failures are counted in the history anyway.
+     */
+    const val BAN_AT_STREAK = 2
+
+    /** A ban lasts [baseMinutes], doubled with every further failure in a row (to 8x). */
     fun badTtlMs(streak: Int, baseMinutes: Int): Long =
-        baseMinutes * 60_000L * (1L shl (streak - 1).coerceIn(0, MAX_DOUBLINGS))
+        baseMinutes * 60_000L * (1L shl (streak - BAN_AT_STREAK).coerceIn(0, MAX_DOUBLINGS))
 
     fun isBad(e: HistoryEntry?, now: Long, baseMinutes: Int): Boolean =
-        e != null && e.streak > 0 && now - e.lastFailAt in 0 until badTtlMs(e.streak, baseMinutes)
+        e != null && e.streak >= BAN_AT_STREAK && now - e.lastFailAt in 0 until badTtlMs(e.streak, baseMinutes)
 
     fun isGood(e: HistoryEntry?, now: Long): Boolean =
         e != null && e.lastOkAt > 0 && e.streak == 0 && now - e.lastOkAt < GOOD_TTL_MS
