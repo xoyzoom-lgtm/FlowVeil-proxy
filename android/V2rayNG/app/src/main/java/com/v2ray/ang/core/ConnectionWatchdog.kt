@@ -59,6 +59,8 @@ import java.lang.ref.WeakReference
 object ConnectionWatchdog {
     private const val CHECK_INTERVAL_MS = 20_000L
     private const val RECHECK_DELAY_MS = 5_000L
+    private const val CHECK_INTERVAL_CELLULAR_MS = 10_000L
+    private const val RECHECK_DELAY_FAST_MS = 2_000L
     private const val SCREEN_ON_DELAY_MS = 2_000L
     private const val MAX_CANDIDATES = 12
     private const val PARALLEL = 6
@@ -78,6 +80,9 @@ object ConnectionWatchdog {
 
     internal val switchLock = Mutex()
 
+    /** On the mobile network with the switch on a restriction costs seconds, so the check comes more often (the screen is on). */
+    private fun checkInterval(): Long = if (WhitelistBypass.isEnabled() && BypassController.applies()) CHECK_INTERVAL_CELLULAR_MS else CHECK_INTERVAL_MS
+
     fun isEnabled(): Boolean = MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_FAILOVER, true)
 
     internal fun currentService(): Service? = serviceRef?.get()
@@ -89,7 +94,7 @@ object ConnectionWatchdog {
         if (job?.isActive == true) return
         job = scope.launch {
             while (isActive) {
-                withTimeoutOrNull(CHECK_INTERVAL_MS) { wake.receive() }
+                withTimeoutOrNull(checkInterval()) { wake.receive() }
                 if (!CoreServiceManager.isRunning() || !isScreenOn()) continue
                 val bypassOn = WhitelistBypass.isEnabled()
                 if (!isEnabled() && !bypassOn) continue
@@ -97,7 +102,7 @@ object ConnectionWatchdog {
                     if (bypassOn) BypassController.beforeCheck()
                     if (currentServerWorks()) return@withLock
                     if (bypassOn) BypassLog.add("the current server does not answer (${serverName(CoreServiceManager.currentServerGuid().orEmpty())}), checking again in 5 s")
-                    delay(RECHECK_DELAY_MS)
+                    delay(if (BypassController.applies()) RECHECK_DELAY_FAST_MS else RECHECK_DELAY_MS)
                     if (!CoreServiceManager.isRunning() || currentServerWorks()) return@withLock
 
                     if (BypassController.applies()) {
@@ -120,7 +125,8 @@ object ConnectionWatchdog {
         if (screenReceiver != null) return
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                // Give the network a moment to wake up, then check once.
+                // Give the network a moment to wake up, then check once; an old pause before a search does not hold the user up.
+                BypassController.onScreenOn()
                 scope.launch {
                     delay(SCREEN_ON_DELAY_MS)
                     wake.trySend(Unit)

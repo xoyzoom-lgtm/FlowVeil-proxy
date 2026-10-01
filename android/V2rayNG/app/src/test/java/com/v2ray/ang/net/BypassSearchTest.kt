@@ -256,4 +256,38 @@ class BypassSearchTest {
         assertTrue(r.aborted)
         assertNull(r.found)
     }
+
+    @Test
+    fun theSecondWaveIsNotStartedWhenTheFirstOneHasAServer() = runBlocking {
+        val env = Env(iso = mapOf("b" to ok(), "e" to ok()))
+        val r = BypassSearch.run(cands("a", "b", "c", "d", "e", "f"), SearchLimits(earlyExit = 5, waves = listOf(3)), env)
+        assertEquals("b", r.found)
+        assertEquals(3, env.isolatedCalls.get())
+    }
+
+    @Test
+    fun aWaveThatGivesNothingIsFollowedByTheNextOne() = runBlocking {
+        val env = Env(iso = mapOf("e" to ok()))
+        val r = BypassSearch.run(cands("a", "b", "c", "d", "e", "f", "g"), SearchLimits(earlyExit = 5, waves = listOf(2, 2)), env)
+        assertEquals("e", r.found)
+        // waves of 2 and 2 gave nothing; the last wave is all that is left: e, f, g
+        assertEquals(7, env.isolatedCalls.get())
+    }
+
+    @Test
+    fun splitIntoWavesTakesTheRestAsTheLastWave() {
+        val c = cands("a", "b", "c", "d", "e", "f", "g")
+        assertEquals(listOf(listOf("a", "b"), listOf("c", "d"), listOf("e", "f", "g")), splitIntoWaves(c, listOf(2, 2)).map { w -> w.map { it.id } })
+        assertEquals(listOf(listOf("a", "b", "c", "d", "e", "f", "g")), splitIntoWaves(c, emptyList()).map { w -> w.map { it.id } })
+        assertEquals(listOf(listOf("a", "b", "c")), splitIntoWaves(cands("a", "b", "c"), listOf(8, 8)).map { w -> w.map { it.id } })
+    }
+
+    @Test
+    fun allWavesFailingGivesNothingAndJudgesFailuresAsUntrusted() = runBlocking {
+        val env = Env(iso = emptyMap())
+        val r = BypassSearch.run(cands("a", "b", "c", "d", "e"), SearchLimits(waves = listOf(2, 2)), env)
+        assertNull(r.found)
+        assertEquals(5, r.tested)
+        assertEquals(false, env.judged?.third)
+    }
 }

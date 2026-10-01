@@ -1,6 +1,8 @@
 package com.v2ray.ang.core
 
+import android.app.ActivityManager
 import android.app.Service
+import android.content.Context
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.enums.EConfigType
@@ -23,6 +25,9 @@ import com.v2ray.ang.net.BypassLevel
 import com.v2ray.ang.net.BypassSearch
 import com.v2ray.ang.net.BypassSnapshot
 import com.v2ray.ang.net.AbandonableCalls
+import com.v2ray.ang.net.AdaptiveParallel
+import com.v2ray.ang.net.Backoff
+import com.v2ray.ang.net.ReadyWait
 import com.v2ray.ang.net.BypassVerdict
 import com.v2ray.ang.net.HardResult
 import com.v2ray.ang.net.cancellingWith
@@ -53,6 +58,7 @@ import com.v2ray.ang.net.Verdict
 import com.v2ray.ang.receiver.WidgetProvider
 import com.v2ray.ang.service.RealPingExecutionLimiter
 import com.v2ray.ang.service.SpeedtestConfig
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -95,7 +101,10 @@ object BypassController {
     private const val RETURN_CHECK_INTERVAL_MS = 150_000L
     private const val IDENTITY_INTERVAL_MS = 60_000L
     private const val IDENTITY_MIN_GAP_MS = 10_000L
-    private const val VERIFY_DELAY_MS = 3_000L
+    private const val READY_WAIT_MS = 3_000L
+    private const val NO_PORT_SETTLE_MS = 1_000L
+    private const val WAVE_1 = 4
+    private const val WAVE_2 = 8
     private const val STABILITY_DELAY_MS = 9_000L
     private const val FULL_CHECK_LIMIT_MS = 30_000L
     private const val SOFT_CHECK_LIMIT_MS = 12_000L
@@ -108,8 +117,13 @@ object BypassController {
 
     /** Where the isolated native tests run: at most as many at once as the search runs in parallel, hung ones included. */
     private val nativeSlots = AbandonableCalls(BYPASS_PARALLEL)
+    @Volatile
     private var returnJob: Job? = null
+
+    @Volatile
     private var eventJob: Job? = null
+
+    @Volatile
     private var identityJob: Job? = null
 
     /** The user picked a server during a bypass: leave it alone until the network type changes. */
@@ -118,9 +132,14 @@ object BypassController {
     /** The counters of the search in progress (only set while [searchBypass] runs, under the switch lock). */
     @Volatile
     private var episode: EpisodeStats? = null
-    private var failedSearches = 0
+    private val failedSearches = AtomicInteger(0)
+
+    @Volatile
     private var nextSearchAt = 0L
+    @Volatile
     private var lastPeriodicReturnAt = 0L
+
+    @Volatile
     private var lastIdentityAt = 0L
     private val lastNotified = HashMap<String, Long>()
 
@@ -154,9 +173,23 @@ object BypassController {
     fun onUserStop() {
         WhitelistBypass.clearState()
         userOverride = false
-        failedSearches = 0
+        failedSearches.set(0)
         nextSearchAt = 0L
     }
+
+    /** The pause before the next search: 15 s, 30 s, 1, 2, 5 minutes, +/- 20%. */
+    private fun nextBackoffMs(): Long = Backoff.delayMs(failedSearches.get(), kotlin.random.Random.nextDouble())
+
+    /** Something happened that may have changed the picture (the network, the screen, the user asked): no waiting out an old pause. */
+    private fun resetBackoff(why: String) {
+        if (failedSearches.get() == 0 && nextSearchAt == 0L) return
+        failedSearches.set(0)
+        nextSearchAt = 0L
+        BypassLog.add("pause before the next search cancelled ($why)")
+    }
+
+    /** The screen came on: the user is about to use the phone, no waiting. */
+    fun onScreenOn() = resetBackoff("screen on")
 
     /** True while WE change the server: the restart that follows must not look like a user's choice. */
     @Volatile
@@ -275,13 +308,13 @@ object BypassController {
     private suspend fun quickCheckOnCellular() {
         if (!CoreServiceManager.isRunning() || !applies()) return
         if (CoreServiceManager.measureCurrentDelay(whitelist = true) >= 0L) return
-        delay(3_000L)
-        if (!CoreServiceManager.isRunning() || !applies() || CoreServiceManager.measureCurrentDelay(whitelist = true) >= 0L) return
+        // No second look after a pause: the diagnosis in handleFailure is the confirmation, and every second counts here.
         handleFailure()
     }
 
     /** The "check now" button of the UI: fresh network type, both IPs and a light check of the server. */
     suspend fun checkNow() {
+        resetBackoff("check now")
         PhysicalNetwork.refreshNow()
         withContext(Dispatchers.IO) { refreshIdentity(clearOnFail = true) }
         if (!WhitelistBypass.isEnabled() || !CoreServiceManager.isRunning()) return
@@ -296,8 +329,10 @@ object BypassController {
     private fun onNetworkChanged(old: PhysicalNetwork.Snapshot, new: PhysicalNetwork.Snapshot) {
         if (old.type != new.type) {
             userOverride = false
-            failedSearches = 0
+            failedSearches.set(0)
             nextSearchAt = 0L
+        } else if (old.key != new.key) {
+            resetBackoff("another network of the same kind")
         }
         if (!WhitelistBypass.isEnabled()) return
         scheduleIdentity(0L, force = true)
@@ -530,8 +565,9 @@ object BypassController {
         val total: Int,
     )
 
-    private fun limits(testOnly: Boolean = false) = SearchLimits(
-        parallel = BYPASS_PARALLEL,
+    private fun limits(service: Service, testOnly: Boolean = false) = SearchLimits(
+        parallel = parallelFor(service),
+        waves = if (testOnly) emptyList() else listOf(WAVE_1, WAVE_2),
         earlyExit = if (testOnly) Int.MAX_VALUE else 2,
         stopAtScore = if (testOnly) Int.MAX_VALUE else BypassData.STRONG_AT,
         totalMs = if (testOnly) TEST_ALL_BUDGET_MS else WhitelistBypass.searchBudgetMs(),
@@ -540,6 +576,12 @@ object BypassController {
         maxLive = 3,
         testOnly = testOnly,
     )
+
+    /** Each isolated test runs its own core: fewer at once on phones with little memory (see [AdaptiveParallel]). */
+    private fun parallelFor(service: Service): Int {
+        val am = service.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return BYPASS_PARALLEL
+        return AdaptiveParallel.pick(am.isLowRamDevice, am.memoryClass, BYPASS_PARALLEL)
+    }
 
     /**
      * One search over [candidates] (best first): the isolated test of each on the phone's real
@@ -557,13 +599,15 @@ object BypassController {
         stillNeeded: () -> Boolean,
         override: SearchLimits? = null,
     ): TryResult {
-        val lim = override ?: limits(testOnly)
+        val lim = override ?: limits(service, testOnly)
         val startGuid = CoreServiceManager.currentServerGuid()
         lastOurs = startGuid
         val bucket = BypassHistory.bucket(service)
         var lastReason: FailReason? = null
         fun onCellular() = PhysicalNetwork.snapshot.type == NetType.CELLULAR
-        val alive = { CoreServiceManager.isRunning() && stillNeeded() && !userChangedServer() }
+        // The network the search started on: another handle (a different Wi-Fi, a different SIM) ends it, the next event decides.
+        val startKey = PhysicalNetwork.snapshot.key
+        val alive = { CoreServiceManager.isRunning() && stillNeeded() && !userChangedServer() && PhysicalNetwork.snapshot.key == startKey }
         // Servers that worked here within a day skip the long stability wait: they proved themselves, and it is the slowest step.
         val provedThemselves = rated.filter { (_, r) -> BypassHistoryLogic.isGood(BypassHistory.entry(r.fingerprint, bucket), System.currentTimeMillis()) }.keys
 
@@ -582,8 +626,9 @@ object BypassController {
             }
 
             override suspend fun switchTo(id: String): SwitchResult {
-                val result = ourSwitch(id)
-                if (result == SwitchResult.OK) delay(VERIFY_DELAY_MS)
+                // Already on it (a rival step got there first): no reload that would only break the traffic for nothing.
+                val result = if (CoreServiceManager.currentServerGuid() == id && !CoreServiceManager.isReloadingNow()) SwitchResult.OK else ourSwitch(id)
+                if (result == SwitchResult.OK) awaitReady(id)
                 return result
             }
 
@@ -737,11 +782,31 @@ object BypassController {
         )
     }
 
+    /**
+     * After a switch: wait until the core is up again and its local port answers (polling every 200 ms, at most 3 s) instead of a
+     * fixed pause, so the first check starts the moment the server is really in use. A profile without a local port has nothing to
+     * poll: a short settle.
+     */
+    private suspend fun awaitReady(guid: String) {
+        val route = LocalProxy.resolve(guid)
+        val ready = ReadyWait.poll(
+            isReady = {
+                CoreServiceManager.isRunning() && !CoreServiceManager.isReloadingNow() &&
+                    (route == null || NetProbe.tcpReachable(null, AppConfig.LOOPBACK, route.port, 250L))
+            },
+            sleep = { delay(it) },
+            now = { System.currentTimeMillis() },
+            timeoutMs = READY_WAIT_MS,
+        )
+        if (route == null && ready) delay(NO_PORT_SETTLE_MS)
+        if (!ready) BypassLog.add("the core was not ready within ${READY_WAIT_MS / 1000}s, checking anyway")
+    }
+
     /** What follows a verified switch: the state, the notice, the log. */
     private fun finishSuccess(service: Service, guid: String) {
         WhitelistBypass.active = guid
         WhitelistBypass.recordSuccess(guid)
-        failedSearches = 0
+        failedSearches.set(0)
         nextSearchAt = 0L
         lastPeriodicReturnAt = System.currentTimeMillis()
         announceSwitch(service, guid)
@@ -815,8 +880,8 @@ object BypassController {
             }
             BypassLog.add("nothing to try (${service.getString(text)})")
             NetInfoCache.writeBypass(BypassState.FAIL, FailReason.NO_GSTATIC, returnToName())
-            failedSearches++
-            nextSearchAt = System.currentTimeMillis() + WhitelistBypass.backoffMillis(failedSearches)
+            failedSearches.incrementAndGet()
+            nextSearchAt = System.currentTimeMillis() + nextBackoffMs()
             postEvent(service, "empty", service.getString(text), NOTIFY_PROBLEM_GAP_MS)
             return EpisodeResult.NOTHING_TO_TRY
         }
@@ -858,8 +923,8 @@ object BypassController {
         }
         // Nothing carried traffic: the search already put the connection back; wait before retrying.
         if (createdSnapshot) WhitelistBypass.snapshot = null
-        failedSearches++
-        val wait = WhitelistBypass.backoffMillis(failedSearches)
+        failedSearches.incrementAndGet()
+        val wait = nextBackoffMs()
         nextSearchAt = System.currentTimeMillis() + wait
         BypassLog.add("no working server (${result.tested} tested, ${result.passed} passed the test), retry in ${wait / 1000}s")
         NetInfoCache.writeBypass(BypassState.FAIL, result.lastReason ?: FailReason.NO_GSTATIC, returnToName())
@@ -973,7 +1038,7 @@ object BypassController {
 
     private suspend fun switchAndVerify(guid: String, stillNeeded: () -> Boolean): Verdict {
         if (ourSwitch(guid) != SwitchResult.OK) return Verdict(Outcome.UNKNOWN)
-        delay(VERIFY_DELAY_MS)
+        awaitReady(guid)
         return verifyAfterSwitch(full = false) { CoreServiceManager.isRunning() && stillNeeded() }
     }
 
@@ -1008,8 +1073,8 @@ object BypassController {
         if (result.aborted) return
         // Back to the server that worked before this search (a failed candidate must not stay active).
         if (CoreServiceManager.currentServerGuid() != current) ourSwitch(current)
-        failedSearches++
-        val wait = WhitelistBypass.backoffMillis(failedSearches)
+        failedSearches.incrementAndGet()
+        val wait = nextBackoffMs()
         nextSearchAt = System.currentTimeMillis() + wait
         BypassLog.add("no replacement found on the normal network, retry in ${wait / 1000}s")
         NetInfoCache.writeBypass(BypassState.FAIL, result.lastReason ?: FailReason.NO_GSTATIC, returnToName())
@@ -1018,7 +1083,7 @@ object BypassController {
 
     private fun finishReturn(service: Service, guid: String, replaced: Boolean) {
         WhitelistBypass.clearState()
-        failedSearches = 0
+        failedSearches.set(0)
         nextSearchAt = 0L
         announceSwitch(service, guid)
         NetInfoCache.writeBypass(BypassState.IDLE)

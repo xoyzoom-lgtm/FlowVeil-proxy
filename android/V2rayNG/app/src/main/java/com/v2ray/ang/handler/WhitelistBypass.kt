@@ -168,11 +168,6 @@ object WhitelistBypass {
         )
     )
 
-    /** Backoff after a search that found nothing: 1, 2, 5, then 10 minutes. */
-    fun backoffMillis(failedSearches: Int): Long = when {
-        failedSearches <= 1 -> 60_000L
-        failedSearches == 2 -> 120_000L
-        failedSearches == 3 -> 300_000L
-        else -> 600_000L
-    }
+    /** The step of the pause after a search that found nothing: 15 s, 30 s, 1, 2, then 5 minutes (the caller adds the jitter). */
+    fun backoffMillis(failedSearches: Int): Long = com.v2ray.ang.net.Backoff.baseMs(failedSearches)
 }

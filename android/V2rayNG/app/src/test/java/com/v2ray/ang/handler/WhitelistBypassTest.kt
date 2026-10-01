@@ -41,10 +41,11 @@ class WhitelistBypassTest {
 
     @Test
     fun backoffGrowsAndCaps() {
-        assertEquals(60_000L, WhitelistBypass.backoffMillis(1))
-        assertEquals(120_000L, WhitelistBypass.backoffMillis(2))
-        assertEquals(300_000L, WhitelistBypass.backoffMillis(3))
-        assertEquals(600_000L, WhitelistBypass.backoffMillis(4))
-        assertEquals(600_000L, WhitelistBypass.backoffMillis(50))
+        assertEquals(15_000L, WhitelistBypass.backoffMillis(1))
+        assertEquals(30_000L, WhitelistBypass.backoffMillis(2))
+        assertEquals(60_000L, WhitelistBypass.backoffMillis(3))
+        assertEquals(120_000L, WhitelistBypass.backoffMillis(4))
+        assertEquals(300_000L, WhitelistBypass.backoffMillis(5))
+        assertEquals(300_000L, WhitelistBypass.backoffMillis(50))
     }
 }

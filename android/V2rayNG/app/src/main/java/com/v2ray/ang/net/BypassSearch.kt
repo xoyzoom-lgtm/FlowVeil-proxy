@@ -32,7 +32,28 @@ data class SearchLimits(
     val maxLive: Int = 3,
     /** Only test ("check on the mobile network now"): never switch. */
     val testOnly: Boolean = false,
+    /**
+     * Sizes of the waves the candidates are tested in (the last wave is all that is left): a wave is started only when
+     * the one before it gave no server that passed. Empty = everything in one go. Smaller waves keep the number of
+     * running cores low, so the phone is not overloaded and tests do not time out because of it.
+     */
+    val waves: List<Int> = emptyList(),
 )
+
+/** The candidates cut into waves of the given sizes; what is left after the listed sizes forms the last wave. */
+fun splitIntoWaves(candidates: List<SearchCandidate>, waves: List<Int>): List<List<SearchCandidate>> {
+    if (waves.isEmpty()) return listOf(candidates)
+    val out = ArrayList<List<SearchCandidate>>()
+    var i = 0
+    for (n in waves) {
+        if (i >= candidates.size) break
+        val end = minOf(candidates.size, i + n.coerceAtLeast(1))
+        out += candidates.subList(i, end)
+        i = end
+    }
+    if (i < candidates.size) out += candidates.subList(i, candidates.size)
+    return out
+}
 
 /** What the search needs from the app; a fake one drives the tests. */
 interface SearchEnv {
@@ -80,28 +101,39 @@ object BypassSearch {
         var tested = 0
         val sem = Semaphore(limits.parallel.coerceAtLeast(1))
 
+        val waveList = splitIntoWaves(candidates, limits.waves)
         val finished = withTimeoutOrNull(limits.totalMs) {
-            coroutineScope {
-                val scopeJob = coroutineContext.job
-                for (c in candidates) {
-                    launch {
-                        sem.withPermit {
-                            if (!env.stillNeeded()) return@withPermit
-                            val r = withTimeoutOrNull(limits.perCandidateMs) { env.isolated(c.id) } ?: IsoResult(false, -1L, timedOut = true)
-                            var enough = false
-                            var done = 0
-                            synchronized(lock) {
-                                tested++
-                                done = tested
-                                if (r.ok) passers += c to r else if (r.timedOut) uncertain++ else failures += c
-                                enough = passers.size >= limits.earlyExit || (r.ok && c.score >= limits.stopAtScore)
+            for ((index, wave) in waveList.withIndex()) {
+                if (index > 0) {
+                    if (synchronized(lock) { passers.isNotEmpty() }) break
+                    if (!env.stillNeeded()) break
+                    env.log("wave $index gave nothing: the next ${wave.size} servers")
+                }
+                var enoughNow = false
+                coroutineScope {
+                    val scopeJob = coroutineContext.job
+                    for (c in wave) {
+                        launch {
+                            sem.withPermit {
+                                if (!env.stillNeeded()) return@withPermit
+                                val r = withTimeoutOrNull(limits.perCandidateMs) { env.isolated(c.id) } ?: IsoResult(false, -1L, timedOut = true)
+                                var enough = false
+                                var done = 0
+                                synchronized(lock) {
+                                    tested++
+                                    done = tested
+                                    if (r.ok) passers += c to r else if (r.timedOut) uncertain++ else failures += c
+                                    enough = passers.size >= limits.earlyExit || (r.ok && c.score >= limits.stopAtScore)
+                                    if (enough) enoughNow = true
+                                }
+                                env.onIsolated(c.id, r)
+                                env.onProgress(done, candidates.size)
+                                if (enough) scopeJob.cancelChildren(CancellationException("enough servers passed"))
                             }
-                            env.onIsolated(c.id, r)
-                            env.onProgress(done, candidates.size)
-                            if (enough) scopeJob.cancelChildren(CancellationException("enough servers passed"))
                         }
                     }
                 }
+                if (enoughNow) break
             }
             true
         }
