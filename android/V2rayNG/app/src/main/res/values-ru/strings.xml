@@ -745,6 +745,7 @@
     <string name="summary_bypass_log">Почему сервер выбран или пропущен. Адресов в нём нет</string>
     <string name="bypass_log_empty">Пока пусто. Журнал заполняется, когда авто-обход проверяет или переключает сервер</string>
     <string name="bypass_log_copy">Скопировать</string>
+    <string name="bypass_log_copy_report">Скопировать отчёт</string>
     <string name="bypass_log_clear">Очистить</string>
     <string name="whitelist_bypass_notify_no_match">Ни один сервер не похож на сервер обхода. Выберите серверы вручную (Настройки → Подключение) или разрешите пробовать остальные</string>
     <string name="whitelist_bypass_notify_all_bad">Все подходящие серверы только что не сработали. Попробую позже</string>

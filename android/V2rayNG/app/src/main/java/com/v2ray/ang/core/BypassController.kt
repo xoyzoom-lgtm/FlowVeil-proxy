@@ -24,6 +24,8 @@ import com.v2ray.ang.net.BypassLevel
 import com.v2ray.ang.net.BypassSearch
 import com.v2ray.ang.net.BypassSnapshot
 import com.v2ray.ang.net.BypassVerdict
+import com.v2ray.ang.net.EpisodeResult
+import com.v2ray.ang.net.EpisodeStats
 import com.v2ray.ang.net.FailReason
 import com.v2ray.ang.net.IsoResult
 import com.v2ray.ang.net.LiveOutcome
@@ -97,6 +99,9 @@ object BypassController {
     /** The user picked a server during a bypass: leave it alone until the network type changes. */
     @Volatile
     private var userOverride = false
+    /** The counters of the search in progress (only set while [searchBypass] runs, under the switch lock). */
+    @Volatile
+    private var episode: EpisodeStats? = null
     private var failedSearches = 0
     private var nextSearchAt = 0L
     private var lastPeriodicReturnAt = 0L
@@ -508,6 +513,14 @@ object BypassController {
             override suspend fun verify(id: String): LiveOutcome {
                 val verdict = verifyAfterSwitch(full && id !in provedThemselves, alive)
                 if (verdict.outcome == Outcome.FAIL) lastReason = verdict.reason
+                episode?.live(
+                    when (verdict.outcome) {
+                        Outcome.OK -> LiveOutcome.OK
+                        Outcome.FAIL -> LiveOutcome.FAIL
+                        Outcome.UNKNOWN -> LiveOutcome.UNKNOWN
+                    },
+                    verdict.reason, System.currentTimeMillis(),
+                )
                 BypassLog.add("live check of ${serverName(id)}: ${verdict.outcome}${verdict.reason?.let { " (${it.name})" }.orEmpty()}")
                 return when (verdict.outcome) {
                     Outcome.OK -> LiveOutcome.OK
@@ -530,6 +543,7 @@ object BypassController {
             override fun log(message: String) = BypassLog.add(message)
 
             override fun onIsolated(id: String, result: IsoResult) {
+                episode?.isolated(result.ok, result.timedOut)
                 MmkvManager.encodeServerTestDelayMillis(id, result.pingMs)
                 val meta = rated[id]
                 BypassLog.add(
@@ -607,11 +621,23 @@ object BypassController {
     private fun delayOf(guid: String): Long = MmkvManager.decodeServerAffiliationInfo(guid)?.testDelayMillis ?: 0L
 
     private suspend fun searchBypass(current: String) {
-        val service = ConnectionWatchdog.currentService() ?: return
+        val ep = EpisodeStats(System.currentTimeMillis())
+        episode = ep
+        var result = EpisodeResult.ABORTED
+        try {
+            result = searchBypassInner(current)
+        } finally {
+            BypassLog.add(ep.summary(System.currentTimeMillis(), result))
+            episode = null
+        }
+    }
+
+    private suspend fun searchBypassInner(current: String): EpisodeResult {
+        val service = ConnectionWatchdog.currentService() ?: return EpisodeResult.ABORTED
         val now = System.currentTimeMillis()
         if (now < nextSearchAt) {
             BypassLog.add("backing off for ${(nextSearchAt - now) / 1000}s")
-            return
+            return EpisodeResult.ABORTED
         }
         val manual = WhitelistBypass.mode() == WhitelistBypass.MODE_MANUAL
         val plan = buildPlan(service, current)
@@ -628,7 +654,7 @@ object BypassController {
             failedSearches++
             nextSearchAt = System.currentTimeMillis() + WhitelistBypass.backoffMillis(failedSearches)
             postEvent(service, "empty", service.getString(text), NOTIFY_PROBLEM_GAP_MS)
-            return
+            return EpisodeResult.NOTHING_TO_TRY
         }
         NetInfoCache.writeBypass(BypassState.SEARCHING, returnTo = returnToName())
         NetInfoCache.writeProgress(0, plan.tier1.size.coerceAtLeast(plan.tier2.size))
@@ -659,12 +685,12 @@ object BypassController {
             NetInfoCache.writeBypass(BypassState.OK, returnTo = returnToName())
             BypassLog.add("connected to ${serverName(guid)}: verified")
             postEvent(service, "switched", service.getString(R.string.whitelist_bypass_notify_switched, serverName(guid)), NOTIFY_SWITCH_GAP_MS)
-            return
+            return EpisodeResult.OK
         }
         if (result.aborted) {
             // The network changed or the user stepped in: the next event decides.
             if (createdSnapshot && WhitelistBypass.active == null) WhitelistBypass.snapshot = null
-            return
+            return EpisodeResult.ABORTED
         }
         // Nothing carried traffic: the search already put the connection back; wait before retrying.
         if (createdSnapshot) WhitelistBypass.snapshot = null
@@ -674,6 +700,7 @@ object BypassController {
         BypassLog.add("no working server (${result.tested} tested, ${result.passed} passed the test), retry in ${wait / 1000}s")
         NetInfoCache.writeBypass(BypassState.FAIL, result.lastReason ?: FailReason.NO_GSTATIC, returnToName())
         postEvent(service, "not_found", service.getString(R.string.whitelist_bypass_notify_not_found), NOTIFY_PROBLEM_GAP_MS)
+        return EpisodeResult.NO_SERVER
     }
 
     /**

@@ -25,7 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import android.os.Build
+import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.WhitelistBypass
+import com.v2ray.ang.net.BypassReport
 import com.v2ray.ang.handler.BypassLog
 import com.v2ray.ang.util.Utils
 
@@ -49,9 +53,21 @@ fun BypassLogDialog(onDismiss: () -> Unit) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = { BypassLog.clear(); text = "" }) { Text(stringResource(R.string.bypass_log_clear)) }
                     TextButton(onClick = { Utils.setClipboard(context, text) }) { Text(stringResource(R.string.bypass_log_copy)) }
+                    TextButton(onClick = { Utils.setClipboard(context, bypassReportText(text)) }) { Text(stringResource(R.string.bypass_log_copy_report)) }
                     TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
                 }
             }
         }
     }
 }
+
+/** The log with a short header (build, Android version, mode, limits), masked like every report: no addresses, links or keys. Stays on the phone until the user pastes it. */
+private fun bypassReportText(log: String): String = BypassReport.build(
+    listOf(
+        "build" to BuildConfig.HUPP_BUILD.toString(),
+        "android" to Build.VERSION.SDK_INT.toString(),
+        "mode" to WhitelistBypass.mode(),
+        "search-budget-s" to (WhitelistBypass.searchBudgetMs() / 1000).toString(),
+    ),
+    log,
+)

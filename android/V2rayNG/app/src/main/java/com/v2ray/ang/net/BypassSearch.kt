@@ -13,7 +13,8 @@ import kotlin.coroutines.coroutineContext
 data class SearchCandidate(val id: String, val score: Int, val order: Int)
 
 /** Result of the isolated test of one candidate. */
-data class IsoResult(val ok: Boolean, val pingMs: Long)
+/** [timedOut]: the test did not come back in time (the phone was busy, not necessarily the server dead). */
+data class IsoResult(val ok: Boolean, val pingMs: Long, val timedOut: Boolean = false)
 
 enum class LiveOutcome { OK, FAIL, UNKNOWN }
 
@@ -78,7 +79,7 @@ object BypassSearch {
                     launch {
                         sem.withPermit {
                             if (!env.stillNeeded()) return@withPermit
-                            val r = withTimeoutOrNull(limits.perCandidateMs) { env.isolated(c.id) } ?: IsoResult(false, -1L)
+                            val r = withTimeoutOrNull(limits.perCandidateMs) { env.isolated(c.id) } ?: IsoResult(false, -1L, timedOut = true)
                             var enough = false
                             var done = 0
                             synchronized(lock) {

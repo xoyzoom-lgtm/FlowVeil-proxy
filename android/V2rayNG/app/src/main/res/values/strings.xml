@@ -741,6 +741,7 @@
     <string name="summary_bypass_log">Why a server was chosen or skipped. No addresses in it</string>
     <string name="bypass_log_empty">Nothing yet. The log fills when the auto bypass checks or switches a server</string>
     <string name="bypass_log_copy">Copy</string>
+    <string name="bypass_log_copy_report">Copy report</string>
     <string name="bypass_log_clear">Clear</string>
     <string name="whitelist_bypass_notify_no_match">No server looks like a bypass server. Pick servers by hand (Settings → Connection) or allow trying the rest</string>
     <string name="whitelist_bypass_notify_all_bad">The suitable servers all failed a moment ago. I will try again later</string>
