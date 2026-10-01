@@ -57,7 +57,6 @@ object CoreServiceManager {
     private val connectionTestScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Volatile
-    @Volatile
     private var isReloading = false
 
     /** Tun descriptor the core was started with, null in the proxy only and root run modes. */
