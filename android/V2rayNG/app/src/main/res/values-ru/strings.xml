@@ -653,6 +653,14 @@
     <string name="settings_section_connection">Подключение</string>
     <string name="title_pref_ru_direct">Российские сайты напрямую</string>
     <string name="summary_pref_ru_direct">Российские сайты и банки открываются напрямую, остальное — через сервер</string>
+    <string name="title_rule_profile">Профиль правил</string>
+    <string name="rule_profile_custom">Свои правила</string>
+    <string name="rule_profile_ru">РФ напрямую</string>
+    <string name="rule_profile_ru_hint">Российские сайты и банки напрямую, всё остальное через сервер</string>
+    <string name="rule_profile_all">Всё через сервер</string>
+    <string name="rule_profile_all_hint">Весь трафик через сервер, кроме домашней сети</string>
+    <string name="rule_profile_direct">Всё напрямую</string>
+    <string name="rule_profile_direct_hint">Сервер не используется: удобно проверить, что мешает — сервер или сеть</string>
     <string name="menu_item_migrate">Перенос из другого приложения</string>
     <string name="migrate_title">Перенос из другого приложения</string>
     <string name="migrate_hint">Подписку нельзя вытащить из другого приложения автоматически. Покажите здесь QR-код и откройте его на другом устройстве (телефон, другое приложение), чтобы отправить ссылку подписки; или скопируйте ссылку там и вставьте здесь.</string>
@@ -700,9 +708,8 @@
     <string name="whats_new_title">Что нового</string>
     <string name="whats_new_ok">Понятно</string>
     <string-array name="whats_new_items">
-        <item>Ссылки-приглашения от провайдера теперь могут нести название сервиса, а на карточке подписки появилась кнопка «Сайт провайдера»</item>
-        <item>Включение обхода белых списков само включает фрагментацию, если она нужна (при выключении всё возвращается как было)</item>
-        <item>Если сервер перестал пропускать трафик, FlowVeil переключается на рабочий: сначала в этой же подписке, затем в других (можно отключить в настройках)</item>
+        <item>«Профиль правил» в настройках: «РФ напрямую», «Всё через сервер» или «Всё напрямую» одним нажатием</item>
+        <item>Автообход белых списков снова проверяет серверы тем адресом, который проходит через белые списки (обычная проверка пинга не изменилась)</item>
     </string-array>
     <string name="title_pref_show_best_button">Кнопка «Лучший»</string>
     <string name="summary_pref_show_best_button">Показывать кнопку «Лучший» под кнопкой включения</string>

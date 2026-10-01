@@ -649,6 +649,14 @@
     <string name="settings_section_connection">Connection</string>
     <string name="title_pref_ru_direct">Russian sites directly</string>
     <string name="summary_pref_ru_direct">Russian sites and banks open directly, everything else goes through the server</string>
+    <string name="title_rule_profile">Rule profile</string>
+    <string name="rule_profile_custom">Custom rules</string>
+    <string name="rule_profile_ru">Russia direct</string>
+    <string name="rule_profile_ru_hint">Russian sites and banks go direct, everything else through the server</string>
+    <string name="rule_profile_all">Everything through the server</string>
+    <string name="rule_profile_all_hint">All traffic goes through the server except the home network</string>
+    <string name="rule_profile_direct">Everything direct</string>
+    <string name="rule_profile_direct_hint">The server is not used: handy to tell whether the server or the network is the problem</string>
     <string name="menu_item_migrate">Move from another app</string>
     <string name="migrate_title">Move from another app</string>
     <string name="migrate_hint">A subscription cannot be taken out of another app automatically. Show a QR code here and open it on the other device (phone, another app) to send the subscription link; or copy the link there and paste it here.</string>
@@ -696,9 +704,8 @@
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_ok">Got it</string>
     <string-array name="whats_new_items">
-        <item>Provider invite links can now carry the service name, and the subscription card has a “Provider website” button</item>
-        <item>Turning on the whitelist bypass also turns on fragmentation when it is needed (everything is restored when you turn it off)</item>
-        <item>If a server stops carrying traffic, FlowVeil switches to a working one: first in the same subscription, then in your others (can be turned off in settings)</item>
+        <item>“Rule profile” in settings: “Russia direct”, “Everything through the server” or “Everything direct” in one tap</item>
+        <item>The whitelist auto bypass checks servers again with the address that passes mobile whitelists (the ordinary ping is unchanged)</item>
     </string-array>
     <string name="title_pref_show_best_button">“Best” button</string>
     <string name="summary_pref_show_best_button">Show the “Best” button under the power button</string>

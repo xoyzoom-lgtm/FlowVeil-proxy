@@ -13,6 +13,8 @@ public partial class MainWindow
     private BackupAndRestoreView? _backupAndRestoreView;
     private AddPageView? _addPage;
     private bool _tunnelAdvancedOpen;
+    private string? _profileTitle;
+    private string? _profileId;
 
     public MainWindow()
     {
@@ -376,6 +378,51 @@ public partial class MainWindow
     /// Settings as grouped rows (icon, title, hint, chevron) like Happ: everyday items on top,
     /// technical ones in "Для опытных".
     /// </summary>
+    /// <summary>Reads which rule profile is on; rebuilds the settings once when the shown text was stale.</summary>
+    private async Task RefreshProfileTitleAsync(MainWindowViewModel vm)
+    {
+        var active = await RuleProfiles.ActiveAsync();
+        string? title;
+        if (active != null)
+        {
+            title = active.Title;
+        }
+        else
+        {
+            var item = await ConfigHandler.GetDefaultRouting(AppManager.Instance.Config);
+            title = item == null ? "Не выбран" : "Свои правила: " + item.Remarks;
+        }
+        if (title != _profileTitle)
+        {
+            _profileTitle = title;
+            _profileId = active?.Id;
+            await Dispatcher.InvokeAsync(() => BuildSettingsPage(vm));
+        }
+    }
+
+    private async Task ApplyProfileAsync(MainWindowViewModel vm, RuleProfile profile)
+    {
+        try
+        {
+            if (!await RuleProfiles.ActivateAsync(AppManager.Instance.Config, profile.Id))
+            {
+                NoticeManager.Instance.Enqueue("Не получилось включить профиль");
+                return;
+            }
+            _profileTitle = profile.Title;
+            _profileId = profile.Id;
+            BuildSettingsPage(vm);
+            await StatusBarViewModel.Instance.RefreshRoutingsMenu();
+            vm.Reload();
+            NoticeManager.Instance.Enqueue($"Профиль «{profile.Title}» включён");
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("Profile", ex);
+            NoticeManager.Instance.Enqueue("Не получилось включить профиль");
+        }
+    }
+
     private void OpenPingUrlMenu(MainWindowViewModel vm)
     {
         var config = AppManager.Instance.Config;
@@ -536,6 +583,9 @@ public partial class MainWindow
                 : appMode == AppProxySettings.ModeDirect ? $"Напрямую: {appCount} прилож."
                 : $"Через прокси только: {appCount} прилож.",
             () => _ = DialogHost.Show(new AppProxyView(() => NoticeManager.Instance.Enqueue("Применится при следующем подключении")), "RootDialog").ContinueWith(_ => Dispatcher.BeginInvoke(new Action(() => BuildSettingsPage(vm)))));
+        _ = RefreshProfileTitleAsync(vm);
+        Row(tunnel, PackIconKind.SourceBranch, "Профиль правил", _profileTitle ?? "Загрузка…", () =>
+            _ = DialogHost.Show(new ProfilePickerView(_profileId, profile => _ = ApplyProfileAsync(vm, profile)), "RootDialog"));
         var pingUrl = settings.SpeedTestItem.SpeedPingTestUrl.IsNullOrEmpty() ? Global.SpeedPingTestUrls[0] : settings.SpeedTestItem.SpeedPingTestUrl;
         Row(tunnel, PackIconKind.Speedometer, "Адрес для пинга", pingUrl, () => OpenPingUrlMenu(vm));
         Row(tunnel, _tunnelAdvancedOpen ? PackIconKind.ChevronUp : PackIconKind.ChevronDown, "Дополнительно", "Шумы и фрагментация: для случаев, когда соединение блокируют", () =>

@@ -76,6 +76,8 @@ import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.handler.DirectSites
+import com.v2ray.ang.handler.RuleProfiles
+import com.v2ray.ang.ui.compose.SelectListDialog
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.net.ReturnLogic
 import com.v2ray.ang.ui.compose.InputDialog
@@ -244,7 +246,8 @@ fun SettingsScreen(
     var bypassPingLimit by rememberMmkvString(WhitelistBypass.PREF_PING_LIMIT, ReturnLogic.DEFAULT_PING_LIMIT_MS.toString())
     var bypassStableSeconds by rememberMmkvString(WhitelistBypass.PREF_STABLE_SECONDS, ReturnLogic.DEFAULT_STABLE_SECONDS.toString())
     var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
-    var ruDirect by rememberMmkvBool(AppConfig.PREF_RU_DIRECT, false)
+    var ruleProfile by remember { mutableStateOf(RuleProfiles.current()) }
+    var showRuleProfiles by remember { mutableStateOf(false) }
     var directSitesCount by remember { mutableStateOf(DirectSites.count()) }
     var showDirectSites by remember { mutableStateOf(false) }
     var showBestButton by rememberMmkvBool(AppConfig.PREF_SHOW_BEST_BUTTON, true)
@@ -349,20 +352,27 @@ fun SettingsScreen(
 
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_connection))
             SettingsGroupCard {
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_ru_direct),
-                    summary = stringResource(R.string.summary_pref_ru_direct),
-                    checked = ruDirect,
-                    onCheckedChange = {
-                        ruDirect = it
-                        // Russian sites and banks go direct, everything else through the VPN.
-                        SettingsManager.resetRoutingRulesetsFromPresets(
-                            settingsContext,
-                            if (it) RoutingType.WHITE_RUSSIA else RoutingType.WHITE
-                        )
-                        SettingsChangeManager.makeRestartService()
-                    }
+                SettingsMenuItem(
+                    title = stringResource(R.string.title_rule_profile),
+                    subtitle = ruleProfile?.let { stringResource(ruleProfileTitle(it)) } ?: stringResource(R.string.rule_profile_custom),
+                    onClick = { showRuleProfiles = true }
                 )
+                if (showRuleProfiles) {
+                    SelectListDialog(
+                        options = RuleProfiles.Profile.entries,
+                        optionText = { stringResource(ruleProfileTitle(it)) + "\n" + stringResource(ruleProfileHint(it)) },
+                        selectedOption = ruleProfile,
+                        showRadio = true,
+                        title = stringResource(R.string.title_rule_profile),
+                        onSelected = {
+                            showRuleProfiles = false
+                            ruleProfile = it
+                            RuleProfiles.apply(settingsContext, it)
+                            SettingsChangeManager.makeRestartService()
+                        },
+                        onDismiss = { showRuleProfiles = false }
+                    )
+                }
                 SettingsMenuItem(
                     title = stringResource(R.string.title_direct_sites),
                     subtitle = stringResource(R.string.summary_direct_sites, directSitesCount),
@@ -1135,4 +1145,16 @@ fun SettingsScreen(
             NavigationBarsSpacer()
         }
     }
+}
+
+private fun ruleProfileTitle(profile: RuleProfiles.Profile): Int = when (profile) {
+    RuleProfiles.Profile.RU_DIRECT -> R.string.rule_profile_ru
+    RuleProfiles.Profile.ALL_PROXY -> R.string.rule_profile_all
+    RuleProfiles.Profile.ALL_DIRECT -> R.string.rule_profile_direct
+}
+
+private fun ruleProfileHint(profile: RuleProfiles.Profile): Int = when (profile) {
+    RuleProfiles.Profile.RU_DIRECT -> R.string.rule_profile_ru_hint
+    RuleProfiles.Profile.ALL_PROXY -> R.string.rule_profile_all_hint
+    RuleProfiles.Profile.ALL_DIRECT -> R.string.rule_profile_direct_hint
 }

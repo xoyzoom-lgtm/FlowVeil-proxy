@@ -25,7 +25,7 @@ internal object WhatsNew {
     private const val LEGACY_KEY = "whats_new_seen_build"
 
     /** Bump when the whats_new_items list changes; the dialog shows once per version. */
-    private const val CONTENT_VERSION = 9
+    private const val CONTENT_VERSION = 10
 
     fun shouldShow(): Boolean {
         val seen = MmkvManager.decodeSettingsString(KEY)?.toIntOrNull()
