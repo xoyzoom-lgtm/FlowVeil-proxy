@@ -23,7 +23,10 @@ import com.v2ray.ang.net.BypassHistoryLogic
 import com.v2ray.ang.net.BypassLevel
 import com.v2ray.ang.net.BypassSearch
 import com.v2ray.ang.net.BypassSnapshot
+import com.v2ray.ang.net.AbandonableCalls
 import com.v2ray.ang.net.BypassVerdict
+import com.v2ray.ang.net.HardResult
+import com.v2ray.ang.net.cancellingWith
 import com.v2ray.ang.net.EpisodeResult
 import com.v2ray.ang.net.EpisodeStats
 import com.v2ray.ang.net.FailStreaks
@@ -59,6 +62,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -95,6 +99,9 @@ object BypassController {
     private const val NOTIFY_PROBLEM_GAP_MS = 30 * 60_000L
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Where the isolated native tests run: at most as many at once as the search runs in parallel, hung ones included. */
+    private val nativeSlots = AbandonableCalls(BYPASS_PARALLEL)
     private var returnJob: Job? = null
     private var eventJob: Job? = null
     private var identityJob: Job? = null
@@ -411,37 +418,42 @@ object BypassController {
         BypassLog.add("check through the server via local ${route.label}")
         val tunnel = NetProbe.tunnel(route)
         try {
-            val first = tunnel.get(NetProbe.BYPASS_204).step
-            if (first.kind == ProbeStep.Kind.REFUSED) return BypassVerdict.decide(first, null, null, null, null)
-            val gstatic = tunnel.get(NetProbe.BYPASS_204).step
-            if (!alive()) return Verdict(Outcome.UNKNOWN)
-            val quick = BypassVerdict.decide(gstatic, null, null, null, null)
-            if (quick.outcome != Outcome.OK) return quick
-
-            val (content, exit, real) = coroutineScope {
-                val c = async { contentStep(tunnel) }
-                val e = async { tunnel.fetchIp(NetProbe.IP_SERVICES) }
-                val r = async { NetInfoCache.readRealIp() ?: fetchRealIp() }
-                Triple(c.await(), e.await(), r.await())
-            }
-            if (!alive()) return Verdict(Outcome.UNKNOWN)
-            NetInfoCache.writeExitIp(exit)
-            if (real != null) NetInfoCache.writeRealIp(real)
-            val verdict = BypassVerdict.decide(gstatic, content, exit, real, null)
-            if (!full || verdict.outcome != Outcome.OK) return verdict
-
-            // Step 4: still alive after a few seconds?
-            var waited = 0L
-            while (waited < STABILITY_DELAY_MS) {
-                delay(500L)
-                waited += 500L
-                if (!alive()) return Verdict(Outcome.UNKNOWN)
-            }
-            val again = tunnel.get(NetProbe.BYPASS_204).step
-            return BypassVerdict.decide(gstatic, content, exit, real, again, cancelled = !alive())
+            // A time limit or a stop tears the running requests down at once; the blocking calls would otherwise run on to their own end.
+            return cancellingWith({ tunnel.cancelAll() }) { runChecksOn(tunnel, full, alive) }
         } finally {
             tunnel.close()
         }
+    }
+
+    private suspend fun runChecksOn(tunnel: NetProbe.Client, full: Boolean, alive: () -> Boolean): Verdict {
+        val first = tunnel.get(NetProbe.BYPASS_204).step
+        if (first.kind == ProbeStep.Kind.REFUSED) return BypassVerdict.decide(first, null, null, null, null)
+        val gstatic = tunnel.get(NetProbe.BYPASS_204).step
+        if (!alive()) return Verdict(Outcome.UNKNOWN)
+        val quick = BypassVerdict.decide(gstatic, null, null, null, null)
+        if (quick.outcome != Outcome.OK) return quick
+
+        val (content, exit, real) = coroutineScope {
+            val c = async { contentStep(tunnel) }
+            val e = async { tunnel.fetchIp(NetProbe.IP_SERVICES) }
+            val r = async { NetInfoCache.readRealIp() ?: fetchRealIp() }
+            Triple(c.await(), e.await(), r.await())
+        }
+        if (!alive()) return Verdict(Outcome.UNKNOWN)
+        NetInfoCache.writeExitIp(exit)
+        if (real != null) NetInfoCache.writeRealIp(real)
+        val verdict = BypassVerdict.decide(gstatic, content, exit, real, null)
+        if (!full || verdict.outcome != Outcome.OK) return verdict
+
+        // Step 4: still alive after a few seconds?
+        var waited = 0L
+        while (waited < STABILITY_DELAY_MS) {
+            delay(500L)
+            waited += 500L
+            if (!alive()) return Verdict(Outcome.UNKNOWN)
+        }
+        val again = tunnel.get(NetProbe.BYPASS_204).step
+        return BypassVerdict.decide(gstatic, content, exit, real, again, cancelled = !alive())
     }
 
     /**
@@ -532,16 +544,16 @@ object BypassController {
 
         val env = object : SearchEnv {
             override suspend fun isolated(id: String): IsoResult {
-                val ping = try {
-                    withContext(Dispatchers.IO) {
-                        RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(id)) { SpeedtestConfig.measureWhitelist(service, id) }
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    -1L
+                // The native test cannot be cancelled: it runs on its own thread so the limit really holds, and a test given up on
+                // keeps its slot (and the limiter's) until it returns, so hung tests never pile up into more running cores.
+                val outcome = nativeSlots.call(PER_CANDIDATE_MS - 500L) {
+                    runBlocking { RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(id)) { SpeedtestConfig.measureWhitelist(service, id) } }
                 }
-                return IsoResult(ping > 0, ping)
+                return when (outcome) {
+                    is HardResult.Done -> IsoResult(outcome.value > 0, outcome.value)
+                    is HardResult.Failed -> IsoResult(false, -1L)
+                    HardResult.TimedOut -> IsoResult(false, -1L, timedOut = true)
+                }
             }
 
             override suspend fun switchTo(id: String): SwitchResult {

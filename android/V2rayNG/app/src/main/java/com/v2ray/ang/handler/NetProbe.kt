@@ -118,6 +118,11 @@ object NetProbe {
             return null
         }
 
+        /** Cancels every request of this client that is still running (the coroutine waiting for them was cancelled). */
+        fun cancelAll() {
+            runCatching { http.dispatcher.cancelAll() }
+        }
+
         override fun close() {
             runCatching { http.connectionPool.evictAll() }
             runCatching { http.dispatcher.executorService.shutdown() }
