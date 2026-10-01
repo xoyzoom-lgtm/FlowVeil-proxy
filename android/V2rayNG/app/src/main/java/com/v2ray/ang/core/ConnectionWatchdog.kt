@@ -18,6 +18,7 @@ import com.v2ray.ang.handler.SubscriptionErrors
 import com.v2ray.ang.net.FailoverPlan
 import com.v2ray.ang.net.SubIssue
 import com.v2ray.ang.net.SubscriptionHealth
+import com.v2ray.ang.net.SwitchResult
 import com.v2ray.ang.handler.SpeedtestManager
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.helper.MessageHelper
@@ -217,7 +218,7 @@ object ConnectionWatchdog {
                 results.forEach { (guid, delay) -> MmkvManager.encodeServerTestDelayMillis(guid, delay) }
                 val best = results.filter { it.second > 0 }.minByOrNull { it.second } ?: continue
                 LogUtil.i(AppConfig.TAG, "Watchdog: switching to ${best.first} (${best.second} ms)")
-                if (BypassController.ourSwitch(best.first)) {
+                if (BypassController.ourSwitch(best.first) == SwitchResult.OK) {
                     MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_SERVER_SWITCHED, best.first)
                     WidgetProvider.refresh(service)
                     notifySwitched(service, current, best.first)

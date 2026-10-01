@@ -43,6 +43,7 @@ import libv2ray.CoreController
 import libv2ray.ProcessFinder
 import java.lang.ref.SoftReference
 import com.v2ray.ang.net.PingUrls
+import com.v2ray.ang.net.SwitchResult
 import java.net.InetSocketAddress
 
 object CoreServiceManager {
@@ -55,6 +56,7 @@ object CoreServiceManager {
     private var networkMonitor: NetworkMonitor? = null
     private val connectionTestScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    @Volatile
     @Volatile
     private var isReloading = false
 
@@ -281,16 +283,27 @@ object CoreServiceManager {
 
     internal fun currentServerGuid(): String? = MmkvManager.getSelectServer()
 
+    /** True while the core is being restarted (a switch asked for now would not happen). */
+    internal fun isReloadingNow(): Boolean = isReloading
+
     /** Selects [guid] and restarts the core on it while the VPN interface stays up. */
-    internal fun switchServer(guid: String): Boolean {
+    internal fun switchServer(guid: String): Boolean = switchServerResult(guid) == SwitchResult.OK
+
+    /**
+     * Like [switchServer] but says why nothing happened. The selection is written only when the reload can really
+     * start: a busy core leaves the old selection in place instead of a server the core is not running.
+     */
+    internal fun switchServerResult(guid: String): SwitchResult {
+        if (isReloading) return SwitchResult.BUSY_RELOADING
+        if (!isRunning() || getService() == null) return SwitchResult.NOT_RUNNING
         MmkvManager.setSelectServer(guid)
         return reloadCore()
     }
 
-    private fun reloadCore(): Boolean {
-        if (isReloading) return false
-        val service = getService() ?: return false
-        if (!isRunning()) return false
+    private fun reloadCore(): SwitchResult {
+        if (isReloading) return SwitchResult.BUSY_RELOADING
+        val service = getService() ?: return SwitchResult.NOT_RUNNING
+        if (!isRunning()) return SwitchResult.NOT_RUNNING
 
         return try {
             val tunFd = currentVpnInterface
@@ -303,12 +316,12 @@ object CoreServiceManager {
             launchCore(service, tunFd, isReload = true)
 
             LogUtil.i(AppConfig.TAG, "StartCore-Manager: Core reload finished")
-            true
+            SwitchResult.OK
         } catch (e: Exception) {
             val message = e.message?.takeUnless { it.isBlank() } ?: e.javaClass.simpleName
             LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to reload core: $message", e)
             MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, message)
-            false
+            SwitchResult.FAILED
         } finally {
             isReloading = false
         }

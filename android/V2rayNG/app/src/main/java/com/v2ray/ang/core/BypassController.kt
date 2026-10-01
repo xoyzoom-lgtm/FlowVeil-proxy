@@ -40,6 +40,8 @@ import com.v2ray.ang.net.ReturnLogic
 import com.v2ray.ang.net.SearchCandidate
 import com.v2ray.ang.net.SearchEnv
 import com.v2ray.ang.net.SearchLimits
+import com.v2ray.ang.net.SwitchResult
+import com.v2ray.ang.net.SwitchRetry
 import com.v2ray.ang.net.Verdict
 import com.v2ray.ang.receiver.WidgetProvider
 import com.v2ray.ang.service.RealPingExecutionLimiter
@@ -148,10 +150,22 @@ object BypassController {
     private var switching = false
 
     /** Every server change made by FlowVeil itself goes through here (bypass, return, failover). */
-    internal fun ourSwitch(guid: String): Boolean {
+    internal suspend fun ourSwitch(guid: String): SwitchResult {
         switching = true
         return try {
-            CoreServiceManager.switchServer(guid).also { if (it) lastOurs = guid }
+            val result = SwitchRetry.run(
+                attempt = { CoreServiceManager.switchServerResult(guid) },
+                isBusy = { CoreServiceManager.isReloadingNow() },
+                sleep = { delay(it) },
+                now = { System.currentTimeMillis() },
+                onBusy = {
+                    episode?.reloadRejected()
+                    BypassLog.add("the core is reloading, waiting for it to finish before the switch")
+                },
+            )
+            if (result == SwitchResult.OK) lastOurs = guid
+            else BypassLog.add("the switch to ${serverName(guid)} did not happen: ${result.name}")
+            result
         } finally {
             switching = false
         }
@@ -530,10 +544,10 @@ object BypassController {
                 return IsoResult(ping > 0, ping)
             }
 
-            override suspend fun switchTo(id: String): Boolean {
-                if (!ourSwitch(id)) return false
-                delay(VERIFY_DELAY_MS)
-                return true
+            override suspend fun switchTo(id: String): SwitchResult {
+                val result = ourSwitch(id)
+                if (result == SwitchResult.OK) delay(VERIFY_DELAY_MS)
+                return result
             }
 
             override suspend fun verify(id: String): LiveOutcome {
@@ -847,7 +861,7 @@ object BypassController {
     }
 
     private suspend fun switchAndVerify(guid: String, stillNeeded: () -> Boolean): Verdict {
-        if (!ourSwitch(guid)) return Verdict(Outcome.UNKNOWN)
+        if (ourSwitch(guid) != SwitchResult.OK) return Verdict(Outcome.UNKNOWN)
         delay(VERIFY_DELAY_MS)
         return verifyAfterSwitch(full = false) { CoreServiceManager.isRunning() && stillNeeded() }
     }

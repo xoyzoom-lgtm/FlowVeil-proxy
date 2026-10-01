@@ -29,7 +29,8 @@ class BypassSearchTest {
             if (isoDelayMs > 0) delay(isoDelayMs)
             return iso[id] ?: IsoResult(false, -1)
         }
-        override suspend fun switchTo(id: String): Boolean { switched += id; return true }
+        val switchResults = HashMap<String, SwitchResult>()
+        override suspend fun switchTo(id: String): SwitchResult { switched += id; return switchResults[id] ?: SwitchResult.OK }
         override suspend fun verify(id: String): LiveOutcome = live[id] ?: LiveOutcome.OK
         override suspend fun rollback() { rolledBack = true }
         override fun stillNeeded(): Boolean = needed()
@@ -224,5 +225,35 @@ class BypassSearchTest {
         s.ok("x")
         assertEquals(1, s.fail("x"))
         assertEquals(1, s.fail("y"))
+    }
+
+    @Test
+    fun aCandidateMetWithABusyCoreIsNotFailedAndDoesNotUseALiveTry() = runBlocking {
+        val env = Env(iso = mapOf("a" to ok(100), "b" to ok(200)))
+        env.switchResults["a"] = SwitchResult.BUSY_RELOADING
+        val r = BypassSearch.run(cands("a", "b"), SearchLimits(earlyExit = 5, maxLive = 1), env)
+        assertEquals("b", r.found)
+        assertTrue(env.liveFails.isEmpty())
+        assertFalse(env.rolledBack)
+    }
+
+    @Test
+    fun aCoreThatStaysBusyEndsTheSearchWithoutRollbackOrFailures() = runBlocking {
+        val env = Env(iso = mapOf("a" to ok(100), "b" to ok(200), "c" to ok(300)))
+        env.switchResults.putAll(mapOf("a" to SwitchResult.BUSY_RELOADING, "b" to SwitchResult.BUSY_RELOADING, "c" to SwitchResult.BUSY_RELOADING))
+        val r = BypassSearch.run(cands("a", "b", "c"), SearchLimits(earlyExit = 5, maxLive = 3), env)
+        assertNull(r.found)
+        assertEquals(2, env.switched.size)
+        assertTrue(env.liveFails.isEmpty())
+        assertFalse(env.rolledBack)
+    }
+
+    @Test
+    fun aCoreThatIsNotRunningAnyMoreAbortsTheSearch() = runBlocking {
+        val env = Env(iso = mapOf("a" to ok()))
+        env.switchResults["a"] = SwitchResult.NOT_RUNNING
+        val r = BypassSearch.run(cands("a"), SearchLimits(), env)
+        assertTrue(r.aborted)
+        assertNull(r.found)
     }
 }

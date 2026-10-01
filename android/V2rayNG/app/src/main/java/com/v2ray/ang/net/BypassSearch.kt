@@ -38,7 +38,8 @@ data class SearchLimits(
 interface SearchEnv {
     /** Tests [id] away from the live connection (its own core instance, on the phone's real network). */
     suspend fun isolated(id: String): IsoResult
-    suspend fun switchTo(id: String): Boolean
+    /** [SwitchResult.BUSY_RELOADING] means nothing was switched and [id] was not judged; the search just goes on. */
+    suspend fun switchTo(id: String): SwitchResult
     /** Checks the connection that is live now (after [switchTo]). */
     suspend fun verify(id: String): LiveOutcome
     /** Back to the server that was active when the search began. */
@@ -127,9 +128,23 @@ object BypassSearch {
         var switched = false
         var aborted = false
         var found: String? = null
-        for ((c, r) in ordered.take(limits.maxLive)) {
+        var liveTried = 0
+        var busyInARow = 0
+        for ((c, r) in ordered) {
+            if (liveTried >= limits.maxLive) break
             if (!env.stillNeeded()) { aborted = true; break }
-            if (!env.switchTo(c.id)) continue
+            when (env.switchTo(c.id)) {
+                SwitchResult.OK -> busyInARow = 0
+                SwitchResult.NOT_RUNNING -> { aborted = true; break }
+                SwitchResult.BUSY_RELOADING -> {
+                    // Not the candidate's fault and not one of the few live tries; two in a row mean the core is stuck: stop.
+                    env.log("the core was busy, ${c.id} not tried this time")
+                    if (++busyInARow >= 2) break
+                    continue
+                }
+                SwitchResult.FAILED -> { liveTried++; continue }
+            }
+            liveTried++
             switched = true
             when (env.verify(c.id)) {
                 LiveOutcome.OK -> { found = c.id }
