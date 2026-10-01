@@ -220,8 +220,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force ../out | Out-Null
           Copy-Item FlowVeil-Setup.exe ../out/
-          # Builds released as "Hupp" look for Hupp-Setup.exe when updating: keep a copy under the old name.
-          Copy-Item FlowVeil-Setup.exe ../out/Hupp-Setup.exe
           Compress-Archive FlowVeil/* ../out/FlowVeil-windows-portable.zip
 
       - uses: actions/upload-artifact@v7
@@ -244,14 +242,6 @@ jobs:
           path: out
           merge-multiple: true
 
-      - name: Checksums
-        run: |
-          # The apps check a downloaded update against this file; it also lets anyone verify a download by hand.
-          cd out
-          sha256sum * | sort -k2 > ../SHA256SUMS.txt
-          mv ../SHA256SUMS.txt SHA256SUMS.txt
-          cat SHA256SUMS.txt
-
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -272,7 +262,6 @@ jobs:
           Уже установлен FlowVeil? Обновитесь прямо в приложении: «Настройки → Проверить обновления».
 
           Добавить подписку: скопируйте ссылку на подписку от своего провайдера и нажмите «Вставить из буфера».
-          Проверить файл: сравните SHA-256 с `SHA256SUMS.txt` из этого релиза (Windows: `certutil -hashfile файл SHA256`).
           Вопросы: Telegram [@GxoyzoomG](https://t.me/GxoyzoomG) · канал [FlowVeil](https://t.me/FlowVeil) · [Политика конфиденциальности](https://github.com/${{ github.repository }}/blob/main/PRIVACY.md)
           EOF
           sed -i 's/^          //' notes.md

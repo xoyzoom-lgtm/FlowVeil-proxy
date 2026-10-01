@@ -242,13 +242,6 @@
                                     <DockPanel>
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                             <Button
-                                                Click="CardSite_Click"
-                                                Style="{StaticResource RoundIconButton}"
-                                                ToolTip="Сайт провайдера"
-                                                Visibility="{Binding WebPageUrl, Converter={StaticResource NotEmptyToVis}}">
-                                                <materialDesign:PackIcon Kind="Web" />
-                                            </Button>
-                                            <Button
                                                 Click="CardSupport_Click"
                                                 Style="{StaticResource RoundIconButton}"
                                                 ToolTip="Поддержка"
