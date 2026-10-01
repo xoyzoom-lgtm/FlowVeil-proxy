@@ -210,9 +210,9 @@ object BypassController {
     /** Checks right after the phone moved to the mobile network (called from the network event). */
     private suspend fun quickCheckOnCellular() {
         if (!CoreServiceManager.isRunning() || !applies()) return
-        if (CoreServiceManager.measureCurrentDelay() >= 0L) return
+        if (CoreServiceManager.measureCurrentDelay(whitelist = true) >= 0L) return
         delay(3_000L)
-        if (!CoreServiceManager.isRunning() || !applies() || CoreServiceManager.measureCurrentDelay() >= 0L) return
+        if (!CoreServiceManager.isRunning() || !applies() || CoreServiceManager.measureCurrentDelay(whitelist = true) >= 0L) return
         handleFailure()
     }
 
@@ -366,9 +366,9 @@ object BypassController {
         BypassLog.add("check through the server via local ${route.label}")
         val tunnel = NetProbe.tunnel(route)
         try {
-            val first = tunnel.get(NetProbe.GSTATIC_204).step
+            val first = tunnel.get(NetProbe.BYPASS_204).step
             if (first.kind == ProbeStep.Kind.REFUSED) return BypassVerdict.decide(first, null, null, null, null)
-            val gstatic = tunnel.get(NetProbe.GSTATIC_204).step
+            val gstatic = tunnel.get(NetProbe.BYPASS_204).step
             if (!alive()) return Verdict(Outcome.UNKNOWN)
             val quick = BypassVerdict.decide(gstatic, null, null, null, null)
             if (quick.outcome != Outcome.OK) return quick
@@ -392,7 +392,7 @@ object BypassController {
                 waited += 500L
                 if (!alive()) return Verdict(Outcome.UNKNOWN)
             }
-            val again = tunnel.get(NetProbe.GSTATIC_204).step
+            val again = tunnel.get(NetProbe.BYPASS_204).step
             return BypassVerdict.decide(gstatic, content, exit, real, again, cancelled = !alive())
         } finally {
             tunnel.close()
@@ -407,10 +407,9 @@ object BypassController {
     private suspend fun runChecksWithoutInbound(full: Boolean, alive: () -> Boolean): Verdict {
         BypassLog.add("check: the profile has no local proxy port, using the core's delay test (weaker)")
         suspend fun delayOf(url: String) = withContext(Dispatchers.IO) { CoreServiceManager.measureLive(url) }
-        delayOf(PingUrls.PRIMARY) // warms the connection up
+        delayOf(PingUrls.WHITELIST) // warms the connection up
         if (!alive()) return Verdict(Outcome.UNKNOWN)
-        if (delayOf(PingUrls.PRIMARY) <= 0) return Verdict(Outcome.FAIL, FailReason.NO_GSTATIC)
-        if (delayOf(PingUrls.FALLBACK) <= 0) return Verdict(Outcome.FAIL, FailReason.NO_DATA)
+        if (delayOf(PingUrls.WHITELIST) <= 0) return Verdict(Outcome.FAIL, FailReason.NO_GSTATIC)
         if (full) {
             var waited = 0L
             while (waited < STABILITY_DELAY_MS) {
@@ -418,7 +417,7 @@ object BypassController {
                 waited += 500L
                 if (!alive()) return Verdict(Outcome.UNKNOWN)
             }
-            if (delayOf(PingUrls.PRIMARY) <= 0) return Verdict(Outcome.FAIL, FailReason.UNSTABLE)
+            if (delayOf(PingUrls.WHITELIST) <= 0) return Verdict(Outcome.FAIL, FailReason.UNSTABLE)
         }
         return Verdict(Outcome.OK, ipUnknown = true)
     }
@@ -490,7 +489,7 @@ object BypassController {
             override suspend fun isolated(id: String): IsoResult {
                 val ping = try {
                     withContext(Dispatchers.IO) {
-                        RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(id)) { SpeedtestConfig.measureStrict(service, id) }
+                        RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(id)) { SpeedtestConfig.measureWhitelist(service, id) }
                     }
                 } catch (e: CancellationException) {
                     throw e

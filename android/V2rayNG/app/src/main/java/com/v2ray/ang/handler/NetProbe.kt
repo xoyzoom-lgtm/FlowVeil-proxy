@@ -33,6 +33,9 @@ object NetProbe {
 
     val GSTATIC_204 = PingUrls.PRIMARY
 
+    /** The 204 check of the whitelist bypass: see [PingUrls.WHITELIST]. */
+    val BYPASS_204 = PingUrls.WHITELIST
+
     /** Small real downloads for the "data really flows" step; the first one that completes wins. */
     val CONTENT_URLS = listOf(
         "https://www.google.com/robots.txt",

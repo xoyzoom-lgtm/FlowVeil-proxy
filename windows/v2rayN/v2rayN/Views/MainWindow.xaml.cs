@@ -44,6 +44,7 @@ public partial class MainWindow
                 homeView.Attach(ViewModel);
                 if (homeView.HomeViewModel != null)
                 {
+                    homeView.HomeViewModel.BeforeConnect = ConflictView.ShowIfAnyAsync;
                     homeView.HomeViewModel.FailoverNotice += (title, text) => Dispatcher.InvokeAsync(() => (contentStatusBarView.Content as StatusBarView)?.ShowBalloon(title, text, () => ShowHideWindow(true)));
                 }
                 BuildSettingsPage(ViewModel);
@@ -557,6 +558,14 @@ public partial class MainWindow
         Row(app, PackIconKind.Update, "Проверить обновления",
             pendingUpdate == null ? $"Сейчас: build {HuppUpdater.CurrentBuild()}" : $"Доступна новая версия build-{pendingUpdate.Build}",
             () => MenuCheckUpdate_Click(this, new RoutedEventArgs()));
+        var conflictOn = ConflictingSoftware.WarnEnabled;
+        Row(app, PackIconKind.AlertOutline, $"Предупреждать о конфликтующих программах: {(conflictOn ? "включено" : "выключено")}",
+            "Если запущены zapret, GoodbyeDPI или другой прокси-клиент, FlowVeil скажет об этом и предложит закрыть их",
+            () =>
+            {
+                ConflictingSoftware.SetWarnEnabled(!conflictOn);
+                BuildSettingsPage(vm);
+            });
         var failoverOn = FailoverSettings.IsEnabled;
         Row(app, PackIconKind.SwapHorizontal, $"Переключаться при сбое сервера: {(failoverOn ? "включено" : "выключено")}",
             "Если сервер перестал пропускать трафик, FlowVeil проверит другие (сначала из этой же подписки, потом из остальных) и переключится на рабочий",
@@ -722,6 +731,11 @@ public partial class MainWindow
         RestoreUI();
         _ = ImportPendingLinkAsync();
         _ = SubAutoUpdate.EnsureDefaultAsync();
+        if (!_config.UiItem.AutoHideStartup)
+        {
+            // A moment after the window is up: programs like zapret that break the connection are said out loud.
+            _ = Task.Delay(TimeSpan.FromSeconds(4)).ContinueWith(_ => Dispatcher.InvokeAsync(() => ConflictView.ShowIfAnyAsync()));
+        }
     }
 
     /// <summary>Start page: «Серверы», or «Добавить» when there is nothing to show yet.</summary>

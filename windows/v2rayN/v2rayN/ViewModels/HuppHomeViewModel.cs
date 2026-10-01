@@ -212,8 +212,22 @@ public sealed partial class HuppHomeViewModel : HuppObservable
         }
     }
 
+    /// <summary>Awaited before connecting (the window sets it: the "conflicting software" warning).</summary>
+    public Func<Task>? BeforeConnect { get; set; }
+
     public async Task ConnectAsync()
     {
+        if (BeforeConnect != null)
+        {
+            try
+            {
+                await BeforeConnect();
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(nameof(HuppHomeViewModel), ex);
+            }
+        }
         if (IsTunMode(_mode))
         {
             // TUN engine: sing-box handles the TUN device ("legacy protect"), or Xray does it itself.

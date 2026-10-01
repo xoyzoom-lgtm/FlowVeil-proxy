@@ -157,7 +157,7 @@ object ConnectionWatchdog {
     }
 
     /** True while reloading too (0 = not measured), so a reload never triggers a switch. */
-    private fun currentServerWorks(): Boolean = CoreServiceManager.measureCurrentDelay() >= 0L
+    private fun currentServerWorks(): Boolean = CoreServiceManager.measureCurrentDelay(whitelist = BypassController.applies()) >= 0L
 
     private fun isScreenOn(): Boolean {
         val service = serviceRef?.get() ?: return false

@@ -42,6 +42,7 @@ import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
 import libv2ray.ProcessFinder
 import java.lang.ref.SoftReference
+import com.v2ray.ang.net.PingUrls
 import java.net.InetSocketAddress
 
 object CoreServiceManager {
@@ -262,9 +263,10 @@ object CoreServiceManager {
      * @return True if the core is running again.
      */
     /** Delay through the running core, or -1 when the check fails. Used by [ConnectionWatchdog]. */
-    internal fun measureCurrentDelay(): Long {
+    internal fun measureCurrentDelay(whitelist: Boolean = false): Long {
         if (!isRunning() || isReloading) return 0L
-        for (url in listOf(SettingsManager.getDelayTestUrl(), SettingsManager.getDelayTestUrl(true))) {
+        val urls = if (whitelist) listOf(PingUrls.WHITELIST) else listOf(SettingsManager.getDelayTestUrl(), SettingsManager.getDelayTestUrl(true))
+        for (url in urls) {
             val time = runCatching { coreController.measureDelay(url) }.getOrDefault(-1L)
             if (time > 0) return time
         }

@@ -294,6 +294,13 @@ object PingUrls {
     const val PRIMARY = "https://www.gstatic.com/generate_204"
     const val FALLBACK = "https://cp.cloudflare.com/generate_204"
 
+    /**
+     * Servers used on mobile whitelists are checked with this address only (as before the gstatic default): such servers
+     * often pass little more than the big whitelisted sites, so gstatic or cloudflare would fail a working server.
+     * Everything else keeps the ordinary ping address.
+     */
+    const val WHITELIST = "https://www.google.com/generate_204"
+
     private val oldDefaults = setOf(
         "https://www.google.com/generate_204",
         "http://www.google.com/generate_204",

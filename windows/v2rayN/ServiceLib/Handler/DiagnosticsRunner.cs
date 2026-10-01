@@ -17,7 +17,6 @@ public static class DiagnosticsRunner
     private const string Gstatic = "https://www.gstatic.com/generate_204";
     private static readonly string[] Domestic = ["https://ya.ru", "https://vk.com", "https://mail.ru"];
     private static readonly string[] Foreign = [Gstatic, "https://cp.cloudflare.com/generate_204"];
-    private static readonly string[] OtherClients = ["v2rayN", "Happ", "clash-verge", "Clash for Windows", "nekoray", "Hiddify", "hiddify-next"];
 
     public static DiagInputs? LastInputs { get; private set; }
 
@@ -95,7 +94,7 @@ public static class DiagnosticsRunner
 
         // 9. system proxy set by someone else, other clients that fight for it
         bool? proxyMatches = running && !config.TunModeItem.EnableTun && config.SystemProxyItem.SysProxyType == ESysProxyType.ForcedChange ? SystemProxyPointsTo(port) : null;
-        var otherClient = OtherClients.Any(name => Process.GetProcessesByName(name).Length > 0);
+        var otherClient = ConflictingSoftware.FindRunning().Count > 0;
         Step(DiagStepId.Proxy, i => i with { SystemProxyMatches = proxyMatches, OtherClientRunning = otherClient });
 
         var result = Diagnosis.Diagnose(inputs);

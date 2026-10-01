@@ -67,3 +67,21 @@ public class FailoverTests
         await groups[0].Should().BeEquivalentTo(new List<string> { "b1" });
     }
 }
+
+public class ConflictingSoftwareTests
+{
+    [Test]
+    public async Task Finds_Zapret_AndLabelsLikeTheDialog()
+    {
+        var found = ConflictingSoftware.Find(n => n == "winws");
+        await found.Count.Should().BeEqualTo(1);
+        await ConflictingSoftware.Label(found[0]).Should().BeEqualTo("zapret (winws.exe)");
+    }
+
+    [Test]
+    public async Task NothingRunning_NothingFound_AndOurCoresAreNotListed()
+    {
+        await ConflictingSoftware.Find(_ => false).Count.Should().BeEqualTo(0);
+        await ConflictingSoftware.Find(n => n is "xray" or "sing-box" or "FlowVeil").Count.Should().BeEqualTo(0);
+    }
+}
