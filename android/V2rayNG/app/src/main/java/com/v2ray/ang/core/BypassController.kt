@@ -40,6 +40,8 @@ import com.v2ray.ang.net.Outcome
 import com.v2ray.ang.net.PingUrls
 import com.v2ray.ang.net.OriginState
 import com.v2ray.ang.net.ProbeStep
+import com.v2ray.ang.net.QuickFacts
+import com.v2ray.ang.net.QuickPath
 import com.v2ray.ang.net.ReturnAction
 import com.v2ray.ang.net.ReturnLogic
 import com.v2ray.ang.net.SearchCandidate
@@ -99,6 +101,8 @@ object BypassController {
     private const val SOFT_CHECK_LIMIT_MS = 12_000L
     private const val NOTIFY_SWITCH_GAP_MS = 5 * 60_000L
     private const val NOTIFY_PROBLEM_GAP_MS = 30 * 60_000L
+    private const val QUICK_TOTAL_MS = 8_000L
+    private const val QUICK_ISO_MS = 3_000L
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -252,9 +256,10 @@ object BypassController {
                 searchBypass(current)
             }
             LinkDiagnosis.UNSURE -> {
-                // The probes disagree: no guessing about the network. (The quick path comes first once it exists; then the ordinary failover.)
-                BypassLog.add("the probes disagree: ordinary failover, the network is not blamed")
-                return true
+                // The probes disagree: no guessing about the network. First the quick path (a server that worked here before),
+                // and only when that gives nothing the ordinary failover.
+                BypassLog.add("the probes disagree: quick path first, then the ordinary failover")
+                return !quickOnly(current)
             }
             LinkDiagnosis.SERVER_DOWN -> {
                 // The open internet works: this is a dead server, not a restriction.
@@ -550,7 +555,9 @@ object BypassController {
         full: Boolean,
         testOnly: Boolean,
         stillNeeded: () -> Boolean,
+        override: SearchLimits? = null,
     ): TryResult {
+        val lim = override ?: limits(testOnly)
         val startGuid = CoreServiceManager.currentServerGuid()
         lastOurs = startGuid
         val bucket = BypassHistory.bucket(service)
@@ -564,7 +571,7 @@ object BypassController {
             override suspend fun isolated(id: String): IsoResult {
                 // The native test cannot be cancelled: it runs on its own thread so the limit really holds, and a test given up on
                 // keeps its slot (and the limiter's) until it returns, so hung tests never pile up into more running cores.
-                val outcome = nativeSlots.call(PER_CANDIDATE_MS - 500L) {
+                val outcome = nativeSlots.call(lim.perCandidateMs - 500L) {
                     runBlocking { RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(id)) { SpeedtestConfig.measureWhitelist(service, id) } }
                 }
                 return when (outcome) {
@@ -647,7 +654,7 @@ object BypassController {
 
             override fun onProgress(checked: Int, total: Int) = NetInfoCache.writeProgress(checked, total)
         }
-        val result = BypassSearch.run(candidates, limits(testOnly), env)
+        val result = BypassSearch.run(candidates, lim, env)
         return TryResult(result.found, lastReason, result.aborted, result.tested, result.passed)
     }
 
@@ -703,6 +710,80 @@ object BypassController {
 
     private fun delayOf(guid: String): Long = MmkvManager.decodeServerAffiliationInfo(guid)?.testDelayMillis ?: 0L
 
+    private fun quickLimits() = SearchLimits(
+        parallel = 1, earlyExit = 1, totalMs = QUICK_TOTAL_MS, perCandidateMs = QUICK_ISO_MS,
+        pingLimitMs = WhitelistBypass.bypassPingMs(), maxLive = 1,
+    )
+
+    /** The one server that worked here before, if any: see [QuickPath]. */
+    private fun quickCandidate(service: Service, plan: Plan): BypassRating.Rated? {
+        val now = System.currentTimeMillis()
+        val bucket = BypassHistory.bucket(service)
+        val recent = WhitelistBypass.recentSuccess()
+        val all = plan.tier1 + plan.tier2
+        val facts = all.map { r ->
+            val e = BypassHistory.entry(r.fingerprint, bucket)
+            QuickFacts(r.guid, e?.lastOkAt ?: 0L, e?.streak ?: 0, e?.avgPingMs ?: 0L, recent[r.guid] ?: 0L)
+        }
+        val id = QuickPath.pick(facts, now, WhitelistBypass.bypassPingMs()) ?: return null
+        return all.firstOrNull { it.guid == id }
+    }
+
+    private suspend fun runQuick(service: Service, quick: BypassRating.Rated, rated: Map<String, BypassRating.Rated>): TryResult {
+        BypassLog.add("quick path: trying ${serverName(quick.guid)} first (it worked on this network before)")
+        return runSearch(
+            service, listOf(SearchCandidate(quick.guid, quick.rating.score, 0)), rated,
+            full = true, testOnly = false, stillNeeded = { applies() }, override = quickLimits(),
+        )
+    }
+
+    /** What follows a verified switch: the state, the notice, the log. */
+    private fun finishSuccess(service: Service, guid: String) {
+        WhitelistBypass.active = guid
+        WhitelistBypass.recordSuccess(guid)
+        failedSearches = 0
+        nextSearchAt = 0L
+        lastPeriodicReturnAt = System.currentTimeMillis()
+        announceSwitch(service, guid)
+        NetInfoCache.writeTarget(serverName(guid))
+        NetInfoCache.writeBypass(BypassState.OK, returnTo = returnToName())
+        BypassLog.add("connected to ${serverName(guid)}: verified")
+        postEvent(service, "switched", service.getString(R.string.whitelist_bypass_notify_switched, serverName(guid)), NOTIFY_SWITCH_GAP_MS)
+    }
+
+    /**
+     * Used when the probes disagree: only the quick path, nothing else. True = a verified server is now in use (the caller
+     * must not run the ordinary failover); false = no quick candidate or it did not hold (nothing was changed).
+     */
+    private suspend fun quickOnly(current: String): Boolean {
+        if (!applies()) return false
+        val service = ConnectionWatchdog.currentService() ?: return false
+        if (System.currentTimeMillis() < nextSearchAt) return false
+        val plan = buildPlan(service, current)
+        val quick = quickCandidate(service, plan) ?: return false
+        val ep = EpisodeStats(System.currentTimeMillis())
+        episode = ep
+        var result = EpisodeResult.ABORTED
+        try {
+            val created = ensureSnapshot(current)
+            NetInfoCache.writeBypass(BypassState.SEARCHING, returnTo = returnToName())
+            val r = runQuick(service, quick, (plan.tier1 + plan.tier2).associateBy { it.guid })
+            ep.quickPath(if (r.found != null) "ok" else if (r.aborted) "aborted" else "failed")
+            if (r.found != null) {
+                finishSuccess(service, r.found)
+                result = EpisodeResult.OK
+                return true
+            }
+            if (created && WhitelistBypass.active == null) WhitelistBypass.snapshot = null
+            NetInfoCache.writeBypass(if (WhitelistBypass.active != null) BypassState.OK else BypassState.IDLE, returnTo = returnToName())
+            result = if (r.aborted) EpisodeResult.ABORTED else EpisodeResult.NO_SERVER
+            return false
+        } finally {
+            BypassLog.add(ep.summary(System.currentTimeMillis(), result))
+            episode = null
+        }
+    }
+
     private suspend fun searchBypass(current: String) {
         val ep = EpisodeStats(System.currentTimeMillis())
         episode = ep
@@ -746,28 +827,28 @@ object BypassController {
         val createdSnapshot = ensureSnapshot(current)
         val stillOnCellular = { applies() }
         val rated = (plan.tier1 + plan.tier2).associateBy { it.guid }
-        var result = if (plan.tier1.isNotEmpty()) {
-            runSearch(service, toCandidates(plan.tier1), rated, full = true, testOnly = false, stillNeeded = stillOnCellular)
-        } else {
-            TryResult(null, null, aborted = false)
+        // First one server that worked here before (seconds); only if that gives nothing, the ordinary search.
+        val quick = quickCandidate(service, plan)
+        var result = TryResult(null, null, aborted = false)
+        if (quick != null) {
+            result = runQuick(service, quick, rated)
+            episode?.quickPath(if (result.found != null) "ok" else if (result.aborted) "aborted" else "failed")
         }
-        if (result.found == null && !result.aborted && restAllowed) {
-            BypassLog.add("the first choice gave nothing: trying the rest of the servers")
-            NetInfoCache.writeProgress(0, plan.tier2.size)
-            result = runSearch(service, toCandidates(plan.tier2), rated, full = true, testOnly = false, stillNeeded = stillOnCellular)
+        if (result.found == null && !result.aborted) {
+            val tier1 = plan.tier1.filter { it.guid != quick?.guid }
+            val tier2 = plan.tier2.filter { it.guid != quick?.guid }
+            if (tier1.isNotEmpty()) {
+                NetInfoCache.writeProgress(0, tier1.size)
+                result = runSearch(service, toCandidates(tier1), rated, full = true, testOnly = false, stillNeeded = stillOnCellular)
+            }
+            if (result.found == null && !result.aborted && restAllowed && tier2.isNotEmpty()) {
+                BypassLog.add("the first choice gave nothing: trying the rest of the servers")
+                NetInfoCache.writeProgress(0, tier2.size)
+                result = runSearch(service, toCandidates(tier2), rated, full = true, testOnly = false, stillNeeded = stillOnCellular)
+            }
         }
         if (result.found != null) {
-            val guid = result.found
-            WhitelistBypass.active = guid
-            WhitelistBypass.recordSuccess(guid)
-            failedSearches = 0
-            nextSearchAt = 0L
-            lastPeriodicReturnAt = System.currentTimeMillis()
-            announceSwitch(service, guid)
-            NetInfoCache.writeTarget(serverName(guid))
-            NetInfoCache.writeBypass(BypassState.OK, returnTo = returnToName())
-            BypassLog.add("connected to ${serverName(guid)}: verified")
-            postEvent(service, "switched", service.getString(R.string.whitelist_bypass_notify_switched, serverName(guid)), NOTIFY_SWITCH_GAP_MS)
+            finishSuccess(service, result.found)
             return EpisodeResult.OK
         }
         if (result.aborted) {
