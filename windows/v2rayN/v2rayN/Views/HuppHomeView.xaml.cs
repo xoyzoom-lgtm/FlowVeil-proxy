@@ -227,6 +227,36 @@ public partial class HuppHomeView : UserControl
         OpenSubMenu(card, sender as UIElement);
     }
 
+    /// <summary>The plain https link as a QR code (any client can scan it), after a warning that it is as good as a password.</summary>
+    private static async Task ShowSubQrAsync(string? url)
+    {
+        if (url.IsNullOrEmpty())
+        {
+            return;
+        }
+        var panel = new StackPanel { Width = 360, Margin = new Thickness(24) };
+        panel.Children.Add(new TextBlock { Text = "QR-код подписки", FontSize = 20, FontWeight = FontWeights.SemiBold });
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Ссылка подписки — как пароль: любой, кто отсканирует код, получит доступ. Показывайте только своим устройствам. Код читают и другие приложения.",
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 8, 0, 12),
+        });
+        var image = new Image { Width = 280, Height = 280, Source = QRCodeWindowsUtils.GetQRCode(url), Visibility = Visibility.Collapsed };
+        var show = AddPageView.Flat("Показать код", () => { });
+        show.Click += (_, _) =>
+        {
+            image.Visibility = Visibility.Visible;
+            show.Visibility = Visibility.Collapsed;
+        };
+        panel.Children.Add(image);
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
+        buttons.Children.Add(show);
+        buttons.Children.Add(AddPageView.Flat("Закрыть", () => MaterialDesignThemes.Wpf.DialogHost.Close("RootDialog")));
+        panel.Children.Add(buttons);
+        await MaterialDesignThemes.Wpf.DialogHost.Show(panel, "RootDialog");
+    }
+
     private void OpenSubMenu(HuppSubCard card, UIElement? target)
     {
         if (_vm == null || _main == null)
@@ -285,6 +315,7 @@ public partial class HuppHomeView : UserControl
             NoticeManager.Instance.Enqueue("Ссылка скопирована");
             return Task.CompletedTask;
         }));
+        menu.Items.Add(Item("Показать QR-код", MaterialDesignThemes.Wpf.PackIconKind.Qrcode, () => ShowSubQrAsync(card.Sub.Url)));
         if (card.SupportUrl.IsNotEmpty())
         {
             menu.Items.Add(Item("Поддержка провайдера", MaterialDesignThemes.Wpf.PackIconKind.Send, () =>
