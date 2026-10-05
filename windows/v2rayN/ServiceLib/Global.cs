@@ -465,8 +465,11 @@ public class Global
         ""
     ];
 
+    // FlowVeil: Yandex first. The upstream defaults are Chinese resolvers: slow and wrong-region from Russia.
     public static readonly List<string> DomainDirectDNSAddress =
     [
+        "77.88.8.8",
+        "https://common.dot.dns.yandex.net/dns-query",
         "119.29.29.29",
         "223.5.5.5",
         "119.29.29.29,223.5.5.5,https://doh.pub/dns-query",
@@ -494,6 +497,7 @@ public class Global
 
     public static readonly List<string> DomainPureIPDNSAddress =
     [
+        "77.88.8.8",
         "119.29.29.29",
         "223.5.5.5",
         "localhost"

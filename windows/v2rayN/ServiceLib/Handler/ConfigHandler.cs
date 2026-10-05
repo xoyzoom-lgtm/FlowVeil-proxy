@@ -135,6 +135,9 @@ public static class ConfigHandler
         config.SimpleDNSItem.FakeIPRange ??= Global.FakeIPRanges.FirstOrDefault();
         config.SimpleDNSItem.GlobalFakeIp ??= true;
         config.SimpleDNSItem.BootstrapDNS ??= Global.DomainPureIPDNSAddress.FirstOrDefault();
+        // FlowVeil: untouched Chinese defaults (direct and bootstrap DNS) become Yandex, once; a value the user picked stays.
+        config.SimpleDNSItem.DirectDNS = DnsDefaults.Migrate(config.SimpleDNSItem.DirectDNS);
+        config.SimpleDNSItem.BootstrapDNS = DnsDefaults.Migrate(config.SimpleDNSItem.BootstrapDNS);
         config.SimpleDNSItem.ServeStale ??= false;
         config.SimpleDNSItem.ParallelQuery ??= false;
         config.SimpleDNSItem.EnableHappyEyeballs ??= false;

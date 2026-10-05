@@ -289,6 +289,24 @@ object BadMarks {
         }.toMap()
 }
 
+/**
+ * The DNS for sites that go directly (not through the server): the upstream default was a Chinese public resolver, slow and
+ * wrong-region from Russia. An untouched old default is replaced once; anything the user typed stays.
+ */
+object DirectDns {
+    const val DEFAULT = "77.88.8.8"
+    private val OLD_DEFAULTS = setOf("223.5.5.5", "223.6.6.6", "119.29.29.29")
+
+    fun migrate(stored: String?): String? {
+        val v = stored?.trim().orEmpty()
+        return when {
+            v.isEmpty() -> DEFAULT
+            v in OLD_DEFAULTS -> DEFAULT
+            else -> null
+        }
+    }
+}
+
 /** Migration of the ping URL: only the untouched old default is replaced, a user's own URL stays. */
 object PingUrls {
     const val PRIMARY = "https://www.gstatic.com/generate_204"

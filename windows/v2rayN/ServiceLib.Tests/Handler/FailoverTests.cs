@@ -85,3 +85,16 @@ public class ConflictingSoftwareTests
         await ConflictingSoftware.Find(n => n is "xray" or "sing-box" or "FlowVeil").Count.Should().BeEqualTo(0);
     }
 }
+
+public class DnsDefaultsTests
+{
+    [Test]
+    public async Task ChineseDefaultsBecomeYandex_UserChoiceStays()
+    {
+        await DnsDefaults.Migrate("119.29.29.29").Should().BeEqualTo("77.88.8.8");
+        await DnsDefaults.Migrate("223.5.5.5").Should().BeEqualTo("77.88.8.8");
+        await DnsDefaults.Migrate(null).Should().BeEqualTo("77.88.8.8");
+        await DnsDefaults.Migrate("1.1.1.1").Should().BeEqualTo("1.1.1.1");
+        await DnsDefaults.Migrate("localhost").Should().BeEqualTo("localhost");
+    }
+}

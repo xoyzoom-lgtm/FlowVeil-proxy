@@ -27,6 +27,7 @@ import com.v2ray.ang.handler.MmkvManager.encodeSubscription
 import com.v2ray.ang.handler.MmkvManager.removeSubscription
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
+import com.v2ray.ang.net.DirectDns
 import com.v2ray.ang.net.PingUrls
 import com.v2ray.ang.util.Utils
 import java.io.File
@@ -41,6 +42,7 @@ object SettingsManager {
     fun initApp(context: Context) {
         ensureDefaultSettings()
         migratePingUrlOnce()
+        migrateDirectDnsOnce()
         applyRecommendedDefaultsOnce()
         applyHuppDefaultsV2Once()
         applyFlowVeilDefaultsV3Once()
@@ -527,6 +529,15 @@ object SettingsManager {
      * The ping now goes to gstatic by default. Only an untouched old default (google.com) is
      * replaced, once; a URL the user typed himself is never changed.
      */
+    private fun migrateDirectDnsOnce() {
+        val flag = "direct_dns_yandex_migrated"
+        if (MmkvManager.decodeSettingsBool(flag, false)) return
+        DirectDns.migrate(MmkvManager.decodeSettingsString(AppConfig.PREF_DOMESTIC_DNS))?.let {
+            MmkvManager.encodeSettings(AppConfig.PREF_DOMESTIC_DNS, it)
+        }
+        MmkvManager.encodeSettings(flag, true)
+    }
+
     private fun migratePingUrlOnce() {
         val flag = "ping_url_gstatic_migrated"
         if (MmkvManager.decodeSettingsBool(flag, false)) return

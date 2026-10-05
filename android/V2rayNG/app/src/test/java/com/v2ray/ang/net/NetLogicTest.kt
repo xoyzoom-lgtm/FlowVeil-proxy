@@ -286,4 +286,13 @@ class NetLogicTest {
         assertNull(PingUrls.migrate("https://www.gstatic.com/generate_204"))
         assertNull(PingUrls.migrate("https://my.example.com/ping"))
     }
+
+    @Test
+    fun directDnsLeavesTheChineseDefaultAndKeepsAUserChoice() {
+        assertEquals("77.88.8.8", DirectDns.migrate("223.5.5.5"))
+        assertEquals("77.88.8.8", DirectDns.migrate(" 119.29.29.29 "))
+        assertEquals("77.88.8.8", DirectDns.migrate(null))
+        assertEquals(null, DirectDns.migrate("1.1.1.1"))
+        assertEquals(null, DirectDns.migrate("https://dns.example/dns-query"))
+    }
 }
