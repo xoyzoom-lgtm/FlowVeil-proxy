@@ -624,6 +624,17 @@ public partial class MainWindow
                 FailoverSettings.SetEnabled(!failoverOn);
                 BuildSettingsPage(vm);
             });
+        if (failoverOn)
+        {
+            var across = FailoverSettings.AcrossSubscriptions;
+            Row(app, PackIconKind.SwapVertical, $"Переключаться между подписками: {(across ? "включено" : "выключено")}",
+                "Если в этой подписке нет рабочего сервера, пробовать серверы других ваших подписок. По умолчанию выключено",
+                () =>
+                {
+                    FailoverSettings.SetAcrossSubscriptions(!across);
+                    BuildSettingsPage(vm);
+                });
+        }
         var notifyOn = UpdateNotifier.IsEnabled;
         Row(app, PackIconKind.BellOutline, $"Сообщать о новых версиях: {(notifyOn ? "включено" : "выключено")}",
             "Проверяет GitHub примерно раз в 6 часов. Это единственный запрос, который приложение делает само, без идентификаторов устройства и аккаунта. Ничего не ставится без вашего подтверждения",
@@ -805,6 +816,49 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>"Добавить подписку?" with the host in big letters, the name, and warnings for http and look-alike hosts.</summary>
+    private static async Task<bool> ConfirmInviteAsync(string link, string? name)
+    {
+        var uri = Utils.TryUri(link);
+        var isSub = uri != null && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
+        var panel = new StackPanel { Width = 440, Margin = new Thickness(24) };
+        panel.Children.Add(new TextBlock { Text = isSub ? "Добавить подписку?" : "Добавить серверы?", FontSize = 20, FontWeight = FontWeights.SemiBold });
+        var host = uri?.IdnHost ?? string.Empty;
+        var shown = uri?.Host ?? string.Empty;
+        if (shown.IsNotEmpty())
+        {
+            panel.Children.Add(new TextBlock { Text = shown, FontSize = 22, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 12, 0, 0), TextWrapping = TextWrapping.Wrap });
+            if (!string.Equals(host, shown, StringComparison.OrdinalIgnoreCase))
+            {
+                panel.Children.Add(new TextBlock { Text = host, Opacity = 0.7, TextWrapping = TextWrapping.Wrap });
+            }
+        }
+        if (name.IsNotEmpty())
+        {
+            panel.Children.Add(new TextBlock { Text = "Название: " + name, Margin = new Thickness(0, 8, 0, 0), TextWrapping = TextWrapping.Wrap });
+        }
+        if (uri?.Scheme == Uri.UriSchemeHttp)
+        {
+            panel.Children.Add(new TextBlock { Text = "Ссылка без шифрования (http): её содержимое видно всем по пути.", Foreground = System.Windows.Media.Brushes.IndianRed, Margin = new Thickness(0, 8, 0, 0), TextWrapping = TextWrapping.Wrap });
+        }
+        if (LooksMixed(shown))
+        {
+            panel.Children.Add(new TextBlock { Text = "Осторожно: в адресе смешаны буквы разных алфавитов, так выглядят поддельные адреса. Настоящий адрес: " + host, Foreground = System.Windows.Media.Brushes.IndianRed, Margin = new Thickness(0, 8, 0, 0), TextWrapping = TextWrapping.Wrap });
+        }
+        panel.Children.Add(new TextBlock { Text = "Ссылку прислал не FlowVeil. Добавляйте только подписку своего провайдера. До нажатия «Добавить» ничего не скачивается.", Opacity = 0.75, Margin = new Thickness(0, 12, 0, 0), TextWrapping = TextWrapping.Wrap });
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0) };
+        var cancel = AddPageView.Flat("Отмена", () => DialogHost.Close("RootDialog", false));
+        var add = AddPageView.Flat("Добавить", () => DialogHost.Close("RootDialog", true));
+        buttons.Children.Add(cancel);
+        buttons.Children.Add(add);
+        panel.Children.Add(buttons);
+        return await DialogHost.Show(panel, "RootDialog") is true;
+    }
+
+    /// <summary>A label mixing Latin with Cyrillic or Greek letters (a look-alike host).</summary>
+    private static bool LooksMixed(string host) => host.Split('.').Any(label =>
+        label.Any(c => c is >= 'a' and <= 'z' or >= 'A' and <= 'Z') && label.Any(c => c is >= '\u0370' and <= '\u03FF' or >= '\u0400' and <= '\u04FF'));
+
     /// <summary>Adds the subscription from a flowveil:// link that opened the app.</summary>
     private async Task ImportPendingLinkAsync()
     {
@@ -814,6 +868,11 @@ public partial class MainWindow
             return;
         }
         ShowHideWindow(true);
+        // A link from a browser or a messenger is never imported before the user says yes: nothing is downloaded until then.
+        if (!await ConfirmInviteAsync(invite.Link, invite.Name))
+        {
+            return;
+        }
         if (_addPage != null)
         {
             // The same path as the "Add" page: duplicate check, the provider's name, download, switch to the new subscription.

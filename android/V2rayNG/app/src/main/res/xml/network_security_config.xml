@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<network-security-config xmlns:tools="http://schemas.android.com/tools">
+<!-- Release: only the system's certificates are trusted. Plain http stays allowed because many panels on an IP:port only offer it;
+     such a link is marked "not encrypted" before it is added. A debug build also trusts user certificates (src/debug). -->
+<network-security-config>
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
-            <certificates
-                src="user"
-                tools:ignore="AcceptsUserCertificates" />
         </trust-anchors>
     </base-config>
 </network-security-config>

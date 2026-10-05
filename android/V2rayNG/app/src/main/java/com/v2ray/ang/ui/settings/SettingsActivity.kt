@@ -224,8 +224,10 @@ fun SettingsScreen(
 
     var speedEnabled by rememberMmkvBool(AppConfig.PREF_SPEED_ENABLED, false)
     var sendHwid by rememberMmkvBool(AppConfig.PREF_SEND_HWID, true)
+    var automation by rememberMmkvBool(AppConfig.PREF_AUTOMATION_ENABLED, false)
+    var showHwid by remember { mutableStateOf(false) }
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
-    var failoverAcrossSubs by rememberMmkvBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, true)
+    var failoverAcrossSubs by rememberMmkvBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, false)
     var whitelistBypass by rememberMmkvBool(WhitelistBypass.PREF_ENABLED, false)
     var whitelistBypassMode by rememberMmkvString(WhitelistBypass.PREF_MODE, WhitelistBypass.MODE_AUTO)
     var whitelistBypassReturn by rememberMmkvBool(WhitelistBypass.PREF_AUTO_RETURN, true)
@@ -625,9 +627,20 @@ fun SettingsScreen(
                 )
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_send_hwid),
-                    summary = stringResource(R.string.summary_pref_send_hwid, deviceHwid),
+                    // The id is shown masked; one tap on the row text reveals it (it is sent only to the host of a subscription the user added).
+                    summary = stringResource(R.string.summary_pref_send_hwid, if (showHwid) deviceHwid else deviceHwid.take(4) + "••••••") +
+                        if (showHwid) "" else " " + stringResource(R.string.hwid_show),
                     checked = sendHwid,
                     onCheckedChange = { sendHwid = it }
+                )
+                if (!showHwid) {
+                    SettingsMenuItem(title = stringResource(R.string.hwid_show_title), onClick = { showHwid = true; Utils.setClipboard(settingsContext, deviceHwid) })
+                }
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_automation),
+                    summary = stringResource(R.string.summary_pref_automation),
+                    checked = automation,
+                    onCheckedChange = { automation = it }
                 )
             }
 

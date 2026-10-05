@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.extension.toast
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.ui.base.BaseComponentActivity
@@ -102,6 +103,15 @@ class TaskerActivity : BaseComponentActivity() {
         val extraBundle = Bundle()
         extraBundle.putBoolean(AppConfig.TASKER_EXTRA_BUNDLE_SWITCH, switchState.value)
         extraBundle.putString(AppConfig.TASKER_EXTRA_BUNDLE_GUID, items[position].guid)
+        // The task carries a secret only FlowVeil and this task know: other apps cannot send the same command.
+        val key = MmkvManager.decodeSettingsString(AppConfig.PREF_AUTOMATION_KEY)?.takeIf { it.length >= 16 }
+            ?: (java.util.UUID.randomUUID().toString() + java.util.UUID.randomUUID().toString()).replace("-", "").also {
+                MmkvManager.encodeSettings(AppConfig.PREF_AUTOMATION_KEY, it)
+            }
+        extraBundle.putString(AppConfig.TASKER_EXTRA_BUNDLE_KEY, key)
+        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTOMATION_ENABLED, false)) {
+            toast(R.string.automation_off_hint)
+        }
         val intent = Intent()
 
         val blurb = getString(

@@ -97,6 +97,11 @@ public partial class HuppHomeViewModel
         }
         var order = subs.Where(s => s.Id.IsNotEmpty()).Select(s => s.Id).ToList();
         order = SubsLogic.ApplyOrder(order, _state.Order);
+        if (!FailoverSettings.AcrossSubscriptions)
+        {
+            // Only the subscription of the server in use, unless the user allowed the others.
+            order = order.Where(id => id == current?.Subid).ToList();
+        }
         var groups = FailoverPlan.Groups(facts, _config.IndexId, current?.Subid ?? string.Empty, order, SubUsable, IsRussianServer);
         var oldName = current?.Remarks ?? string.Empty;
         Logging.SaveLog($"Failover: «{oldName}» does not answer, {groups.Sum(g => g.Count)} candidates in {groups.Count} groups");

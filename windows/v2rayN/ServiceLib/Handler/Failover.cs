@@ -82,6 +82,30 @@ public static class FailoverPlan
 public static class FailoverSettings
 {
     private const string OffFile = "failover_off";
+    private const string AcrossOnFile = "failover_across_on";
+
+    /// <summary>May the switch go to servers of OTHER subscriptions? Off unless the user turns it on.</summary>
+    public static bool AcrossSubscriptions => File.Exists(Utils.GetConfigPath(AcrossOnFile));
+
+    public static void SetAcrossSubscriptions(bool on)
+    {
+        try
+        {
+            var path = Utils.GetConfigPath(AcrossOnFile);
+            if (on)
+            {
+                File.WriteAllText(path, "on");
+            }
+            else
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(nameof(FailoverSettings), ex);
+        }
+    }
 
     public static bool IsEnabled => !File.Exists(Utils.GetConfigPath(OffFile));
 

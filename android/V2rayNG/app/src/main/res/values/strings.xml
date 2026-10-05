@@ -952,4 +952,19 @@
     <string name="update_notify_summary">Checks GitHub for a new version about twice a day. This is the only request the app makes on its own; it carries no device or account identifiers. Nothing is installed until you press “Update”.</string>
     <string name="update_checksum_failed">The update file is damaged or was changed, installation cancelled</string>
     <string name="about_channel">FlowVeil channel</string>
+    <string name="import_confirm_title_sub">Add the subscription?</string>
+    <string name="import_confirm_title_servers">Add the servers?</string>
+    <string name="import_confirm_name">Name: %1$s</string>
+    <string name="import_confirm_servers">Servers: %1$d</string>
+    <string name="import_confirm_warning">This link did not come from FlowVeil. Add only your own provider\'s subscription. Nothing is downloaded or sent before you press “Add”.</string>
+    <string name="import_confirm_http">The link is not encrypted (http): anyone on the way can see what it loads. Ask the provider for an https link.</string>
+    <string name="import_confirm_lookalike">Careful: the address mixes letters of different alphabets, which is how fake addresses look. The real address: %1$s</string>
+    <string name="import_confirm_add">Add</string>
+    <string name="import_rejected_title">This link cannot be added</string>
+    <string name="import_rejected_text">It is neither a subscription nor a server link, or it has characters that are not allowed. Ask the provider for a regular link.</string>
+    <string name="hwid_show">(hidden)</string>
+    <string name="hwid_show_title">Show and copy the device ID</string>
+    <string name="title_pref_automation">Automation (Tasker and the like)</string>
+    <string name="summary_pref_automation">Let other apps turn the connection on and off with tasks created in FlowVeil. Off: such commands are ignored</string>
+    <string name="automation_off_hint">Task created. To make it work, turn on “Automation” in FlowVeil settings</string>
 </resources>

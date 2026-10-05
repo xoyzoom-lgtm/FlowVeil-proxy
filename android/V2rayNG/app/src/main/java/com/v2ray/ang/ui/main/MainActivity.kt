@@ -84,6 +84,9 @@ class MainActivity : HelperBaseComponentActivity() {
     private var pairManual by mutableStateOf(false)
     private var sharedText by mutableStateOf<String?>(null)
 
+    /** A link that opened the app or a scanned code, waiting for the user's "Add" (see [ImportConfirmDialog]). */
+    private var pendingImport by mutableStateOf<String?>(null)
+
 
     private val mainViewModel: MainViewModel by viewModels {
         MainViewModel.Factory(application, MainRepository(application as AngApplication))
@@ -152,6 +155,13 @@ class MainActivity : HelperBaseComponentActivity() {
         }
         if (pairQr != null || pairManual) {
             PairSendDialog(qr = pairQr, preset = pairPreset, onDismiss = { pairQr = null; pairManual = false; pairPreset = null })
+        }
+        pendingImport?.let { text ->
+            ImportConfirmDialog(
+                text = text,
+                onAdd = { pendingImport = null; mainViewModel.onAction(MainAction.ImportBatchConfig(text)) },
+                onCancel = { pendingImport = null },
+            )
         }
         sharedText?.let { text ->
             AlertDialog(
@@ -247,7 +257,8 @@ class MainActivity : HelperBaseComponentActivity() {
             intent.removeExtra(EXTRA_SHARED)
             sharedText = text
         } else {
-            mainViewModel.onAction(MainAction.ImportBatchConfig(text))
+            // An invite link from a browser or a messenger: never imported before the user confirms it.
+            pendingImport = text
         }
     }
 
@@ -326,7 +337,7 @@ class MainActivity : HelperBaseComponentActivity() {
             if (scanResult != null) {
                 // a code shown by FlowVeil on a computer is not a config: offer to send a subscription there
                 val qr = PairProtocol.parseQr(scanResult)
-                if (qr != null) pairQr = qr else mainViewModel.onAction(MainAction.ImportBatchConfig(scanResult))
+                if (qr != null) pairQr = qr else pendingImport = scanResult
             }
         }
     }

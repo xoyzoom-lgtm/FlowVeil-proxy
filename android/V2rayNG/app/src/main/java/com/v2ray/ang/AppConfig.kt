@@ -143,6 +143,9 @@ object AppConfig {
     const val TASKER_EXTRA_BUNDLE_SWITCH = "tasker_extra_bundle_switch"
     const val TASKER_EXTRA_BUNDLE_GUID = "tasker_extra_bundle_guid"
     const val TASKER_DEFAULT_GUID = "Default"
+    const val TASKER_EXTRA_BUNDLE_KEY = "tasker_extra_bundle_key"
+    const val PREF_AUTOMATION_ENABLED = "pref_automation_enabled"
+    const val PREF_AUTOMATION_KEY = "pref_automation_key"
 
     /** Tags for different proxy modes. */
     const val TAG_PROXY = "proxy"

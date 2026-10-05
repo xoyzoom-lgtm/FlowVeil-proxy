@@ -6,6 +6,8 @@ import android.content.Intent
 import android.text.TextUtils
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.core.LauncherManager
+import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.net.AutomationGate
 import com.v2ray.ang.util.LogUtil
 
 class TaskerReceiver : BroadcastReceiver() {
@@ -21,6 +23,15 @@ class TaskerReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         try {
             val bundle = intent?.getBundleExtra(AppConfig.TASKER_EXTRA_BUNDLE)
+            val allowed = AutomationGate.allowed(
+                MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTOMATION_ENABLED, false),
+                MmkvManager.decodeSettingsString(AppConfig.PREF_AUTOMATION_KEY),
+                bundle?.getString(AppConfig.TASKER_EXTRA_BUNDLE_KEY),
+            )
+            if (!allowed) {
+                LogUtil.w(AppConfig.TAG, "Automation command ignored: automation is off or the key does not match")
+                return
+            }
             val switch = bundle?.getBoolean(AppConfig.TASKER_EXTRA_BUNDLE_SWITCH, false)
             val guid = bundle?.getString(AppConfig.TASKER_EXTRA_BUNDLE_GUID).orEmpty()
 

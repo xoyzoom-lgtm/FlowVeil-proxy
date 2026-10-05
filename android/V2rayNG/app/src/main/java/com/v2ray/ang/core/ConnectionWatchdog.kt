@@ -206,7 +206,8 @@ object ConnectionWatchdog {
         }
         val groups = FailoverPlan.groups(
             all, current, currentSub, subs, ::subscriptionUsable, ServerCountry::isRussian,
-            MmkvManager.decodeSettingsBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, true)
+            // Off unless the user turns it on: a subscription from someone else's link must not get traffic silently.
+            MmkvManager.decodeSettingsBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, false)
         )
         if (groups.isEmpty()) {
             BypassLog.add("failover: no candidates (the subscription has no other servers and other subscriptions are off or unusable)")

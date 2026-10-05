@@ -17,6 +17,7 @@ object InviteLink {
     /** The link to import; [Invite.name] is already folded into it as a `#fragment` (the importer uses that as the subscription name). */
     fun parse(raw: String): Invite? {
         val full = raw.trim()
+        if (full.length > 4 * ImportPreview.MAX_LENGTH || full.any { it.isISOControl() }) return null
         val afterScheme = full.substringAfter("://", "")
         if (afterScheme.isEmpty()) return null
         val outerFragment = afterScheme.substringAfter('#', "").takeIf { it.isNotEmpty() }?.let(::decode)

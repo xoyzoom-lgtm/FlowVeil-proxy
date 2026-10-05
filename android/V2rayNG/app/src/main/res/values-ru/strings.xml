@@ -948,4 +948,19 @@
     <string name="update_notify_summary">Примерно дважды в сутки проверяет GitHub, есть ли новая версия. Это единственный запрос, который приложение делает само; в нём нет идентификаторов устройства и аккаунта. Ничего не устанавливается, пока вы не нажмёте «Обновить».</string>
     <string name="update_checksum_failed">Файл обновления повреждён или изменён, установка отменена</string>
     <string name="about_channel">Канал FlowVeil</string>
+    <string name="import_confirm_title_sub">Добавить подписку?</string>
+    <string name="import_confirm_title_servers">Добавить серверы?</string>
+    <string name="import_confirm_name">Название: %1$s</string>
+    <string name="import_confirm_servers">Серверов: %1$d</string>
+    <string name="import_confirm_warning">Ссылку прислал не FlowVeil. Добавляйте только подписку своего провайдера. До нажатия «Добавить» ничего не скачивается и не отправляется.</string>
+    <string name="import_confirm_http">Ссылка без шифрования (http): её содержимое видно всем по пути. Лучше попросить у провайдера ссылку https.</string>
+    <string name="import_confirm_lookalike">Осторожно: в адресе смешаны буквы разных алфавитов, так выглядят поддельные адреса. Настоящий адрес: %1$s</string>
+    <string name="import_confirm_add">Добавить</string>
+    <string name="import_rejected_title">Ссылку нельзя добавить</string>
+    <string name="import_rejected_text">Это не подписка и не ссылка на сервер, либо в ней есть недопустимые символы. Попросите у провайдера обычную ссылку.</string>
+    <string name="hwid_show">(скрыт)</string>
+    <string name="hwid_show_title">Показать и скопировать ID устройства</string>
+    <string name="title_pref_automation">Автоматизация (Tasker и т. п.)</string>
+    <string name="summary_pref_automation">Разрешить другим приложениям включать и выключать подключение по заданиям, созданным в FlowVeil. Выключено: такие команды игнорируются</string>
+    <string name="automation_off_hint">Задание создано. Чтобы оно работало, включите «Автоматизация» в настройках FlowVeil</string>
 </resources>
