@@ -39,6 +39,8 @@ import com.v2ray.ang.handler.UpdateNotifier
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.ui.compose.DeleteConfirmDialog
 import com.v2ray.ang.ui.compose.QRCodeDialog
+import com.v2ray.ang.ui.compose.ConfirmDialog
+import com.v2ray.ang.util.QRCodeDecoder
 import com.v2ray.ang.ui.compose.verticalScrollbar
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.util.Utils
@@ -60,6 +62,8 @@ fun MainScreen(
     val selectedGuid = uiState.selectedGuid
     val confirmRemove = uiState.confirmRemove
     val shareQRCodeBitmap = uiState.shareQRCodeBitmap
+    var subQrUrl by remember { mutableStateOf<String?>(null) }
+    var subQrConfirmed by remember { mutableStateOf(false) }
 
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -117,6 +121,24 @@ fun MainScreen(
             onAction = onAction,
             onRemove = removeServer,
         )
+    }
+    subQrUrl?.let { url ->
+        // The QR holds the plain https address, so any client (Happ, v2rayNG and others) can scan it. It is as good as a password.
+        if (!subQrConfirmed) {
+            ConfirmDialog(
+                title = stringResource(R.string.sub_qr_warning_title),
+                message = stringResource(R.string.sub_qr_warning),
+                onConfirm = { subQrConfirmed = true },
+                onDismiss = { subQrUrl = null },
+            )
+        } else {
+            val bitmap = remember(url) { QRCodeDecoder.createQRCode(url) }
+            if (bitmap != null) {
+                QRCodeDialog(bitmap = bitmap, onDismiss = { subQrUrl = null; subQrConfirmed = false })
+            } else {
+                LaunchedEffect(url) { subQrUrl = null; subQrConfirmed = false }
+            }
+        }
     }
     if (shareQRCodeBitmap != null) {
         QRCodeDialog(bitmap = shareQRCodeBitmap, onDismiss = { onAction(MainAction.DismissQRCodeDialog) })
@@ -243,6 +265,7 @@ fun MainScreen(
                                     SubscriptionMenuAction.TestTcping -> onAction(MainAction.TestAllServers)
                                     SubscriptionMenuAction.SortByPing -> onAction(MainAction.SortByTestResults)
                                     SubscriptionMenuAction.Edit -> onAction(MainAction.EditSubscription(uiState.selectedGroupId))
+                                    SubscriptionMenuAction.ShareQr -> subQrUrl = selectedSubscription.url
                                     SubscriptionMenuAction.CopyLink -> {
                                         Utils.setClipboard(context, selectedSubscription.url)
                                         context.toastSuccess(R.string.toast_success)

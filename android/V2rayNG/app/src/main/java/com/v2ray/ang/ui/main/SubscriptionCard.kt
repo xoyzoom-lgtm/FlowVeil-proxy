@@ -62,6 +62,7 @@ internal enum class SubscriptionMenuAction(val labelRes: Int, val iconRes: Int) 
     SortByPing(R.string.sub_menu_sort, R.drawable.ic_expand_more_24dp),
     Edit(R.string.sub_menu_edit, R.drawable.ic_edit_24dp),
     CopyLink(R.string.sub_menu_copy, R.drawable.ic_copy),
+    ShareQr(R.string.sub_menu_share_qr, R.drawable.ic_share_24dp),
     ExportAll(R.string.sub_menu_export, R.drawable.ic_share_24dp),
     RemoveDuplicate(R.string.sub_menu_remove_duplicate, R.drawable.ic_delete_24dp),
     RemoveInvalid(R.string.sub_menu_remove_invalid, R.drawable.ic_delete_24dp),

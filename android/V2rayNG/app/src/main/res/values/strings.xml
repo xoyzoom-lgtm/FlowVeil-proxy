@@ -967,4 +967,16 @@
     <string name="title_pref_automation">Automation (Tasker and the like)</string>
     <string name="summary_pref_automation">Let other apps turn the connection on and off with tasks created in FlowVeil. Off: such commands are ignored</string>
     <string name="automation_off_hint">Task created. To make it work, turn on “Automation” in FlowVeil settings</string>
+    <string name="title_pref_adblock">Ad blocking</string>
+    <string name="summary_pref_adblock">Ad and tracking addresses are blocked on the device (built-in list). If a site breaks, turn it off</string>
+    <string name="title_pref_telegram_proxy">Telegram always through the server</string>
+    <string name="summary_pref_telegram_proxy">Telegram messages, files and calls go through the server with any rule profile</string>
+    <string name="sub_menu_share_qr">Share as QR code</string>
+    <string name="sub_qr_warning_title">Show the subscription QR code?</string>
+    <string name="sub_qr_warning">A subscription link is like a password: anyone who scans the code gets your subscription. Show it only to your own devices. Other apps (Happ, v2rayNG and the like) can read the code too.</string>
+    <string name="title_kill_switch">Internet only through FlowVeil</string>
+    <string name="summary_kill_switch">Opens Android settings: pick FlowVeil, turn on “Always-on VPN” and “Block connections without VPN”. Then nothing leaks directly if the connection drops</string>
+    <string name="kill_switch_unavailable">This phone has no such settings screen</string>
+    <string name="title_pref_clipboard_offer">Offer a link from the clipboard</string>
+    <string name="summary_pref_clipboard_offer">When FlowVeil opens it looks once for a subscription or server link in the clipboard and offers to add it. Nothing is downloaded before you tap “Add”</string>
 </resources>

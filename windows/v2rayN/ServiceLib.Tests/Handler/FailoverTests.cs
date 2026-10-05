@@ -98,3 +98,21 @@ public class DnsDefaultsTests
         await DnsDefaults.Migrate("localhost").Should().BeEqualTo("localhost");
     }
 }
+
+public class ExtraRulesTests
+{
+    [Test]
+    public async Task Off_GivesNothing_On_GivesTheRules()
+    {
+        await ExtraRules.Before(false).Count.Should().BeEqualTo(0);
+        await ExtraRules.After(false, false).Count.Should().BeEqualTo(0);
+        var ads = ExtraRules.Before(true);
+        await ads[0].OutboundTag.Should().BeEqualTo("block");
+        await ads[0].Domain![0].Should().BeEqualTo("geosite:category-ads-all");
+        var tg = ExtraRules.After(true, false);
+        await tg.Count.Should().BeEqualTo(2);
+        await tg.All(r => r.OutboundTag == "proxy").Should().BeTrue();
+        // only the chosen apps go through the server: Telegram is not forced on top of that
+        await ExtraRules.After(true, true).Count.Should().BeEqualTo(0);
+    }
+}

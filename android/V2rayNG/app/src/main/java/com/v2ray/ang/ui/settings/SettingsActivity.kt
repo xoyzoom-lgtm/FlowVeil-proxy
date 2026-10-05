@@ -77,6 +77,7 @@ import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.handler.DirectSites
 import com.v2ray.ang.handler.RuleProfiles
+import com.v2ray.ang.handler.ExtraRules
 import com.v2ray.ang.ui.compose.SelectListDialog
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.net.ReturnLogic
@@ -225,6 +226,7 @@ fun SettingsScreen(
     var speedEnabled by rememberMmkvBool(AppConfig.PREF_SPEED_ENABLED, false)
     var sendHwid by rememberMmkvBool(AppConfig.PREF_SEND_HWID, true)
     var automation by rememberMmkvBool(AppConfig.PREF_AUTOMATION_ENABLED, false)
+    var clipboardOffer by rememberMmkvBool(AppConfig.PREF_CLIPBOARD_OFFER, true)
     var showHwid by remember { mutableStateOf(false) }
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
     var failoverAcrossSubs by rememberMmkvBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, false)
@@ -249,6 +251,8 @@ fun SettingsScreen(
     var bypassStableSeconds by rememberMmkvString(WhitelistBypass.PREF_STABLE_SECONDS, ReturnLogic.DEFAULT_STABLE_SECONDS.toString())
     var subReminders by rememberMmkvBool(AppConfig.PREF_SUB_REMINDERS, true)
     var ruleProfile by remember { mutableStateOf(RuleProfiles.current()) }
+    var adBlock by rememberMmkvBool(ExtraRules.PREF_ADBLOCK, false)
+    var telegramProxy by rememberMmkvBool(ExtraRules.PREF_TELEGRAM_PROXY, false)
     var showRuleProfiles by remember { mutableStateOf(false) }
     var directSitesCount by remember { mutableStateOf(DirectSites.count()) }
     var showDirectSites by remember { mutableStateOf(false) }
@@ -358,6 +362,35 @@ fun SettingsScreen(
                     title = stringResource(R.string.title_rule_profile),
                     subtitle = ruleProfile?.let { stringResource(ruleProfileTitle(it)) } ?: stringResource(R.string.rule_profile_custom),
                     onClick = { showRuleProfiles = true }
+                )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_adblock),
+                    summary = stringResource(R.string.summary_pref_adblock),
+                    checked = adBlock,
+                    onCheckedChange = {
+                        adBlock = it
+                        ExtraRules.apply()
+                        SettingsChangeManager.makeRestartService()
+                    }
+                )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_telegram_proxy),
+                    summary = stringResource(R.string.summary_pref_telegram_proxy),
+                    checked = telegramProxy,
+                    onCheckedChange = {
+                        telegramProxy = it
+                        ExtraRules.apply()
+                        SettingsChangeManager.makeRestartService()
+                    }
+                )
+                SettingsMenuItem(
+                    title = stringResource(R.string.title_kill_switch),
+                    subtitle = stringResource(R.string.summary_kill_switch),
+                    onClick = {
+                        // Android does this itself (Always-on VPN + "Block connections without VPN"): open its screen, nothing to emulate.
+                        runCatching { settingsContext.startActivity(android.content.Intent(android.provider.Settings.ACTION_VPN_SETTINGS)) }
+                            .onFailure { settingsContext.toastError(R.string.kill_switch_unavailable) }
+                    }
                 )
                 if (showRuleProfiles) {
                     SelectListDialog(
@@ -636,6 +669,12 @@ fun SettingsScreen(
                 if (!showHwid) {
                     SettingsMenuItem(title = stringResource(R.string.hwid_show_title), onClick = { showHwid = true; Utils.setClipboard(settingsContext, deviceHwid) })
                 }
+                SettingsSwitchItem(
+                    title = stringResource(R.string.title_pref_clipboard_offer),
+                    summary = stringResource(R.string.summary_pref_clipboard_offer),
+                    checked = clipboardOffer,
+                    onCheckedChange = { clipboardOffer = it }
+                )
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_automation),
                     summary = stringResource(R.string.summary_pref_automation),

@@ -67,6 +67,8 @@ object DirectSites {
             )
         }
         MmkvManager.encodeRoutingRulesets(rules)
+        // Ad blocking and "Telegram through the server" stay above the user's direct sites.
+        ExtraRules.apply()
         return domains.size + ips.size
     }
 

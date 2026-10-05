@@ -963,4 +963,16 @@
     <string name="title_pref_automation">Автоматизация (Tasker и т. п.)</string>
     <string name="summary_pref_automation">Разрешить другим приложениям включать и выключать подключение по заданиям, созданным в FlowVeil. Выключено: такие команды игнорируются</string>
     <string name="automation_off_hint">Задание создано. Чтобы оно работало, включите «Автоматизация» в настройках FlowVeil</string>
+    <string name="title_pref_adblock">Блокировка рекламы</string>
+    <string name="summary_pref_adblock">Рекламные и следящие адреса блокируются на устройстве (встроенный список). Если сайт сломался, выключите</string>
+    <string name="title_pref_telegram_proxy">Telegram всегда через сервер</string>
+    <string name="summary_pref_telegram_proxy">Сообщения, файлы и звонки Telegram идут через сервер при любом профиле правил</string>
+    <string name="sub_menu_share_qr">Поделиться QR-кодом</string>
+    <string name="sub_qr_warning_title">Показать QR-код подписки?</string>
+    <string name="sub_qr_warning">Ссылка подписки — как пароль: любой, кто отсканирует код, получит доступ к вашей подписке. Показывайте только своим устройствам. Код читают и другие приложения (Happ, v2rayNG и т. п.).</string>
+    <string name="title_kill_switch">Интернет только через FlowVeil</string>
+    <string name="summary_kill_switch">Откроются настройки Android: выберите FlowVeil, включите «Постоянная VPN» и «Блокировать соединения без VPN». Тогда при обрыве подключения трафик не уйдёт напрямую</string>
+    <string name="kill_switch_unavailable">На этом телефоне нет такого экрана настроек</string>
+    <string name="title_pref_clipboard_offer">Предлагать ссылку из буфера</string>
+    <string name="summary_pref_clipboard_offer">При открытии FlowVeil один раз смотрит, нет ли в буфере ссылки на подписку или сервер, и предлагает её добавить. Без вашего «Добавить» ничего не скачивается</string>
 </resources>

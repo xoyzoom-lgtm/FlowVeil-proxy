@@ -256,7 +256,8 @@ public partial class CoreConfigSingboxService
             {
                 // FlowVeil: per-application rules go first (see AppProxySettings).
                 var appRules = AppProxySettings.BuildRules(out var appsOnly);
-                foreach (var appRule in appRules)
+                var extra = ExtraRules.Before(ExtraRules.AdBlock).Concat(appRules).Concat(ExtraRules.After(ExtraRules.TelegramProxy, appsOnly));
+                foreach (var appRule in extra)
                 {
                     GenRoutingUserRule(appRule);
                 }

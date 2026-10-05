@@ -1,5 +1,7 @@
 package com.v2ray.ang.ui.main
 
+import com.v2ray.ang.net.ImportPreview
+
 import android.content.Intent
 import com.v2ray.ang.net.PairProtocol
 import androidx.compose.ui.res.stringResource
@@ -77,6 +79,7 @@ class MainActivity : HelperBaseComponentActivity() {
 
         /** Set when the text came from the system share sheet: the user chooses between this phone and a computer. */
         const val EXTRA_SHARED = "com.flowveil.extra.SHARED"
+        private const val KEY_LAST_OFFERED = "clipboard_last_offered"
     }
 
     private var pairQr by mutableStateOf<PairProtocol.Qr?>(null)
@@ -349,6 +352,26 @@ class MainActivity : HelperBaseComponentActivity() {
             val qr = PairProtocol.parseQr(scanResult)
             if (qr != null) pairQr = qr else toast(R.string.pair_not_qr)
         }
+    }
+
+    /** Read once per launch, only while the app is in front: a link the user just copied is offered (never added without a tap). */
+    private var clipboardOffered = false
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus || clipboardOffered || pendingImport != null || sharedText != null) return
+        clipboardOffered = true
+        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_CLIPBOARD_OFFER, true)) return
+        val text = runCatching { Utils.getClipboard(this) }.getOrDefault("").trim()
+        if (text.isEmpty() || text == "null" || text.length > ImportPreview.MAX_LENGTH * 4) return
+        val preview = ImportPreview.of(text)
+        if (preview.kind == ImportPreview.Kind.REJECTED) return
+        // Already here: nothing to offer.
+        val known = MmkvManager.decodeSubscriptions().map { it.subscription.url.trim().substringBefore('#').trimEnd('/') }.toSet()
+        if (text.substringBefore('#').trimEnd('/') in known) return
+        if (text == MmkvManager.decodeSettingsString(KEY_LAST_OFFERED)) return
+        MmkvManager.encodeSettings(KEY_LAST_OFFERED, text)
+        pendingImport = text
     }
 
     private fun importClipboard() {

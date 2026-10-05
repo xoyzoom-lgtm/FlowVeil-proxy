@@ -586,6 +586,22 @@ public partial class MainWindow
         _ = RefreshProfileTitleAsync(vm);
         Row(tunnel, PackIconKind.SourceBranch, "Профиль правил", _profileTitle ?? "Загрузка…", () =>
             _ = DialogHost.Show(new ProfilePickerView(_profileId, profile => _ = ApplyProfileAsync(vm, profile)), "RootDialog"));
+        var ads = ExtraRules.AdBlock;
+        Row(tunnel, PackIconKind.Cancel, $"Блокировка рекламы: {(ads ? "включено" : "выключено")}",
+            "Рекламные и следящие адреса (список category-ads-all) блокируются на устройстве. Если сайт сломался, выключите", () =>
+            {
+                ExtraRules.SetAdBlock(!ads);
+                NoticeManager.Instance.Enqueue("Применится при следующем подключении");
+                BuildSettingsPage(vm);
+            });
+        var tg = ExtraRules.TelegramProxy;
+        Row(tunnel, PackIconKind.Send, $"Telegram всегда через сервер: {(tg ? "включено" : "выключено")}",
+            "Сообщения, файлы и звонки Telegram идут через сервер при любом профиле правил", () =>
+            {
+                ExtraRules.SetTelegramProxy(!tg);
+                NoticeManager.Instance.Enqueue("Применится при следующем подключении");
+                BuildSettingsPage(vm);
+            });
         var pingUrl = settings.SpeedTestItem.SpeedPingTestUrl.IsNullOrEmpty() ? Global.SpeedPingTestUrls[0] : settings.SpeedTestItem.SpeedPingTestUrl;
         Row(tunnel, PackIconKind.Speedometer, "Адрес для пинга", pingUrl, () => OpenPingUrlMenu(vm));
         Row(tunnel, _tunnelAdvancedOpen ? PackIconKind.ChevronUp : PackIconKind.ChevronDown, "Дополнительно", "Шумы и фрагментация: для случаев, когда соединение блокируют", () =>
