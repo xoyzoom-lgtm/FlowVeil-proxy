@@ -17,6 +17,7 @@ import com.v2ray.ang.service.CoreProxyOnlyService
 import com.v2ray.ang.service.CoreRootService
 import com.v2ray.ang.service.CoreVpnService
 import com.v2ray.ang.util.LogUtil
+import com.v2ray.ang.net.ServerAddress
 import com.v2ray.ang.util.Utils
 
 object LauncherManager {
@@ -68,6 +69,9 @@ object LauncherManager {
         }
     }
 
+    /** The code of the last refused start (no names or addresses), for the "Why does it not work?" report. */
+    private fun rememberStartError(code: String?) = MmkvManager.encodeSettings(AppConfig.CACHE_LAST_START_ERROR, code.orEmpty())
+
     @Throws(Exception::class)
     private fun startContextService(context: Context) {
         // Note: isRunning check is removed here to avoid loading Native libraries in the UI process.
@@ -81,17 +85,29 @@ object LauncherManager {
 
         val config = MmkvManager.decodeServerConfig(guid)
             ?: run {
-                LogUtil.e(AppConfig.TAG, "LauncherManager: Failed to decode server config")
-                error(context.getString(R.string.toast_config_file_invalid))
+                // The selected id points at nothing: usually a subscription update or a deleted server.
+                LogUtil.e(AppConfig.TAG, "LauncherManager: start refused, code=server_missing")
+                rememberStartError("server_missing")
+                error(context.getString(R.string.toast_server_missing))
             }
 
-        if (!config.configType.isComplexType()
-            && !Utils.isValidUrl(config.server)
-            && !Utils.isPureIpAddress(config.server.orEmpty())
-        ) {
-            LogUtil.e(AppConfig.TAG, "LauncherManager: Invalid server configuration")
-            error(context.getString(R.string.toast_config_file_invalid))
+        if (!config.configType.isComplexType()) {
+            val problem = ServerAddress.problem(config.server)
+            if (problem != null) {
+                LogUtil.e(AppConfig.TAG, "LauncherManager: start refused, code=address_${problem.name.lowercase()}")
+                rememberStartError("address_${problem.name.lowercase()}")
+                val why = context.getString(
+                    when (problem) {
+                        ServerAddress.Problem.EMPTY -> R.string.server_problem_empty
+                        ServerAddress.Problem.SPACES -> R.string.server_problem_spaces
+                        ServerAddress.Problem.SCHEME_OR_PATH -> R.string.server_problem_link
+                        ServerAddress.Problem.BAD_HOST -> R.string.server_problem_host
+                    }
+                )
+                error(context.getString(R.string.toast_server_bad_address, config.remarks.ifBlank { "?" }, why))
+            }
         }
+        rememberStartError(null)
 
         SettingsManager.refreshRuntimeSocksPort()
 

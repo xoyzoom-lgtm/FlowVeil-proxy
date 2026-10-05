@@ -125,6 +125,12 @@
     <string name="toast_require_file_manager">Please install a file manager.</string>
     <string name="server_customize_config">Customize config</string>
     <string name="toast_config_file_invalid">Invalid config</string>
+    <string name="toast_server_missing">The selected server is gone (the subscription was updated or the server deleted). Pick a server in the list</string>
+    <string name="toast_server_bad_address">Server “%1$s” cannot be used: %2$s. Pick another server</string>
+    <string name="server_problem_empty">it has no address</string>
+    <string name="server_problem_spaces">its address has spaces</string>
+    <string name="server_problem_link">a link instead of a server address</string>
+    <string name="server_problem_host">a broken server name</string>
     <string name="server_lab_content">Content</string>
     <string name="toast_none_data_clipboard">There is no data in the clipboard</string>
     <string name="toast_invalid_url">Invalid URL</string>

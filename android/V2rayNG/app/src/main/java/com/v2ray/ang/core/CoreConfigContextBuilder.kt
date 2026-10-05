@@ -12,7 +12,7 @@ import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.LogUtil
-import com.v2ray.ang.util.Utils
+import com.v2ray.ang.net.ServerAddress
 
 /**
  * Build runtime context from the selected profile.
@@ -168,7 +168,7 @@ object CoreConfigContextBuilder {
                     }
                 }
                 .filter { it.server.isNotNullEmpty() }
-                .filter { Utils.isPureIpAddress(it.server!!) || Utils.isValidUrl(it.server!!) }
+                .filter { ServerAddress.isValid(it.server) }
                 .filter { !it.configType.isComplexType() }
                 .toList()
         } catch (e: Exception) {
@@ -187,7 +187,7 @@ object CoreConfigContextBuilder {
                 .asSequence()
                 .mapNotNull { remark -> SettingsManager.getServerViaRemarks(remark) }
                 .filter { it.server.isNotNullEmpty() }
-                .filter { Utils.isPureIpAddress(it.server!!) || Utils.isValidUrl(it.server!!) }
+                .filter { ServerAddress.isValid(it.server) }
                 .filter { !it.configType.isComplexType() }
                 .toList()
                 .reversed()

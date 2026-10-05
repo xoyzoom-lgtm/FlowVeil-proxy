@@ -114,6 +114,7 @@ object AppConfig {
     const val CACHE_SUBSCRIPTION_ID = "cache_subscription_id"
     const val CACHE_CONNECTED_SINCE = "cache_connected_since"
     const val CACHE_DEVICE_HWID = "cache_device_hwid"
+    const val CACHE_LAST_START_ERROR = "cache_last_start_error"
 
     // Network status shared by the core process (writer) and the UI (reader); see NetInfoCache.
     const val CACHE_NET_TYPE = "cache_net_type"

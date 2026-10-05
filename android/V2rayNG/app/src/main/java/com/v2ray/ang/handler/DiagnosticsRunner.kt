@@ -2,6 +2,7 @@ package com.v2ray.ang.handler
 
 import android.content.Context
 import android.os.Build
+import com.v2ray.ang.AppConfig
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.core.CoreNativeManager
 import com.v2ray.ang.core.PhysicalNetwork
@@ -134,6 +135,7 @@ object DiagnosticsRunner {
             appendLine("Xray: ${runCatching { CoreNativeManager.getLibVersion() }.getOrDefault("?")}; sing-box: ${if (com.v2ray.ang.core.SingboxBridge.isAvailable()) "yes" else "no"}")
             if (i != null) appendLine("Network: ${i.net.id}${if (i.captive) ", login page" else ""}; clock skew: ${i.clockSkewMs?.let { "${it / 1000}s" } ?: "?"}")
             appendLine("Verdict: ${result.cause.id}")
+            MmkvManager.decodeSettingsString(AppConfig.CACHE_LAST_START_ERROR)?.takeIf { it.isNotBlank() }?.let { appendLine("Last refused start: $it") }
             if (result.warnings.isNotEmpty()) appendLine("Warnings: ${result.warnings.joinToString { it.id }}")
             appendLine("Steps:")
             result.steps.forEach { appendLine("  ${it.id.name}: ${it.status.name}${it.cause?.let { c -> " (${c.id})" } ?: ""}") }
