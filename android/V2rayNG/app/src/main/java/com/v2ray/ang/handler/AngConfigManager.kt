@@ -332,8 +332,8 @@ object AngConfigManager {
         }
 
         MmkvManager.saveServerProfiles(
-            profiles = keyToProfile,
-            rawConfigs = rawConfigs,
+            incomingProfiles = keyToProfile,
+            incomingRaw = rawConfigs,
             subscriptionId = subid,
             append = append,
         )

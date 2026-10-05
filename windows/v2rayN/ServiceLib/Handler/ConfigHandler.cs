@@ -2166,6 +2166,12 @@ public static class ConfigHandler
             }
         }
 
+        // FlowVeil: favorites and the measured ping follow their server to its new id.
+        if (lstOriSub != null)
+        {
+            await KeepServerChoicesAsync(lstOriSub, subid);
+        }
+
         //Keep the last traffic statistics
         if (lstOriSub != null)
         {
@@ -2181,6 +2187,35 @@ public static class ConfigHandler
         }
 
         return counter;
+    }
+
+    /// <summary>Matches the servers of the update to the ones before it (<see cref="ServerIdentity"/>) and moves the user's favorites and pings over.</summary>
+    private static async Task KeepServerChoicesAsync(List<ProfileItem> before, string subid)
+    {
+        try
+        {
+            var after = await AppManager.Instance.ProfileItems(subid) ?? [];
+            var map = ServerIdentity.Reuse(
+                after.Select(p => new IdEntry(p.IndexId, ServerIdentity.FingerprintOf(p), ServerIdentity.NameKey(p.Remarks))).ToList(),
+                before.Select(p => new IdEntry(p.IndexId, ServerIdentity.FingerprintOf(p), ServerIdentity.NameKey(p.Remarks))).ToList());
+            if (map.Count == 0)
+            {
+                return;
+            }
+            var exs = (await ProfileExManager.Instance.GetProfileExs()).ToDictionary(e => e.IndexId, e => e.Delay);
+            foreach (var (newId, oldId) in map)
+            {
+                if (exs.TryGetValue(oldId, out var delay) && delay != 0)
+                {
+                    ProfileExManager.Instance.SetTestDelay(newId, delay);
+                }
+            }
+            SubsUiStateStore.RemapIds(map);
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(nameof(KeepServerChoicesAsync), ex);
+        }
     }
 
     #endregion Batch add servers

@@ -106,6 +106,12 @@ public sealed partial class HuppHomeViewModel
     private void InitSubs()
     {
         _state = SubsUiStateStore.Load();
+        SubsUiStateStore.IdsRemapped += map => Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+        {
+            _state.Favorites = ServerIdentity.RemapIds(_state.Favorites, map);
+            SubsUiStateStore.Save(_state);
+            RebuildListSoon();
+        }));
         _selection = SubSelection.Decode(_state.Selected);
         _listTimer.Tick += async (_, _) =>
         {

@@ -731,6 +731,8 @@
     <string name="whitelist_bypass_mode_auto">Автоматически (возможны ошибки; лучше выберите серверы сами)</string>
     <string name="whitelist_bypass_mode_manual">Только выбранные мной</string>
     <string name="title_whitelist_bypass_servers">Выбрать серверы обхода</string>
+    <string name="bypass_missing_group">Нет в подписке</string>
+    <string name="bypass_missing_server">нет в подписке · удалится через 7 дней, если не вернётся</string>
     <string name="summary_whitelist_bypass_servers">Выбрано: %1$d. Используется самый быстрый рабочий</string>
     <string name="title_whitelist_bypass_auto_return">Возвращаться на прежний сервер при Wi-Fi</string>
     <string name="summary_whitelist_bypass_auto_return">Когда телефон снова на Wi-Fi или Ethernet и старый сервер работает нормально. Иначе выберется подходящий (не российский)</string>

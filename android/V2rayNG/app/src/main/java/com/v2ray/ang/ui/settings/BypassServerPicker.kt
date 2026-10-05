@@ -33,6 +33,7 @@ import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.handler.BypassHistory
 import com.v2ray.ang.handler.BypassRating
 import com.v2ray.ang.handler.FavoriteServers
+import com.v2ray.ang.handler.ServerRefs
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.net.BypassLevel
@@ -61,7 +62,9 @@ private data class PickerGroup(val title: String, val servers: List<PickerServer
 @Composable
 fun BypassServerPickerDialog(onDismiss: () -> Unit, onSaved: (Int) -> Unit) {
     val favoritesTitle = stringResource(R.string.whitelist_bypass_favorites)
-    val groups = remember { loadGroups(favoritesTitle) }
+    val missingTitle = stringResource(R.string.bypass_missing_group)
+    val missingLabel = stringResource(R.string.bypass_missing_server)
+    val groups = remember { loadGroups(favoritesTitle, missingTitle, missingLabel) }
     val selected = remember { mutableStateListOf<String>().apply { addAll(WhitelistBypass.servers()) } }
     var query by remember { mutableStateOf("") }
 
@@ -146,6 +149,8 @@ fun BypassServerPickerDialog(onDismiss: () -> Unit, onSaved: (Int) -> Unit) {
                     TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
                     TextButton(onClick = {
                         WhitelistBypass.setServers(selected.toList())
+                    // A missing server the user unchecked is let go at once instead of after a week.
+                    ServerRefs.lostIds().filter { it !in selected && it !in FavoriteServers.all() }.forEach { ServerRefs.forget(it) }
                         onSaved(selected.size)
                     }) { Text(stringResource(R.string.action_ok)) }
                 }
@@ -181,7 +186,7 @@ private fun badgesOf(guid: String): Pair<List<Badge>, Boolean> {
     return badges to (rated.rating.level == BypassLevel.UNLIKELY)
 }
 
-private fun loadGroups(favoritesTitle: String): List<PickerGroup> {
+private fun loadGroups(favoritesTitle: String, missingTitle: String, missingLabel: String): List<PickerGroup> {
     fun toServer(guid: String): PickerServer? {
         val profile = MmkvManager.decodeServerConfig(guid) ?: return null
         if (profile.configType == EConfigType.POLICYGROUP || profile.configType == EConfigType.PROXYCHAIN) return null
@@ -215,5 +220,10 @@ private fun loadGroups(favoritesTitle: String): List<PickerGroup> {
         .filter { guid -> MmkvManager.decodeServerConfig(guid)?.subscriptionId.let { it.isNullOrEmpty() || it !in known } }
         .mapNotNull(::toServer)
     if (loose.isNotEmpty()) groups += PickerGroup("—", loose)
+    // Chosen servers that left their subscription: shown, kept for a week, removed by unchecking.
+    val chosen = WhitelistBypass.storedServers().toSet()
+    val missing = ServerRefs.lost().filter { it.id in chosen && MmkvManager.decodeServerConfig(it.id) == null }
+        .map { PickerServer(guid = it.id, name = it.name.ifBlank { it.id.take(8) }, type = missingLabel, delay = 0L, badges = emptyList(), unlikely = false) }
+    if (missing.isNotEmpty()) groups += PickerGroup(missingTitle, missing)
     return groups
 }

@@ -300,18 +300,19 @@ object MmkvManager {
     /**
      * Saves a profile batch before publishing its group index and removing replaced payloads.
      *
-     * @param profiles Generated GUIDs and parsed profiles, in insertion order.
-     * @param rawConfigs Optional raw configuration payloads keyed by profile GUID.
+     * @param incomingProfiles Generated GUIDs and parsed profiles, in insertion order. A server that is the same as one
+     *   already stored (see [ServerRefs]) is written under the old GUID instead.
+     * @param incomingRaw Optional raw configuration payloads keyed by profile GUID.
      * @param subscriptionId The destination subscription ID.
      * @param append Whether to append to the existing group index.
      */
     internal fun saveServerProfiles(
-        profiles: Map<String, ProfileItem>,
-        rawConfigs: Map<String, String>,
+        incomingProfiles: Map<String, ProfileItem>,
+        incomingRaw: Map<String, String>,
         subscriptionId: String,
         append: Boolean,
     ) {
-        if (profiles.isEmpty()) return
+        if (incomingProfiles.isEmpty()) return
 
         withProfileIndexLock {
             val replacedServers = if (append) {
@@ -319,6 +320,8 @@ object MmkvManager {
             } else {
                 decodeServerList(subscriptionId).toList()
             }
+            // Servers that are the same as before keep their old ids, so favorites, chosen servers, marks and pings stay attached.
+            val (profiles, rawConfigs) = keepIds(incomingProfiles, incomingRaw, replacedServers, subscriptionId)
             val previousSelection = getSelectServer()
             val selectedProfile = if (!append &&
                 previousSelection != null &&
@@ -328,22 +331,30 @@ object MmkvManager {
             } else {
                 null
             }
-            val replacementSelection = ProfileReplacement.findSelectedReplacement(
-                profiles = profiles,
-                currentSelection = previousSelection,
-                selectedProfile = selectedProfile,
-            )
+            val replacementSelection = if (previousSelection != null && previousSelection in profiles) {
+                previousSelection
+            } else {
+                ProfileReplacement.findSelectedReplacement(
+                    profiles = profiles,
+                    currentSelection = previousSelection,
+                    selectedProfile = selectedProfile,
+                )
+            }
 
             profiles.forEach { (guid, profile) ->
                 requireStorageWrite(
                     profileFullStorage.encode(guid, JsonUtil.toJson(profile)),
                     "Failed to save profile payload",
                 )
-                rawConfigs[guid]?.let { raw ->
+                val raw = rawConfigs[guid]
+                if (raw != null) {
                     requireStorageWrite(
                         serverRawStorage.encode(guid, raw),
                         "Failed to save raw profile payload",
                     )
+                } else if (guid in replacedServers) {
+                    // A kept id whose server is no longer a JSON config: no stale raw config under it.
+                    serverRawStorage.remove(guid)
                 }
             }
 
@@ -380,8 +391,44 @@ object MmkvManager {
                 protectedServer = protectedServer,
                 serversReferencedByOtherGroups = referencedByOtherGroups,
             )
+            rememberLost(removablePayloads, subscriptionId)
+            ServerRefs.update(emptyList(), serverList.toSet())
             removeProfilePayloads(removablePayloads)
         }
+    }
+
+    /** Renames the incoming profiles to the ids of the same servers before the update (or of chosen servers that were lost). */
+    private fun keepIds(
+        profiles: Map<String, ProfileItem>,
+        raw: Map<String, String>,
+        replaced: List<String>,
+        subscriptionId: String,
+    ): Pair<Map<String, ProfileItem>, Map<String, String>> {
+        val old = replaced.mapNotNull { guid ->
+            decodeServerConfig(guid)?.takeIf { !it.configType.isGroupType() }?.let { ServerRefs.entryOf(guid, it, decodeServerRaw(guid)) }
+        } + ServerRefs.candidatesFor(subscriptionId)
+        if (old.isEmpty()) return profiles to raw
+        val new = profiles.map { (key, p) -> ServerRefs.entryOf(key, p, raw[key]) }
+        val reuse = com.v2ray.ang.net.ServerIdentity.reuse(new, old)
+        if (reuse.isEmpty()) return profiles to raw
+        val renamedProfiles = LinkedHashMap<String, ProfileItem>()
+        profiles.forEach { (key, p) -> renamedProfiles[reuse[key] ?: key] = p }
+        val renamedRaw = HashMap<String, String>()
+        raw.forEach { (key, r) -> renamedRaw[reuse[key] ?: key] = r }
+        Log.i(TAG, "Subscription update kept ${reuse.size} of ${profiles.size} server ids")
+        return renamedProfiles to renamedRaw
+    }
+
+    /** Chosen servers that are about to be removed are remembered for a while (see [ServerRefs]). */
+    private fun rememberLost(ids: Collection<String>, subscriptionId: String) {
+        val chosen = ServerRefs.referencedIds()
+        val now = System.currentTimeMillis()
+        val refs = ids.filter { it in chosen }.mapNotNull { guid ->
+            val p = decodeServerConfig(guid) ?: return@mapNotNull null
+            val e = ServerRefs.entryOf(guid, p, decodeServerRaw(guid))
+            com.v2ray.ang.net.LostRef(guid, e.fingerprint, e.nameKey, subscriptionId, p.remarks, now)
+        }
+        if (refs.isNotEmpty()) ServerRefs.update(refs, emptySet(), now)
     }
 
     /**
@@ -419,6 +466,8 @@ object MmkvManager {
     fun removeServerViaSubid(subscriptionId: String?) {
         val subId = getSubscriptionId(subscriptionId)
         val serverList = decodeServerList(subId)
+        // The same subscription added again brings these servers back under their old ids.
+        rememberLost(serverList, subId)
 
         // Remove all servers in the list
         serverList.forEach { guid ->

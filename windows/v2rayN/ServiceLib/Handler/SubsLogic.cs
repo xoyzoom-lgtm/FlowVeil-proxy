@@ -276,6 +276,18 @@ public static class SubsUiStateStore
         }
     }
 
+    /// <summary>Raised after <see cref="RemapIds"/> with new id → old id: a screen that holds the state in memory applies it too.</summary>
+    public static event Action<IReadOnlyDictionary<string, string>>? IdsRemapped;
+
+    /// <summary>A subscription update gave servers new ids: favorites follow them (stored file and any open screen).</summary>
+    public static void RemapIds(IReadOnlyDictionary<string, string> newToOld)
+    {
+        var state = Load();
+        state.Favorites = ServerIdentity.RemapIds(state.Favorites, newToOld);
+        Save(state);
+        IdsRemapped?.Invoke(newToOld);
+    }
+
     public static void Save(SubsUiState state)
     {
         try

@@ -64,12 +64,23 @@ object WhitelistBypass {
     /** How long Wi-Fi must stay up before the return starts (metro, lift and flapping protection). */
     fun stableSeconds(): Int = MmkvManager.decodeSettingsString(PREF_STABLE_SECONDS)?.toIntOrNull()?.takeIf { it in 1..300 } ?: ReturnLogic.DEFAULT_STABLE_SECONDS
 
-    /** Manually chosen bypass servers; profiles deleted since are dropped (and the list rewritten). */
+    /** Every id in the stored choice, including servers that are gone from their subscription for now. */
+    fun storedServers(): List<String> = MmkvManager.decodeSettingsString(PREF_SERVERS).orEmpty()
+        .split(',').map { it.trim() }.filter { it.isNotEmpty() }
+
+    /**
+     * Manually chosen bypass servers that exist now. A server that left its subscription stays in the stored choice for a
+     * week (it comes back by itself if the provider returns it); only after that, or when it is gone for another reason, is
+     * it dropped from the list.
+     */
     fun servers(): List<String> {
-        val stored = MmkvManager.decodeSettingsString(PREF_SERVERS).orEmpty()
-            .split(',').map { it.trim() }.filter { it.isNotEmpty() }
+        val stored = storedServers()
         val alive = stored.filter { MmkvManager.decodeServerConfig(it) != null }
-        if (alive.size != stored.size) setServers(alive)
+        if (alive.size != stored.size) {
+            val lost = ServerRefs.lostIds()
+            val keep = stored.filter { it in alive || it in lost }
+            if (keep.size != stored.size) setServers(keep)
+        }
         return alive
     }
 
