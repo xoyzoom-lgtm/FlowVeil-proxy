@@ -262,7 +262,7 @@ internal fun HomeSettings(
             Spacer(Modifier.height(14.dp))
             // Style: glass or solid
             Text(stringResource(R.string.hs_style), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
-            Segmented(listOf(stringResource(R.string.hs_style_glass), stringResource(R.string.hs_style_solid)), if (HomeStyle.glass) 0 else 1) { HomeStyle.setGlass(it == 0) }
+            Segmented(listOf(stringResource(R.string.hs_style_glass), stringResource(R.string.hs_style_solid)), if (HomeStyle.glass) 0 else 1) { HomeStyle.chooseGlass(it == 0) }
             Text(
                 stringResource(if (HomeStyle.glass) R.string.hs_style_glass_hint else R.string.hs_style_solid_hint),
                 fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, top = 6.dp)

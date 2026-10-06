@@ -20,7 +20,7 @@ object HomeStyle {
     var glass by mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_GLASS, true))
         private set
 
-    fun setGlass(on: Boolean) {
+    fun chooseGlass(on: Boolean) {
         glass = on
         MmkvManager.encodeSettings(AppConfig.PREF_GLASS, on)
     }
