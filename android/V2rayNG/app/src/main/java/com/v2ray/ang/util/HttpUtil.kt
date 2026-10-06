@@ -20,6 +20,10 @@ import java.net.URL
 import java.util.concurrent.TimeUnit
 
 object HttpUtil {
+    /** Messages of redirects the client cannot follow (see net/RedirectTarget.kt); the subscription updater turns them into advice. */
+    const val REDIRECT_HAPP_CRYPT = "redirect to an encrypted Happ link"
+    const val REDIRECT_APP_LINK = "redirect to an app link: "
+
 
     /**
      * Converts the domain part of a URL string to its IDN (Punycode, ASCII Compatible Encoding) format.
@@ -196,9 +200,11 @@ object HttpUtil {
                         if (location.isNullOrEmpty()) {
                             throw IOException("Redirect location not found")
                         }
-                        currentUrl = resolveLocation(currentUrl, location)
-                        if (currentUrl.isNullOrEmpty()) {
-                            throw IOException("Failed to resolve redirect location")
+                        when (val target = com.v2ray.ang.net.RedirectTarget.classify(currentUrl, location)) {
+                            is com.v2ray.ang.net.RedirectTarget.Kind.Follow -> currentUrl = target.url
+                            com.v2ray.ang.net.RedirectTarget.Kind.HappEncrypted -> throw IOException(REDIRECT_HAPP_CRYPT)
+                            is com.v2ray.ang.net.RedirectTarget.Kind.AppLink -> throw IOException("$REDIRECT_APP_LINK${target.scheme}")
+                            com.v2ray.ang.net.RedirectTarget.Kind.Invalid -> throw IOException("Failed to resolve redirect location")
                         }
                         continue
                     }
