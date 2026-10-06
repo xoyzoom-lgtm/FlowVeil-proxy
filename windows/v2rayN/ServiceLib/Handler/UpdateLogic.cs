@@ -14,7 +14,7 @@ public sealed record ReleaseAsset(string Name, string Url);
 
 public sealed record ReleaseInfo(string Tag, bool Draft, bool Prerelease, string Body, IReadOnlyList<ReleaseAsset> Assets);
 
-public sealed record UpdateCandidate(int Build, string Tag, string Notes, string AssetName, string AssetUrl, string? SumsUrl, string ReleaseUrl);
+public sealed record UpdateCandidate(int Build, string Tag, string Notes, string AssetName, string AssetUrl, string? SumsUrl, string ReleaseUrl, string? ManifestUrl = null, string? SignatureUrl = null);
 
 public static class UpdateLogic
 {
@@ -49,7 +49,9 @@ public static class UpdateLogic
                 continue;
             }
             best = new UpdateCandidate(build, release.Tag, release.Body, asset.Name, asset.Url,
-                release.Assets.FirstOrDefault(a => a.Name == SumsFile)?.Url, $"{repoUrl}/releases/tag/{release.Tag}");
+                release.Assets.FirstOrDefault(a => a.Name == SumsFile)?.Url, $"{repoUrl}/releases/tag/{release.Tag}",
+                release.Assets.FirstOrDefault(a => a.Name == UpdateManifest.ManifestFile)?.Url,
+                release.Assets.FirstOrDefault(a => a.Name == UpdateManifest.SignatureFile)?.Url);
         }
         return best;
     }

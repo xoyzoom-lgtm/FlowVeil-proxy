@@ -9,8 +9,9 @@ on:
       - 'docs/**'
   workflow_dispatch:
 
+# Read-only by default; only the release job may write (publish the release).
 permissions:
-  contents: write
+  contents: read
 
 # One build at a time, so releases are published in order.
 concurrency:
@@ -18,6 +19,51 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  tests:
+    # Pure logic tests of both apps (no device needed). A release is published only when they pass.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.1xx
+
+      - name: Windows logic tests (ServiceLib.Tests)
+        working-directory: windows/v2rayN
+        run: dotnet test --project ServiceLib.Tests/ServiceLib.Tests.csproj -c Release -p:EnableWindowsTargeting=true
+
+      - name: Setup Java
+        uses: actions/setup-java@v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Android logic tests (net/*, plain JVM)
+        run: |
+          # The net/ package has no Android classes: compile it with its tests and run JUnit directly.
+          M=https://repo1.maven.org/maven2
+          mkdir -p kt && cd kt
+          for j in \
+            org/jetbrains/kotlin/kotlin-compiler-embeddable/2.4.20/kotlin-compiler-embeddable-2.4.20.jar \
+            org/jetbrains/kotlin/kotlin-stdlib/2.4.20/kotlin-stdlib-2.4.20.jar \
+            org/jetbrains/kotlin/kotlin-script-runtime/2.4.20/kotlin-script-runtime-2.4.20.jar \
+            org/jetbrains/kotlin/kotlin-reflect/1.6.10/kotlin-reflect-1.6.10.jar \
+            org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.11.0/kotlinx-coroutines-core-jvm-1.11.0.jar \
+            org/jetbrains/intellij/deps/trove4j/1.0.20200330/trove4j-1.0.20200330.jar \
+            org/jetbrains/annotations/13.0/annotations-13.0.jar \
+            junit/junit/4.13.2/junit-4.13.2.jar \
+            org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar; do
+            curl -fsSL --retry 5 -O "$M/$j"
+          done
+          CP=$(ls "$PWD"/*.jar | tr '\n' ':')
+          S=$GITHUB_WORKSPACE/android/V2rayNG/app/src
+          java -cp "$CP" org.jetbrains.kotlin.cli.jvm.K2JVMCompiler -no-stdlib \
+            -cp "kotlin-stdlib-2.4.20.jar:kotlinx-coroutines-core-jvm-1.11.0.jar:junit-4.13.2.jar" \
+            -d out $S/main/java/com/v2ray/ang/net/*.kt $S/test/java/com/v2ray/ang/net/*.kt
+          CLASSES=$(cd $S/test/java/com/v2ray/ang/net && ls *Test.kt | sed 's/\.kt$//; s/^/com.v2ray.ang.net./' | tr '\n' ' ')
+          cd $S/.. && java -cp "$GITHUB_WORKSPACE/kt/out:$CP" org.junit.runner.JUnitCore $CLASSES
+
   android:
     if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/bypass-') }}
     runs-on: ubuntu-latest
@@ -228,9 +274,11 @@ jobs:
           path: out/*
 
   release:
-    needs: [android, windows]
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.android.result == 'success' && needs.windows.result == 'success' }}
+    needs: [tests, android, windows]
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.tests.result == 'success' && needs.android.result == 'success' && needs.windows.result == 'success' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -241,6 +289,32 @@ jobs:
         with:
           path: out
           merge-multiple: true
+
+      - name: Release manifest (sizes and SHA-256 of every file)
+        run: |
+          # The apps check the downloaded file against this list before installing. The owner signs it offline and adds
+          # FlowVeil-manifest.json.sig to the release (OWNER-TODO.md); until then the apps call the update "not signed".
+          BUILD=${{ github.run_number }}
+          TAG="v$(printf '%04d' $BUILD)"
+          python3 - "$TAG" "$BUILD" <<'PY'
+          import hashlib, json, os, sys, datetime
+          tag, build = sys.argv[1], int(sys.argv[2])
+          files = []
+          for name in sorted(os.listdir("out")):
+              path = os.path.join("out", name)
+              h = hashlib.sha256()
+              with open(path, "rb") as f:
+                  for chunk in iter(lambda: f.read(1 << 20), b""):
+                      h.update(chunk)
+              files.append({"name": name, "size": os.path.getsize(path), "sha256": h.hexdigest()})
+          manifest = {"schema": 1, "tag": tag, "build": build,
+                      "issuedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                      "minBuild": 1, "files": files}
+          with open("out/FlowVeil-manifest.json", "w", newline="\n") as f:
+              json.dump(manifest, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+          print(open("out/FlowVeil-manifest.json").read())
+          PY
 
       - name: Publish release
         env:

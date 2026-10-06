@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "tag": "v0127",
+  "build": 127,
+  "issuedAt": "2026-10-06T00:00:00Z",
+  "minBuild": 1,
+  "files": [
+    { "name": "FlowVeil-android.apk", "size": 19, "sha256": "56cd031524c04eb29157df9b4d288a661637e42fce1afc1ff293b86def76a79d" },
+    { "name": "FlowVeil-windows-x64.zip", "size": 10, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }
+  ]
+}

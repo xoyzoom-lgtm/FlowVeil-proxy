@@ -22,6 +22,9 @@ data class UpdateCandidate(
     val assetUrl: String,
     /** The `SHA256SUMS.txt` of that release, when it has one. */
     val sumsUrl: String?,
+    /** FlowVeil-manifest.json and its signature, when the release has them. */
+    val manifestUrl: String? = null,
+    val signatureUrl: String? = null,
 )
 
 object UpdateLogic {
@@ -48,6 +51,8 @@ object UpdateLogic {
                 assetName = asset.name,
                 assetUrl = asset.url,
                 sumsUrl = release.assets.firstOrNull { it.name == SUMS_FILE }?.url,
+                manifestUrl = release.assets.firstOrNull { it.name == UpdateManifest.MANIFEST_FILE }?.url,
+                signatureUrl = release.assets.firstOrNull { it.name == UpdateManifest.SIGNATURE_FILE }?.url,
             )
         }
         return best

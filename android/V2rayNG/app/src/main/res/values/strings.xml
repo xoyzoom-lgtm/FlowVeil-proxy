@@ -1071,4 +1071,12 @@
     <string name="summary_onboarding_again">Go through the first-run steps again</string>
     <string name="title_country_direct">Country sites directly</string>
     <string name="country_none">Nothing</string>
+    <string name="update_other_signer">This file is signed by someone else, not by FlowVeil. It was not installed.</string>
+    <string name="update_bad_signature">The update signature does not match. The file was not installed: download it from the release page.</string>
+    <string name="update_rollback">This is not a newer version. It was not installed.</string>
+    <string name="update_unsigned_refused">This update is not signed. It was not installed.</string>
+    <string name="update_unsigned_title">This update is not signed</string>
+    <string name="update_unsigned_text">This release has no FlowVeil signature yet, so the app cannot confirm the file is genuine. Install anyway?\n\nAndroid may then show a Play Protect check: this is normal for apps not from a store. Choose «Scan» or «Install without scanning».</string>
+    <string name="update_unsigned_no">No</string>
+    <string name="update_unsigned_yes">Install anyway</string>
 </resources>

@@ -115,6 +115,47 @@ public partial class HuppUpdateView : UserControl
             return;
         }
 
+        var check = await HuppUpdater.CheckManifestAsync(path, _info);
+        if (check is UpdateManifest.Result.Rejected rejected)
+        {
+            Logging.SaveLog($"Update refused: {rejected.Reason}");
+            TryDelete(path);
+            txtStatus.Text = rejected.Reason switch
+            {
+                UpdateManifest.Reason.BadSignature => "Подпись обновления не сходится. Файл не запущен — скачайте его со страницы релиза.",
+                UpdateManifest.Reason.Rollback => "Это не более новая версия. Установка отменена.",
+                UpdateManifest.Reason.Unsigned => "Обновление не подписано. Установка отменена.",
+                _ => "Файл обновления не совпадает с описанием релиза, установка отменена. Скачайте его со страницы релиза.",
+            };
+            btnInstall.IsEnabled = true;
+            btnClose.IsEnabled = true;
+            return;
+        }
+        if (check is not UpdateManifest.Result.Verified { Signed: true })
+        {
+            var answer = MessageBox.Show(
+                "У этого релиза пока нет подписи FlowVeil, поэтому программа не может подтвердить, что файл настоящий. Установить всё равно?",
+                "Обновление не подписано", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+            if (answer != MessageBoxResult.Yes)
+            {
+                TryDelete(path);
+                txtStatus.Text = "Установка отменена.";
+                btnInstall.IsEnabled = true;
+                btnClose.IsEnabled = true;
+                return;
+            }
+        }
+        // The file must still be the one that was checked.
+        var expected = (check as UpdateManifest.Result.Verified)?.Entry.Sha256;
+        if (expected != null && !string.Equals(await HuppUpdater.Sha256Async(path), expected, StringComparison.OrdinalIgnoreCase))
+        {
+            TryDelete(path);
+            txtStatus.Text = "Файл обновления изменился после проверки, установка отменена.";
+            btnInstall.IsEnabled = true;
+            btnClose.IsEnabled = true;
+            return;
+        }
+
         txtStatus.Text = "Устанавливаю… FlowVeil перезапустится сам.";
         try
         {
@@ -127,6 +168,18 @@ public partial class HuppUpdateView : UserControl
             Logging.SaveLog(nameof(HuppUpdateView), ex);
             txtStatus.Text = "Не удалось запустить установщик. Файл лежит здесь: " + path;
             btnClose.IsEnabled = true;
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch
+        {
+            // a leftover file in the updates folder is harmless
         }
     }
 }

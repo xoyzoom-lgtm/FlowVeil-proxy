@@ -82,6 +82,8 @@ object UpdateCheckerManager {
             build = candidate.build,
             assetName = candidate.assetName,
             sumsUrl = candidate.sumsUrl,
+            manifestUrl = candidate.manifestUrl,
+            signatureUrl = candidate.signatureUrl,
         )
     }
 

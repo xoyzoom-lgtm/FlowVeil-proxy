@@ -1069,4 +1069,12 @@
     <string name="summary_onboarding_again">Пройти первые шаги заново</string>
     <string name="title_country_direct">Сайты страны напрямую</string>
     <string name="country_none">Ничего</string>
+    <string name="update_other_signer">Файл подписан не FlowVeil. Он не установлен.</string>
+    <string name="update_bad_signature">Подпись обновления не сходится. Файл не установлен — скачайте его со страницы релиза.</string>
+    <string name="update_rollback">Это не более новая версия. Она не установлена.</string>
+    <string name="update_unsigned_refused">Обновление не подписано. Оно не установлено.</string>
+    <string name="update_unsigned_title">Это обновление не подписано</string>
+    <string name="update_unsigned_text">У этого релиза пока нет подписи FlowVeil, поэтому приложение не может подтвердить, что файл настоящий. Установить всё равно?\n\nПосле этого Android может показать проверку Play Защиты — это обычно для приложений не из магазина. Выберите «Проверить» или «Установить без проверки».</string>
+    <string name="update_unsigned_no">Нет</string>
+    <string name="update_unsigned_yes">Установить всё равно</string>
 </resources>
