@@ -37,13 +37,15 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
         MmkvManager.encodeSettings(AppConfig.PREF_CHECK_UPDATE_PRE_RELEASE, enabled)
     }
 
-    fun checkForUpdates() {
+    /** [autoInstall]: opened from the "update available" pop-up, so the download starts right away. */
+    fun checkForUpdates(autoInstall: Boolean = false) {
         launchLoading {
             try {
                 val result = UpdateCheckerManager.checkForUpdate(_checkPreRelease.value)
                 if (result.hasUpdate) {
                     _updateResult.value = result
                     _showUpdateDialog.value = true
+                    if (autoInstall) downloadAndInstall()
                 } else {
                     toastSuccess(R.string.update_already_latest_version)
                 }
@@ -57,6 +59,10 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
     /** null = not downloading, -1 = size unknown, 0..100 = percent. */
     private val _downloadProgress = MutableStateFlow<Int?>(null)
     val downloadProgress: StateFlow<Int?> = _downloadProgress.asStateFlow()
+
+    private val _downloadFailed = MutableStateFlow(false)
+    /** The in-app download did not work: the dialog then offers the browser. */
+    val downloadFailed: StateFlow<Boolean> = _downloadFailed.asStateFlow()
 
     private var downloadJob: Job? = null
     private var downloadedApk: File? = null
@@ -77,6 +83,7 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
         val app = getApplication<Application>()
         downloadJob = viewModelScope.launch {
             _downloadProgress.value = 0
+            _downloadFailed.value = false
             try {
                 val apk = ApkUpdateInstaller.download(app, url) { _downloadProgress.value = it }
                 val result = _updateResult.value
@@ -103,6 +110,7 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
             } catch (e: Exception) {
                 LogUtil.e(AppConfig.TAG, "Update download failed", e)
                 _downloadProgress.value = null
+                _downloadFailed.value = true
                 val why = (e as? ApkUpdateInstaller.DownloadFailed)?.reason?.take(80)
                 if (why != null) toastError(app.getString(R.string.update_download_failed_why, why)) else toastError(R.string.update_download_failed)
             }

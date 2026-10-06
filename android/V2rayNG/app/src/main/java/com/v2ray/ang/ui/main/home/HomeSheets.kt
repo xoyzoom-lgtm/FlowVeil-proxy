@@ -57,7 +57,7 @@ import com.v2ray.ang.util.QRCodeDecoder
 
 /** Every subscription action the sheet can ask the screen to run. */
 internal enum class SubSheetAction {
-    Update, Check, Share, Edit, Look, Message, Support, CopyLink, AllSubscriptions,
+    Update, Check, Diagnose, Share, Edit, Look, Message, Support, CopyLink, AllSubscriptions,
     SortByPing, TestTcping, ExportAll, RemoveDuplicate, RemoveInvalid, Delete,
 }
 
@@ -242,6 +242,7 @@ internal fun SubscriptionSheet(
             SheetRow(R.drawable.ic_promotion_24dp, stringResource(R.string.home_provider_message), sub!!.announce) { act(SubSheetAction.Message) }
         }
         SheetRow(R.drawable.ic_image_24dp, stringResource(R.string.look_title), stringResource(R.string.look_sub)) { act(SubSheetAction.Look) }
+        SheetRow(R.drawable.ic_logcat_24dp, stringResource(R.string.home_act_diagnose), stringResource(R.string.home_diag_sub)) { act(SubSheetAction.Diagnose) }
         if (sub != null) {
             SheetRow(R.drawable.ic_copy, stringResource(R.string.sub_menu_copy)) { act(SubSheetAction.CopyLink) }
         }

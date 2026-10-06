@@ -85,6 +85,17 @@ object UpdateNotifier {
         return candidate.takeIf { NotifyPolicy.bannerVisible(state(), it.build, BuildConfig.HUPP_BUILD, now) }
     }
 
+    /** Whether the "update available" pop-up was already shown since the app started (it comes once per launch). */
+    @Volatile
+    var popupShown = false
+
+    /** The update for the launch pop-up: newer and not skipped. "Later" does not hide it: it comes back at the next launch. */
+    fun popupCandidate(): UpdateCandidate? {
+        if (!isEnabled()) return null
+        val candidate = cached() ?: return null
+        return candidate.takeIf { state().skippedBuild != it.build }
+    }
+
     fun remember(candidate: UpdateCandidate?, etag: String?) {
         MmkvManager.encodeSettings(KEY_CANDIDATE, candidate?.let { JsonUtil.toJson(it) } ?: "")
         if (etag != null) MmkvManager.encodeSettings(KEY_ETAG, etag)

@@ -193,7 +193,7 @@
     <string name="title_pref_per_app_proxy">Прокси для выбранных приложений</string>
     <string name="summary_pref_per_app_proxy">Основной: выбранное приложение соединяется через прокси, не выбранное — напрямую;\nОбход: выбранное приложение соединяется напрямую, не выбранное — через прокси.\nВ меню можно автоматически выбрать приложения, которые должны использовать прокси.</string>
     <string name="title_pref_is_booted">Автоподключение при загрузке устройства</string>
-    <string name="summary_pref_is_booted">Автоматически подключаться к выбранному серверу после загрузки устройства. Android может ограничивать запуск в фоне.</string>
+    <string name="summary_pref_is_booted">Подключаться к выбранному серверу после включения телефона</string>
     <string name="title_system_vpn_settings">Системные настройки VPN</string>
     <string name="summary_system_vpn_settings">Открыть настройки VPN в Android для включения постоянного VPN-подключения, если устройство его поддерживает</string>
     <string name="toast_system_vpn_settings_unavailable">Системные настройки VPN недоступны.</string>
@@ -669,25 +669,25 @@
     <string name="rule_profile_direct_hint">Сервер не используется: удобно проверить, что мешает — сервер или сеть</string>
     <string name="menu_item_migrate">Перенос из другого приложения</string>
     <string name="migrate_title">Перенос из другого приложения</string>
-    <string name="migrate_hint">Подписку нельзя вытащить из другого приложения автоматически. Покажите здесь QR-код и откройте его на другом устройстве (телефон, другое приложение), чтобы отправить ссылку подписки; или скопируйте ссылку там и вставьте здесь.</string>
+    <string name="migrate_hint">Подписку нельзя достать из другого приложения автоматически. Покажите здесь QR-код и откройте его в другом приложении, или скопируйте ссылку там и вставьте здесь.</string>
     <string name="migrate_clipboard">Вставить ссылку из буфера обмена</string>
     <string name="migrate_qr">Добавить по QR-коду (со второго устройства)</string>
     <string name="migrate_backup">Из файла резервной копии v2rayNG</string>
-    <string name="migrate_note">Резервная копия v2rayNG (там: Настройки → Резервное копирование) читается только ради ссылок подписок, ничего вашего здесь не заменяется. Зашифрованные ссылки других приложений открыть нельзя.</string>
+    <string name="migrate_note">Резервная копия v2rayNG читается только ради ссылок подписок, ничего вашего не заменяется. Зашифрованные ссылки других приложений открыть нельзя.</string>
     <string name="tv_title">Добавить на этот ТВ</string>
-    <string name="tv_hint">Наведите камеру телефона на код. Откроется страница: вставьте на ней ссылку подписки, и она придёт сюда. Оба устройства должны быть в одной домашней сети.</string>
+    <string name="tv_hint">Наведите камеру телефона на код, вставьте на открывшейся странице ссылку подписки, и она придёт сюда. Устройства должны быть в одной сети.</string>
     <string name="tv_no_network">Устройство не в домашней сети (Wi-Fi или кабель). Подключите его к той же сети, что и телефон, и повторите.</string>
     <string name="tv_received">Получено: %1$d</string>
     <string name="migrate_backup_none">В этом файле нет ссылок на подписки</string>
     <string name="migrate_backup_found">Найдено подписок: %1$d</string>
     <string name="title_pref_noise">Шумы (мусорный трафик)</string>
-    <string name="summary_pref_noise">Случайные пакеты перед соединением, чтобы его начало труднее было опознать. Работает с UDP-серверами (Hysteria2, mKCP), чуть увеличивает трафик. Применится при следующем подключении</string>
+    <string name="summary_pref_noise">Случайные пакеты перед соединением, только для UDP-серверов. Чуть больше трафика. Применится при следующем подключении</string>
     <string name="title_pref_noise_rand">Размер шумового пакета (байт, диапазон)</string>
     <string name="title_pref_noise_delay">Задержка шума (мс, диапазон)</string>
     <string name="title_pref_auto_failover">Автопереключение сервера</string>
     <string name="summary_pref_auto_failover">Если сервер перестал отвечать — перейти на следующий рабочий, не отключаясь</string>
     <string name="title_pref_failover_across_subs">Переключаться между подписками</string>
-    <string name="summary_pref_failover_across_subs">Если в этой подписке нет рабочего сервера — попробовать серверы других подписок (выключенные и истёкшие пропускаются)</string>
+    <string name="summary_pref_failover_across_subs">Если в подписке нет рабочего сервера, пробовать серверы других подписок</string>
     <string name="failover_none_title">Сервер не отвечает</string>
     <string name="failover_none_text">Рабочей замены не нашёл. Откройте FlowVeil и нажмите «Почему не работает?»</string>
     <string name="title_pref_sub_reminders">Напоминания о подписке</string>
@@ -724,7 +724,7 @@
     <string name="unit_gbit">Гбит/с</string>
     <string name="settings_section_developer">Для разработчиков</string>
     <string name="title_pref_dev_mode">Режим разработчика</string>
-    <string name="summary_pref_dev_mode">Показать технические настройки и инструменты: ручное добавление серверов, маршрутизацию, DNS, настройки ядра, логи, массовые действия</string>
+    <string name="summary_pref_dev_mode">Технические настройки: ручное добавление серверов, маршрутизация, DNS, ядро, журнал</string>
     <string name="title_pref_sub_update_interval">Автообновление подписок</string>
     <string name="notification_channel_switch">Переключение сервера</string>
     <string name="server_lab_tuic_congestion">Управление перегрузкой</string>
@@ -732,7 +732,7 @@
     <string name="tuic_engine_missing">Для TUIC нужен движок sing-box, а в этой сборке его нет для вашего устройства. Возьмите сервер VLESS, Hysteria 2 или другой либо поставьте полную сборку FlowVeil.</string>
     <string name="tuic_engine_failed">Движок TUIC не запустился. Проверьте адрес сервера, UUID и пароль.</string>
     <string name="title_whitelist_bypass">Автообход белых списков</string>
-    <string name="summary_whitelist_bypass">Только на мобильной сети. Если оператор пускает лишь на сайты из белого списка и сервер перестал работать, FlowVeil найдёт сервер, который проходит, и переключится на него Вместе с ним включается фрагментирование первых пакетов (и выключается, когда вы выключите это).</string>
+    <string name="summary_whitelist_bypass">Только на мобильной сети: если интернет ограничен и сервер не работает, FlowVeil найдёт подходящий и переключится</string>
     <string name="title_whitelist_bypass_mode">Серверы обхода</string>
     <string name="whitelist_bypass_mode_auto">Автоматически (возможны ошибки; лучше выберите серверы сами)</string>
     <string name="whitelist_bypass_mode_manual">Только выбранные мной</string>
@@ -746,7 +746,9 @@
     <string name="summary_bypass_battery_on">Разрешено: Android не будет «усыплять» FlowVeil</string>
     <string name="summary_bypass_battery_off">Не разрешено: автообход может не сработать, пока телефон лежит в кармане. Нажмите, чтобы разрешить</string>
     <string name="bypass_battery_dialog_title">Разрешить работу в фоне?</string>
-    <string name="bypass_battery_dialog_message">Автообход следит за сетью и переключает сервер, пока телефон лежит в кармане. Многие прошивки (Xiaomi, OPPO, vivo, Huawei и др.) сами «усыпляют» приложения, и тогда обход не сработает вовсе.\n\nРазрешите FlowVeil работать без ограничений батареи. На этих телефонах также включите «Автозапуск» для FlowVeil в настройках приложения.\n\nРасход батареи почти не растёт: регулярные проверки идут только при включённом экране.</string>
+    <string name="bypass_battery_dialog_message">Автообход следит за сетью, пока телефон в кармане. Многие телефоны сами «усыпляют» приложения, и тогда он не сработает.
+
+Разрешите FlowVeil работать без ограничений батареи (и «Автозапуск» на Xiaomi, OPPO, vivo, Huawei). Расход почти не растёт: проверки идут только при включённом экране.</string>
     <string name="bypass_battery_allow">Разрешить</string>
     <string name="bypass_battery_later">Позже</string>
     <string name="title_bypass_log">Журнал автообхода</string>
@@ -760,7 +762,7 @@
     <string name="title_bypass_fallback">Если подходящих серверов не нашлось</string>
     <string name="bypass_fallback_none">Ничего не делать и сообщить</string>
     <string name="bypass_fallback_all">Пробовать остальные серверы (дольше)</string>
-    <string name="summary_whitelist_bypass_auto">Автоматический режим гадает по названию и типу сервера и может ошибиться. Во избежание ошибок лучше выберите серверы обхода сами: так надёжнее</string>
+    <string name="summary_whitelist_bypass_auto">Автоматический режим может ошибиться. Надёжнее выбрать серверы самому</string>
     <string name="bypass_status_searching">Ищу рабочий сервер… (проверено %1$d из %2$d)</string>
     <string name="bypass_status_connected">Подключён к %1$s (проверено)</string>
     <string name="bypass_status_failed">Не нашёл рабочий сервер, попробую позже</string>
@@ -945,7 +947,7 @@
     <string name="update_later">Позже</string>
     <string name="update_skip">Пропустить эту версию</string>
     <string name="update_notify_switch">Сообщать о новых версиях</string>
-    <string name="update_notify_summary">Примерно дважды в сутки проверяет GitHub, есть ли новая версия. Это единственный запрос, который приложение делает само; в нём нет идентификаторов устройства и аккаунта. Ничего не устанавливается, пока вы не нажмёте «Обновить».</string>
+    <string name="update_notify_summary">Раз в полдня смотрит GitHub, есть ли новая версия. Данных о вас не отправляет, сам ничего не ставит.</string>
     <string name="update_checksum_failed">Файл обновления повреждён или изменён, установка отменена</string>
     <string name="about_channel">Канал FlowVeil</string>
     <string name="import_confirm_title_sub">Добавить подписку?</string>
@@ -961,20 +963,20 @@
     <string name="hwid_show">(скрыт)</string>
     <string name="hwid_show_title">Показать и скопировать ID устройства</string>
     <string name="title_pref_automation">Автоматизация (Tasker и т. п.)</string>
-    <string name="summary_pref_automation">Разрешить другим приложениям включать и выключать подключение по заданиям, созданным в FlowVeil. Выключено: такие команды игнорируются</string>
+    <string name="summary_pref_automation">Разрешить другим приложениям (например, Tasker) включать и выключать подключение</string>
     <string name="automation_off_hint">Задание создано. Чтобы оно работало, включите «Автоматизация» в настройках FlowVeil</string>
     <string name="title_pref_adblock">Блокировка рекламы</string>
-    <string name="summary_pref_adblock">Рекламные и следящие адреса блокируются на устройстве (встроенный список). Если сайт сломался, выключите</string>
+    <string name="summary_pref_adblock">Блокирует рекламные и следящие адреса. Если сайт сломался, выключите</string>
     <string name="title_pref_telegram_proxy">Telegram всегда через сервер</string>
     <string name="summary_pref_telegram_proxy">Сообщения, файлы и звонки Telegram идут через сервер при любом профиле правил</string>
     <string name="sub_menu_share_qr">Поделиться QR-кодом</string>
     <string name="sub_qr_warning_title">Показать QR-код подписки?</string>
     <string name="sub_qr_warning">Ссылка подписки — как пароль: любой, кто отсканирует код, получит доступ к вашей подписке. Показывайте только своим устройствам. Код читают и другие приложения (Happ, v2rayNG и т. п.).</string>
     <string name="title_kill_switch">Интернет только через FlowVeil</string>
-    <string name="summary_kill_switch">Откроются настройки Android: выберите FlowVeil, включите «Постоянная VPN» и «Блокировать соединения без VPN». Тогда при обрыве подключения трафик не уйдёт напрямую</string>
+    <string name="summary_kill_switch">Откроются настройки Android: выберите FlowVeil, включите «Постоянная VPN» и «Блокировать соединения без VPN»</string>
     <string name="kill_switch_unavailable">На этом телефоне нет такого экрана настроек</string>
     <string name="title_pref_clipboard_offer">Предлагать ссылку из буфера</string>
-    <string name="summary_pref_clipboard_offer">При открытии FlowVeil один раз смотрит, нет ли в буфере ссылки на подписку или сервер, и предлагает её добавить. Без вашего «Добавить» ничего не скачивается</string>
+    <string name="summary_pref_clipboard_offer">При запуске предложит добавить ссылку из буфера обмена. Без вашего «Добавить» ничего не скачивается</string>
     <string name="home_servers_title">Серверы · %1$d</string>
     <string name="home_status_connected">подключено</string>
     <string name="home_status_off">выключена</string>
@@ -1074,7 +1076,7 @@
     <string name="update_rollback">Это не более новая версия. Она не установлена.</string>
     <string name="update_unsigned_refused">Обновление не подписано. Оно не установлено.</string>
     <string name="update_unsigned_title">Это обновление не подписано</string>
-    <string name="update_unsigned_text">У этого релиза пока нет подписи FlowVeil, поэтому приложение не может подтвердить, что файл настоящий. Установить всё равно?\n\nПосле этого Android может показать проверку Play Защиты — это обычно для приложений не из магазина. Выберите «Проверить» или «Установить без проверки».</string>
+    <string name="update_unsigned_text">У этого релиза пока нет подписи FlowVeil, подлинность файла подтвердить нельзя. Установить всё равно?</string>
     <string name="update_unsigned_no">Нет</string>
     <string name="update_unsigned_yes">Установить всё равно</string>
     <string name="hs_group_subs">Подписки и серверы</string>
@@ -1101,7 +1103,7 @@
     <string name="home_sub_use">Использовать подписку</string>
     <string name="home_sub_use_hint">Выключенная не обновляется и не участвует в автопереключении</string>
     <string name="title_fast_mode">Быстрый режим</string>
-    <string name="summary_fast_mode">Меньше лишнего при подключении: в журнал только предупреждения, фоновые проверки вдвое реже, одно нажатие «Подключить» выбирает лучший сервер. Защита и DNS не меняются</string>
+    <string name="summary_fast_mode">Меньше записей в журнале, проверки реже, «Подключить» сам выбирает лучший сервер. Защита и DNS не меняются</string>
     <string name="home_fast_tag">Быстрый</string>
     <string name="hs_group_safety">Удобство и безопасность</string>
     <string name="hs_appearance">Оформление</string>
@@ -1130,7 +1132,7 @@
     <string name="look_bg_change">Сменить фон</string>
     <string name="look_bg_remove">Убрать фон</string>
     <string name="look_reset">Вернуть автоматический вид</string>
-    <string name="subs_hint">Нажмите на подписку — откроется её меню: обновить, проверить, поделиться, внешний вид, изменить, удалить. Переключатель включает и выключает подписку.</string>
+    <string name="subs_hint">Нажмите на подписку, чтобы открыть меню. Переключатель включает и выключает её.</string>
     <string name="te_quick">Быстро</string>
     <string name="te_mode_auto">Авто</string>
     <string name="te_mode_light">Светлая</string>
@@ -1181,7 +1183,7 @@
     <string name="stats_time">Время подключения</string>
     <string name="stats_reset">Сбросить статистику</string>
     <string name="stats_reset_confirm">Нажмите ещё раз, чтобы стереть</string>
-    <string name="stats_empty">Данных пока нет. Они появятся после первого подключения (нужна включённая «Скорость в уведомлении»).</string>
+    <string name="stats_empty">Данных пока нет. Они появятся после первого подключения.</string>
     <string name="stats_unit_b">Б</string>
     <string name="stats_unit_kb">КБ</string>
     <string name="stats_unit_mb">МБ</string>
@@ -1197,4 +1199,15 @@
     <string name="info_fast">Меньше записей в журнале и реже фоновые проверки. Защита и DNS не меняются.</string>
     <string name="info_failover_subs">Если все серверы подписки недоступны, пробуются серверы других подписок.</string>
     <string name="info_automation">Позволяет другим приложениям (например, Tasker) включать и выключать FlowVeil.</string>
+    <string name="title_group_country">Группировать серверы по странам</string>
+    <string name="summary_group_country">Флаг и число серверов, группу можно свернуть</string>
+    <string name="title_smart_names">Короткие названия серверов</string>
+    <string name="summary_smart_names">Прячет в списке пометки вроде скорости, VIP и протокола. Сами серверы не переименовываются</string>
+    <string name="country_group_other">Другие</string>
+    <string name="home_act_diagnose">Диагностика</string>
+    <string name="home_diag_sub">Почему не работает</string>
+    <string name="home_status_error">Не обновилась</string>
+    <string name="update_popup_title">Доступно обновление</string>
+    <string name="update_popup_body">Готова сборка FlowVeil %1$d</string>
+    <string name="update_open_browser">Скачать в браузере</string>
 </resources>

@@ -87,6 +87,8 @@ internal fun HomeSettings(
     var ads by remember { mutableStateOf(ExtraRules.adBlock()) }
     var tg by remember { mutableStateOf(ExtraRules.telegramProxy()) }
     var fast by remember { mutableStateOf(flag(AppConfig.PREF_FAST_MODE, false)) }
+    var groupCountry by remember { mutableStateOf(flag(AppConfig.PREF_GROUP_COUNTRY, false)) }
+    var smartNames by remember { mutableStateOf(flag(AppConfig.PREF_SMART_NAMES, false)) }
     var failover by remember { mutableStateOf(flag(AppConfig.PREF_AUTO_FAILOVER, true)) }
     var failoverSubs by remember { mutableStateOf(flag(AppConfig.PREF_FAILOVER_ACROSS_SUBS, false)) }
     var bypass by remember { mutableStateOf(flag(WhitelistBypass.PREF_ENABLED, false)) }
@@ -148,6 +150,12 @@ internal fun HomeSettings(
                         listOf(happ?.name ?: "—", stringResource(styleName(HomeStyle.mode))).joinToString(" · ")
                     ) { picker = "look" }
                     NavRow(R.drawable.ic_translate_24dp, stringResource(R.string.title_language), if (russian) "Русский" else "English") { picker = "language" }
+                    SwitchRow2(R.drawable.ic_language_24dp, stringResource(R.string.title_group_country), stringResource(R.string.summary_group_country), groupCountry) {
+                        groupCountry = it; save(AppConfig.PREF_GROUP_COUNTRY, it)
+                    }
+                    SwitchRow2(R.drawable.ic_edit_24dp, stringResource(R.string.title_smart_names), stringResource(R.string.summary_smart_names), smartNames) {
+                        smartNames = it; save(AppConfig.PREF_SMART_NAMES, it)
+                    }
                 }
                 Group(stringResource(R.string.hs_group_subs)) {
                     NavRow(R.drawable.ic_subscriptions_24dp, stringResource(R.string.hs_subscriptions), stringResource(R.string.hs_subscriptions_sub, subs, servers)) {

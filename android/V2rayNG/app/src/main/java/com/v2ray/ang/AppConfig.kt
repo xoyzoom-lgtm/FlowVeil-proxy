@@ -152,6 +152,10 @@ object AppConfig {
     const val PREF_CLIPBOARD_OFFER = "pref_clipboard_offer"
     /** "Быстрый режим" (see net/FastMode.kt). Off by default. */
     const val PREF_FAST_MODE = "pref_fast_mode"
+    /** Server list: group by country (flag, count, collapsible). Off by default. */
+    const val PREF_GROUP_COUNTRY = "pref_group_country"
+    /** Server list: short names without speed / protocol marks (net/ServerName.kt). Off by default. */
+    const val PREF_SMART_NAMES = "pref_smart_names"
     /** Interface look: true = glass (translucent surfaces, blur behind sheets), false = solid. */
     const val PREF_GLASS = "pref_ui_glass"
     /** "glass", "blur" or "solid" (see ui/main/home/HomeStyle.kt). */

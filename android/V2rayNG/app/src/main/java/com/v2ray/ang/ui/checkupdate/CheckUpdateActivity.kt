@@ -61,8 +61,12 @@ class CheckUpdateActivity : BaseComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
-            viewModel.checkForUpdates()
+            viewModel.checkForUpdates(autoInstall = intent.getBooleanExtra(EXTRA_AUTO_UPDATE, false))
         }
+    }
+
+    companion object {
+        const val EXTRA_AUTO_UPDATE = "auto_update"
     }
 
     override fun onResume() {
@@ -90,6 +94,7 @@ fun CheckUpdateScreen(
     val showUpdateDialog by viewModel.showUpdateDialog.collectAsStateWithLifecycle()
     val updateResult by viewModel.updateResult.collectAsStateWithLifecycle()
     val downloadProgress by viewModel.downloadProgress.collectAsStateWithLifecycle()
+    val downloadFailed by viewModel.downloadFailed.collectAsStateWithLifecycle()
 
     val libVersion = CoreNativeManager.getLibVersion()
     val versionText = "FlowVeil build ${BuildConfig.HUPP_BUILD} ($libVersion)"
@@ -170,6 +175,11 @@ fun CheckUpdateScreen(
                                 .verticalScroll(scrollState)
                                 .verticalScrollbar(scrollState)
                         )
+                        if (downloadFailed && !result.downloadUrl.isNullOrBlank()) {
+                            TextButton(onClick = { result.downloadUrl?.let { Utils.openUri(context, it) } }) {
+                                Text(stringResource(R.string.update_open_browser))
+                            }
+                        }
                         TextButton(onClick = { viewModel.skipVersion() }) {
                             Text(stringResource(R.string.update_skip))
                         }
