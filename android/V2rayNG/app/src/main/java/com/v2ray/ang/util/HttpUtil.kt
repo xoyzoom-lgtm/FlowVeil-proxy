@@ -237,7 +237,7 @@ object HttpUtil {
         }
     }
 
-    private fun buildOkHttpClient(
+    internal fun buildOkHttpClient(
         timeout: Int,
         httpPort: Int,
         proxyUsername: String?,

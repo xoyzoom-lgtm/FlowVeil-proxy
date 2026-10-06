@@ -575,6 +575,12 @@ fun HomeScreen(
                 onOpen = { g -> sheetGroup = g; sheet = Sheet.SUB },
                 onAdd = { sheet = Sheet.ADD },
                 onRefreshAll = { context.toastSuccess(R.string.home_toast_updating); onAction(MainAction.UpdateSubscriptions) },
+                onReorder = { ids ->
+                    // The stored order of subscriptions; ids that were not on the list stay at the end.
+                    val rest = com.v2ray.ang.handler.MmkvManager.decodeSubsList().filter { it !in ids }
+                    com.v2ray.ang.handler.MmkvManager.encodeSubsList((ids + rest).toMutableList())
+                    onAction(MainAction.RefreshGroups)
+                },
                 onToggle = { g, on ->
                     com.v2ray.ang.handler.MmkvManager.decodeSubscription(g.id)?.let { item ->
                         item.enabled = on

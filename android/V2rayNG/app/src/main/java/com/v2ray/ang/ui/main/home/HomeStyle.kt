@@ -105,11 +105,11 @@ internal fun BlurBehindDialog() {
 
 /** Opaque base for full-screen layers that slide over the home screen (settings, subscriptions): the screen below must not show through. */
 @Composable
-internal fun Modifier.screenBase(): Modifier {
+internal fun Modifier.screenBase(solid: Boolean = false): Modifier {
     val happ = com.v2ray.ang.ui.compose.LocalHappTheme.current
     val fallback = androidx.compose.material3.MaterialTheme.colorScheme.background
     // In the blur style the (blurred) home screen shows through; otherwise the layer is fully opaque.
-    val veil = if (HomeStyle.mode == HomeStyle.Mode.BLUR) 0.62f else 1f
+    val veil = if (HomeStyle.mode == HomeStyle.Mode.BLUR && !solid) 0.62f else 1f
     return if (happ != null) {
         this.background(fallback.copy(alpha = veil)).background(happ.backgroundBrush(), alpha = veil)
     } else {

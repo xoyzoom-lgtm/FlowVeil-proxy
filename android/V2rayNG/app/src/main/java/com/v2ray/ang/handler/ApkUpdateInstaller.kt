@@ -24,56 +24,81 @@ import kotlin.coroutines.coroutineContext
 object ApkUpdateInstaller {
     private const val FILE_NAME = "FlowVeil-update.apk"
 
-    /** Returns the downloaded file; [onProgress] gets 0..100 (or -1 while the size is unknown). */
+    /**
+     * Returns the downloaded file; [onProgress] gets 0..100 (or -1 while the size is unknown).
+     * GitHub's file host is often unreachable without help, so every route is tried like for the update check:
+     * through the running tunnel (when it is on), directly, then directly with DNS-over-HTTPS. The error says why it failed.
+     */
     suspend fun download(context: Context, url: String, onProgress: (Int) -> Unit): File = withContext(Dispatchers.IO) {
         val dir = File(context.cacheDir, "update").apply { mkdirs() }
         val target = File(dir, FILE_NAME)
         val partial = File(dir, "$FILE_NAME.part")
-        var current = URL(url)
-        var redirects = 0
-        while (true) {
-            val conn = (current.openConnection() as HttpURLConnection).apply {
-                instanceFollowRedirects = false
-                connectTimeout = 15_000
-                readTimeout = 30_000
-                setRequestProperty("User-Agent", "FlowVeil-updater")
-            }
+        val tunnelOn = MmkvManager.decodeSettingsLong(AppConfig.CACHE_CONNECTED_SINCE, 0L) > 0L
+        val routes = buildList {
+            if (tunnelOn) add(Route(viaProxy = true, secureDns = false))
+            add(Route(viaProxy = false, secureDns = false))
+            add(Route(viaProxy = false, secureDns = true))
+            if (!tunnelOn) add(Route(viaProxy = false, secureDns = false))
+        }
+        var lastError: Exception? = null
+        for (route in routes) {
             try {
-                val code = conn.responseCode
-                if (code in 300..399 && redirects++ < 5) {
-                    current = URL(current, conn.getHeaderField("Location"))
-                    continue
-                }
-                if (code !in 200..299) throw IllegalStateException("HTTP $code")
-                val total = conn.contentLengthLong
-                conn.inputStream.use { input ->
-                    partial.outputStream().use { output ->
-                        val buffer = ByteArray(64 * 1024)
-                        var done = 0L
-                        var last = -2
-                        while (true) {
-                            coroutineContext.ensureActive()
-                            val read = input.read(buffer)
-                            if (read < 0) break
-                            output.write(buffer, 0, read)
-                            done += read
-                            val percent = if (total > 0) (done * 100 / total).toInt() else -1
-                            if (percent != last) {
-                                last = percent
-                                withContext(Dispatchers.Main) { onProgress(percent) }
-                            }
-                        }
-                    }
-                }
+                partial.delete()
+                fetchTo(url, route, partial, onProgress)
                 target.delete()
                 if (!partial.renameTo(target)) throw IllegalStateException("Cannot save update")
                 return@withContext target
-            } finally {
-                conn.disconnect()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                partial.delete()
+                throw e
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Update download via $route failed", e)
+                lastError = e
             }
         }
-        @Suppress("UNREACHABLE_CODE")
-        target
+        partial.delete()
+        throw DownloadFailed(lastError?.message ?: lastError?.javaClass?.simpleName ?: "unknown")
+    }
+
+    class DownloadFailed(val reason: String) : Exception(reason)
+
+    private data class Route(val viaProxy: Boolean, val secureDns: Boolean)
+
+    private suspend fun fetchTo(url: String, route: Route, partial: File, onProgress: (Int) -> Unit) {
+        val client = HttpUtil.buildOkHttpClient(
+            timeout = 30_000,
+            httpPort = if (route.viaProxy) SettingsManager.getHttpPort() else 0,
+            proxyUsername = if (route.viaProxy) SettingsManager.getSocksUsername() else null,
+            proxyPassword = if (route.viaProxy) SettingsManager.getSocksPassword() else null,
+            followRedirects = true,
+            secureDns = route.secureDns,
+        )
+        val request = okhttp3.Request.Builder().url(url).header("User-Agent", "FlowVeil-updater").build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IllegalStateException("HTTP ${response.code}")
+            val body = response.body ?: throw IllegalStateException("empty answer")
+            val total = body.contentLength()
+            body.byteStream().use { input ->
+                partial.outputStream().use { output ->
+                    val buffer = ByteArray(64 * 1024)
+                    var done = 0L
+                    var last = -2
+                    while (true) {
+                        coroutineContext.ensureActive()
+                        val read = input.read(buffer)
+                        if (read < 0) break
+                        output.write(buffer, 0, read)
+                        done += read
+                        val percent = if (total > 0) (done * 100 / total).toInt() else -1
+                        if (percent != last) {
+                            last = percent
+                            withContext(Dispatchers.Main) { onProgress(percent) }
+                        }
+                    }
+                    if (total > 0 && done != total) throw IllegalStateException("cut off at $done of $total")
+                }
+            }
+        }
     }
 
     /**
