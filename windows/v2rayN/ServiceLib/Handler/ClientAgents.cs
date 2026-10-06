@@ -7,7 +7,7 @@ namespace ServiceLib.Handler;
 public static class ClientAgents
 {
     public static readonly IReadOnlyList<string> Fallback =
-        ["Happ/2.7.0", "v2rayN/7.25.2", "clash-verge/v2.2.3", "HiddifyNext/2.5.7", "sing-box/1.12.0"];
+        ["v2rayN/7.25.2", "clash-verge/v2.2.3", "HiddifyNext/2.5.7", "sing-box/1.12.0"];
 
     /// <summary>True when the provider refused or sent us elsewhere (3xx, 4xx except 404/410, 5xx), not "no network".</summary>
     public static bool Retryable(int? status) =>

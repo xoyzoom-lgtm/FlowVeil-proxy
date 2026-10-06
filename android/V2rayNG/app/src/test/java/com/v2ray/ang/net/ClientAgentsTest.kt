@@ -24,7 +24,7 @@ class ClientAgentsTest {
     }
 
     @Test
-    fun happFirst() {
-        assertEquals("Happ", ClientAgents.FALLBACK.first().substringBefore('/'))
+    fun neverPretendsToBeHapp() {
+        assertFalse(ClientAgents.FALLBACK.any { it.startsWith("Happ", ignoreCase = true) })
     }
 }
