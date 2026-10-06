@@ -49,7 +49,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.res.stringArrayResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.v2ray.ang.AppConfig
 import com.v2ray.ang.handler.AppLocaleManager
 import com.v2ray.ang.handler.UpdateNotifier
 import com.v2ray.ang.ui.compose.HappThemeManager
