@@ -181,7 +181,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.okhttp)
     // Clash/Mihomo YAML subscriptions (SubscriptionFormats)
-    implementation("org.snakeyaml:snakeyaml-engine:2.9")
+    implementation("org.snakeyaml:snakeyaml-engine:3.1.1")
 
     // Reactive and Utility Libraries
     implementation(libs.kotlinx.coroutines.android)
