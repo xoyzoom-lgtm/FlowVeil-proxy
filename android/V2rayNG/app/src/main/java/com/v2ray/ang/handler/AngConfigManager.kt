@@ -514,7 +514,9 @@ object AngConfigManager {
             val requestHeaders = it.subscription.requestHeaders
             val proxyUsername = SettingsManager.getSocksUsername()
             val proxyPassword = SettingsManager.getSocksPassword()
-            val deviceHeaders = DeviceIdentity.subscriptionHeaders()
+            val deviceHeaders = DeviceIdentity.subscriptionHeaders().let { base ->
+                if (it.subscription.sendHwidCookie && base.containsKey("x-hwid")) base + ("Cookie" to "hwid=" + base.getValue("x-hwid")) else base
+            }
 
             var lastNetworkError: String? = null
             fun fetch(agent: String?, viaProxy: Boolean, secureDns: Boolean): Pair<String, Map<String, String>> = try {

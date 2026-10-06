@@ -1160,4 +1160,8 @@
     <string name="tune_corner">Corner roundness</string>
     <string name="tune_blobs">Background glow</string>
     <string name="tune_reset">Reset fine tuning</string>
+    <string name="sub_edit_main">Main</string>
+    <string name="sub_edit_options">Options</string>
+    <string name="sub_edit_advanced">Advanced</string>
+    <string name="sub_send_hwid_cookie">Send device ID in Cookie too</string>
 </resources>
