@@ -1,0 +1,52 @@
+name: Upstream watch
+
+# Once a week: a new release of a project FlowVeil is built from opens an issue "Вышла версия X, у нас Y" (see UPSTREAM.md).
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: UPSTREAM.md
+          sparse-checkout-cone-mode: false
+
+      - name: Compare with UPSTREAM.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess, urllib.request
+
+          def latest(repo):
+              req = urllib.request.Request(f"https://api.github.com/repos/{repo}/releases?per_page=10",
+                                           headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"], "User-Agent": "flowveil-ci"})
+              rel = [r for r in json.load(urllib.request.urlopen(req, timeout=60)) if not r["draft"] and not r["prerelease"]]
+              return rel[0]["tag_name"] if rel else None
+
+          ours = {}
+          for line in open("UPSTREAM.md", encoding="utf-8"):
+              m = re.match(r"\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|", line)
+              if m:
+                  ours[m.group(1)] = m.group(2)
+          for repo, have in ours.items():
+              tag = latest(repo)
+              if not tag or tag == have:
+                  continue
+              title = f"Вышла версия {repo} {tag}, у нас {have}"
+              found = subprocess.run(["gh", "issue", "list", "--repo", os.environ["GITHUB_REPOSITORY"], "--state", "all",
+                                      "--search", f"\"{title}\" in:title", "--json", "number"], capture_output=True, text=True).stdout
+              if found.strip() not in ("", "[]"):
+                  continue
+              subprocess.run(["gh", "issue", "create", "--repo", os.environ["GITHUB_REPOSITORY"], "--title", title,
+                              "--body", f"https://github.com/{repo}/releases/tag/{tag}\n\nПосмотреть изменения, обновить в сборке и в UPSTREAM.md."], check=True)
+              print("opened:", title)
+          PY

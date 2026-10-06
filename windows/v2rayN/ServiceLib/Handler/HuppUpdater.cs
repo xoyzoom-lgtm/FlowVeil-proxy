@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace ServiceLib.Handler;
 
-public sealed record HuppUpdateInfo(int Build, string Tag, string Notes, string? SetupUrl, bool HasUpdate, string? SumsUrl = null, string? AssetName = null, string? ReleaseUrl = null, bool Portable = false);
+public sealed record HuppUpdateInfo(int Build, string Tag, string Notes, string? SetupUrl, bool HasUpdate, string? SumsUrl = null, string? AssetName = null, string? ReleaseUrl = null, bool Portable = false, string? ManifestUrl = null, string? SignatureUrl = null);
 
 /// <summary>Checks the FlowVeil GitHub releases ("build-N" tags) and downloads the installer.</summary>
 public static class HuppUpdater
@@ -128,7 +128,7 @@ public static class HuppUpdater
         UpdateNotifier.Remember(candidate, ok.ETag);
         return candidate == null
             ? new HuppUpdateInfo(CurrentBuild(), string.Empty, string.Empty, null, false)
-            : new HuppUpdateInfo(candidate.Build, candidate.Tag, ReleaseNotes.Plain(candidate.Notes), candidate.AssetUrl, true, candidate.SumsUrl, candidate.AssetName, candidate.ReleaseUrl, !IsInstalled());
+            : new HuppUpdateInfo(candidate.Build, candidate.Tag, ReleaseNotes.Plain(candidate.Notes), candidate.AssetUrl, true, candidate.SumsUrl, candidate.AssetName, candidate.ReleaseUrl, !IsInstalled(), candidate.ManifestUrl, candidate.SignatureUrl);
     }
 
     /// <summary>Checks the downloaded file against SHA256SUMS.txt: true = matches, false = differs (do not run it), null = no sums or not listed (do not block).</summary>
@@ -148,10 +148,53 @@ public static class HuppUpdater
         return Sha256Sums.Verify(Sha256Sums.Parse(text), assetName, hash);
     }
 
-    /// <summary>Downloads the installer to a temp file, reporting 0..100.</summary>
+    /// <summary>SHA-256 of a file, lower-case hex.</summary>
+    public static async Task<string> Sha256Async(string path)
+    {
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return Convert.ToHexString(await System.Security.Cryptography.SHA256.HashDataAsync(stream)).ToLowerInvariant();
+    }
+
+    private static async Task<byte[]?> GetBytesAsync(string? url, int limit)
+    {
+        if (url == null)
+        {
+            return null;
+        }
+        foreach (var proxy in new[] { null, LocalProxy() })
+        {
+            try
+            {
+                using var client = MakeClient(proxy, TimeSpan.FromSeconds(20));
+                var bytes = await client.GetByteArrayAsync(url);
+                return bytes.Length > limit ? null : bytes;
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(nameof(HuppUpdater), ex);
+            }
+        }
+        return null;
+    }
+
+    /// <summary>The downloaded file against the release manifest (signature, name, size, SHA-256, build).</summary>
+    public static async Task<UpdateManifest.Result> CheckManifestAsync(string path, HuppUpdateInfo info)
+    {
+        var manifest = await GetBytesAsync(info.ManifestUrl, 64 * 1024);
+        var signature = manifest != null ? await GetBytesAsync(info.SignatureUrl, 1024) : null;
+        return UpdateManifest.Check(manifest, signature, UpdateKeys.PublicKeys(), info.AssetName ?? string.Empty,
+            new FileInfo(path).Length, await Sha256Async(path), info.Build > 0 ? info.Build : null, CurrentBuild());
+    }
+
+    /// <summary>
+    /// Downloads the installer into a fresh folder only this user can write to (%LocalAppData%\FlowVeil\updates\&lt;GUID&gt;),
+    /// reporting 0..100. The hash is checked there and once more right before the installer starts.
+    /// </summary>
     public static async Task<string?> DownloadAsync(string url, IProgress<int> progress)
     {
-        var path = Path.Combine(Path.GetTempPath(), SetupAsset);
+        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FlowVeil", "updates", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, SetupAsset);
         foreach (var proxy in new[] { null, LocalProxy() })
         {
             try

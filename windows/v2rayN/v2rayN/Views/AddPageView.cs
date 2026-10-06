@@ -239,11 +239,9 @@ public sealed class AddPageView : ScrollViewer
 
     private static void Exec(System.Windows.Input.ICommand command) => command.Execute(null);
 
-    private static string? ReadClipboard()
-    {
-        var text = WindowsUtils.GetClipboardData();
-        return text.IsNullOrEmpty() ? null : text.Trim();
-    }
+    /// <summary>Clipboard text with other clients' wrappers removed (happ://add, v2rayng://install-sub); Happ's encrypted links give null.</summary>
+    private static string? ReadClipboard() =>
+        ImportSource.Normalize(WindowsUtils.GetClipboardData()) is ImportSource.Result.Text t ? t.Value : null;
 
     private void RefreshClipboardHint()
     {

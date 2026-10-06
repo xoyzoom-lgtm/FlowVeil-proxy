@@ -42,11 +42,26 @@ public static class ExtraRules
         : [];
 
     /// <summary>Rules that go after the per-app rules and before the profile (an app the user sent direct stays direct).</summary>
-    public static List<RulesItem> After(bool telegram, bool appsOnly) => telegram && !appsOnly
-        ?
-        [
-            new RulesItem { Id = "fv-telegram-domains", Remarks = "Telegram через сервер", OutboundTag = Global.ProxyTag, Domain = ["geosite:telegram"] },
-            new RulesItem { Id = "fv-telegram-ips", Remarks = "Telegram через сервер", OutboundTag = Global.ProxyTag, Ip = ["geoip:telegram"] },
-        ]
-        : [];
+    /// The chosen country's sites go direct right after Telegram (same order as Android).
+    public static List<RulesItem> After(bool telegram, bool appsOnly) => After(telegram, appsOnly, CountryProfiles.Current);
+
+    public static List<RulesItem> After(bool telegram, bool appsOnly, CountryProfiles.Country? country)
+    {
+        if (appsOnly)
+        {
+            return [];
+        }
+        var list = new List<RulesItem>();
+        if (telegram)
+        {
+            list.Add(new RulesItem { Id = "fv-telegram-domains", Remarks = "Telegram через сервер", OutboundTag = Global.ProxyTag, Domain = ["geosite:telegram"] });
+            list.Add(new RulesItem { Id = "fv-telegram-ips", Remarks = "Telegram через сервер", OutboundTag = Global.ProxyTag, Ip = ["geoip:telegram"] });
+        }
+        if (country != null)
+        {
+            list.Add(new RulesItem { Id = "fv-country-domains", Remarks = $"{country.NameRu} напрямую", OutboundTag = Global.DirectTag, Domain = CountryProfiles.Domains(country) });
+            list.Add(new RulesItem { Id = "fv-country-ips", Remarks = $"{country.NameRu} напрямую", OutboundTag = Global.DirectTag, Ip = CountryProfiles.Ips(country) });
+        }
+        return list;
+    }
 }

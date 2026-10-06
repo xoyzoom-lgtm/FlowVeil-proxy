@@ -130,6 +130,18 @@ fun CheckUpdateScreen(
         }
     }
 
+    val askUnsigned by viewModel.askUnsigned.collectAsStateWithLifecycle()
+    if (askUnsigned) {
+        AlertDialog(
+            onDismissRequest = { viewModel.answerUnsigned(false) },
+            title = { Text(stringResource(R.string.update_unsigned_title)) },
+            text = { Text(stringResource(R.string.update_unsigned_text)) },
+            confirmButton = { TextButton(onClick = { viewModel.answerUnsigned(false) }) { Text(stringResource(R.string.update_unsigned_no)) } },
+            dismissButton = { TextButton(onClick = { viewModel.answerUnsigned(true) }) { Text(stringResource(R.string.update_unsigned_yes)) } },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
     if (showUpdateDialog && updateResult != null) {
         val result = updateResult!!
         AlertDialog(

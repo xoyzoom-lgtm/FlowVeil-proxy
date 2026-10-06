@@ -329,10 +329,14 @@ public partial class MainWindow
 
     public async Task AddServerViaClipboardAsync()
     {
-        var clipboardData = WindowsUtils.GetClipboardData();
-        if (clipboardData.IsNotEmpty() && ViewModel != null)
+        switch (ImportSource.Normalize(WindowsUtils.GetClipboardData()))
         {
-            await ViewModel.AddServerViaClipboardAsync(clipboardData);
+            case ImportSource.Result.HappEncrypted:
+                NoticeManager.Instance.Enqueue(ImportSource.HappEncryptedMessage);
+                break;
+            case ImportSource.Result.Text t when ViewModel != null:
+                await ViewModel.AddServerViaClipboardAsync(t.Value);
+                break;
         }
     }
 
@@ -421,6 +425,25 @@ public partial class MainWindow
             Logging.SaveLog("Profile", ex);
             NoticeManager.Instance.Enqueue("Не получилось включить профиль");
         }
+    }
+
+    private void OpenCountryMenu(MainWindowViewModel vm)
+    {
+        var current = CountryProfiles.Current?.Id ?? CountryProfiles.None;
+        var menu = new ContextMenu();
+        foreach (var (id, title) in new[] { (CountryProfiles.None, "Ничего") }.Concat(CountryProfiles.All.Select(c => (c.Id, $"{c.Flag} {c.NameRu}"))))
+        {
+            var item = new MenuItem { Header = title, IsCheckable = true, IsChecked = id == current };
+            var chosen = id;
+            item.Click += (_, _) =>
+            {
+                CountryProfiles.SetCurrent(chosen);
+                NoticeManager.Instance.Enqueue("Применится при следующем подключении");
+                BuildSettingsPage(vm);
+            };
+            menu.Items.Add(item);
+        }
+        menu.IsOpen = true;
     }
 
     private void OpenPingUrlMenu(MainWindowViewModel vm)
@@ -602,6 +625,9 @@ public partial class MainWindow
                 NoticeManager.Instance.Enqueue("Применится при следующем подключении");
                 BuildSettingsPage(vm);
             });
+        var country = CountryProfiles.Current;
+        Row(tunnel, PackIconKind.Earth, $"Сайты страны напрямую: {(country == null ? "ничего" : $"{country.Flag} {country.NameRu}")}",
+            "Банки, госуслуги и сайты выбранной страны открываются без сервера, остальное через сервер", () => OpenCountryMenu(vm));
         var pingUrl = settings.SpeedTestItem.SpeedPingTestUrl.IsNullOrEmpty() ? Global.SpeedPingTestUrls[0] : settings.SpeedTestItem.SpeedPingTestUrl;
         Row(tunnel, PackIconKind.Speedometer, "Адрес для пинга", pingUrl, () => OpenPingUrlMenu(vm));
         Row(tunnel, _tunnelAdvancedOpen ? PackIconKind.ChevronUp : PackIconKind.ChevronDown, "Дополнительно", "Шумы и фрагментация: для случаев, когда соединение блокируют", () =>

@@ -11,6 +11,7 @@ import com.v2ray.ang.handler.UpdateNotifier
 import com.v2ray.ang.ui.base.BaseViewModel
 import com.v2ray.ang.util.LogUtil
 import kotlinx.coroutines.flow.MutableStateFlow
+import com.v2ray.ang.net.UpdateManifest
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -79,23 +80,54 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
             try {
                 val apk = ApkUpdateInstaller.download(app, url) { _downloadProgress.value = it }
                 val result = _updateResult.value
-                // false = the file differs from the published sum: never install it. null = no sums published: do not block.
+                // An old-style SHA256SUMS that disagrees: never install.
                 if (ApkUpdateInstaller.verify(apk, result?.assetName, result?.sumsUrl) == false) {
-                    apk.delete()
-                    _downloadProgress.value = null
-                    toastError(R.string.update_checksum_failed)
+                    reject(apk, R.string.update_checksum_failed)
+                    return@launch
+                }
+                if (ApkUpdateInstaller.sameSigner(app, apk) == false) {
+                    reject(apk, R.string.update_other_signer)
+                    return@launch
+                }
+                val check = if (result != null) ApkUpdateInstaller.checkManifest(apk, result) else UpdateManifest.Result.Missing
+                if (check is UpdateManifest.Result.Rejected) {
+                    LogUtil.w(AppConfig.TAG, "Update refused: ${check.reason}")
+                    reject(apk, rejectText(check.reason))
                     return@launch
                 }
                 downloadedApk = apk
                 _downloadProgress.value = null
                 _showUpdateDialog.value = false
-                installDownloaded()
+                val signed = check is UpdateManifest.Result.Verified && check.signed
+                if (signed) installDownloaded() else _askUnsigned.value = true
             } catch (e: Exception) {
                 LogUtil.e(AppConfig.TAG, "Update download failed", e)
                 _downloadProgress.value = null
                 toastError(R.string.update_download_failed)
             }
         }
+    }
+
+    private val _askUnsigned = MutableStateFlow(false)
+    /** The update has no valid signature yet (transition period): the user decides, "No" is the default. */
+    val askUnsigned: StateFlow<Boolean> = _askUnsigned.asStateFlow()
+
+    fun answerUnsigned(install: Boolean) {
+        _askUnsigned.value = false
+        if (install) installDownloaded() else downloadedApk?.delete().also { downloadedApk = null }
+    }
+
+    private fun reject(apk: File, message: Int) {
+        apk.delete()
+        _downloadProgress.value = null
+        toastError(message)
+    }
+
+    private fun rejectText(reason: UpdateManifest.Reason): Int = when (reason) {
+        UpdateManifest.Reason.BAD_SIGNATURE -> R.string.update_bad_signature
+        UpdateManifest.Reason.ROLLBACK -> R.string.update_rollback
+        UpdateManifest.Reason.UNSIGNED -> R.string.update_unsigned_refused
+        else -> R.string.update_checksum_failed
     }
 
     /** Starts the installer for an already downloaded APK (also after granting the permission). */

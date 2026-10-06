@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Что такое ключ — FlowVeil</title>
+<meta name="description" content="Ключ — это ссылка от вашего провайдера, по которой FlowVeil получает список серверов. FlowVeil сам серверов не даёт.">
+<meta name="theme-color" content="#040C23">
+<link rel="icon" href="/FlowVeil-proxy/favicon.ico" sizes="any">
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+body{background:#040C23;color:#F2F7FA;font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px 16px 64px}
+main{max-width:680px;margin:0 auto}
+a{color:#3BE0B0}
+.back{display:inline-block;margin-bottom:24px;text-decoration:none;font-weight:700}
+h1{font-size:30px;line-height:1.2;margin-bottom:12px}
+h2{font-size:20px;margin:32px 0 10px}
+p,li{color:#C9D7DF}
+p{margin-bottom:12px}
+ol,ul{padding-left:22px;margin-bottom:12px}
+li{margin-bottom:6px}
+code{background:#0F1A35;border-radius:6px;padding:1px 6px;font-size:14px;color:#F2F7FA}
+.box{background:#0F1A35;border:1px solid #1E2C4F;border-radius:18px;padding:16px 18px;margin:16px 0}
+.warn{border-color:#5A4520;background:#1C1608}
+.warn b{color:#FFB84D}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="/FlowVeil-proxy/">‹ FlowVeil</a>
+<h1>Что такое ключ</h1>
+<p><b>FlowVeil — приложение для подключения, серверов у него нет.</b> Серверы и доступ к ним даёт ваш провайдер. «Ключ» — то, что провайдер вам выдал, чтобы приложение знало, куда подключаться.</p>
+
+<h2>Как выглядит ключ</h2>
+<ul>
+<li><b>Ссылка подписки</b> — обычный адрес <code>https://…</code>. По нему FlowVeil получает список серверов и обновляет его сам. Самый удобный вариант.</li>
+<li><b>Ссылка одного сервера</b> — начинается с <code>vless://</code>, <code>vmess://</code>, <code>trojan://</code>, <code>ss://</code>, <code>hysteria2://</code>, <code>tuic://</code> и т. п.</li>
+<li><b>QR-код</b> — то же самое, только картинкой.</li>
+</ul>
+
+<h2>Как добавить</h2>
+<ol>
+<li>Скопируйте ссылку или откройте QR-код от провайдера.</li>
+<li>В FlowVeil нажмите «＋» → «Вставить из буфера» или «Сканировать QR».</li>
+<li>Проверьте адрес в окне «Добавить подписку?» и нажмите «Добавить».</li>
+<li>Нажмите «Подключить».</li>
+</ol>
+
+<div class="box warn"><b>Ключ — как пароль.</b> Кто получил вашу ссылку подписки, может пользоваться вашим тарифом. Не публикуйте её и не отправляйте незнакомым. Если ссылка утекла, попросите у провайдера новую.</div>
+
+<h2>Где взять ключ</h2>
+<p>Только у своего провайдера (в его боте, личном кабинете или письме). FlowVeil не продаёт и не раздаёт ключи.</p>
+
+</main>
+</body>
+</html>

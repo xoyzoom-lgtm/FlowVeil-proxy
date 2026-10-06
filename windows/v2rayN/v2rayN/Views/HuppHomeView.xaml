@@ -224,109 +224,131 @@
         </DataTemplate>
 
         <DataTemplate x:Key="SubCardTemplate">
+                            <!--  v4 card: gradient by subscription id, avatar letter, short name, big days left  -->
                             <Border
                                 Margin="0,0,0,10"
+                                Padding="18,14,12,16"
+                                Background="{Binding CardBrush}"
+                                BorderThickness="2"
+                                CornerRadius="24"
                                 Cursor="Hand"
                                 MouseLeftButtonUp="Card_MouseLeftButtonUp"
                                 MouseRightButtonUp="CardMenu_Click">
                                 <Border.Style>
-                                    <Style BasedOn="{StaticResource HuppCard}" TargetType="Border">
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="Transparent" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                <Setter Property="BorderBrush" Value="#CCFFFFFF" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <StackPanel>
+                                <StackPanel TextElement.Foreground="White">
                                     <DockPanel>
+                                        <Border
+                                            Width="40"
+                                            Height="40"
+                                            Margin="0,0,12,0"
+                                            Background="#38FFFFFF"
+                                            CornerRadius="14"
+                                            DockPanel.Dock="Left">
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="18"
+                                                FontWeight="Bold"
+                                                Foreground="White"
+                                                Text="{Binding Initial}" />
+                                        </Border>
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                            <StackPanel.Resources>
+                                                <Style BasedOn="{StaticResource RoundIconButton}" TargetType="Button">
+                                                    <Setter Property="Foreground" Value="White" />
+                                                    <Setter Property="Background" Value="#2EFFFFFF" />
+                                                    <Setter Property="Margin" Value="4,0,0,0" />
+                                                </Style>
+                                            </StackPanel.Resources>
                                             <Button
                                                 Click="CardSupport_Click"
-                                                Style="{StaticResource RoundIconButton}"
                                                 ToolTip="Поддержка"
                                                 Visibility="{Binding SupportUrl, Converter={StaticResource NotEmptyToVis}}">
                                                 <materialDesign:PackIcon Kind="Send" />
                                             </Button>
-                                            <Button
-                                                Click="CardPing_Click"
-                                                Style="{StaticResource RoundIconButton}"
-                                                ToolTip="Проверить серверы">
-                                                <materialDesign:PackIcon Kind="Speedometer" />
+                                            <Button Click="CardPing_Click" ToolTip="Проверить серверы">
+                                                <materialDesign:PackIcon Kind="LightningBolt" />
                                             </Button>
-                                            <Button
-                                                Click="CardUpdate_Click"
-                                                Style="{StaticResource RoundIconButton}"
-                                                ToolTip="Обновить">
+                                            <Button Click="CardUpdate_Click" ToolTip="Обновить">
                                                 <materialDesign:PackIcon Kind="Refresh" />
                                             </Button>
-                                            <Button
-                                                Click="CardMenu_Click"
-                                                Style="{StaticResource RoundIconButton}"
-                                                ToolTip="Меню подписки">
-                                                <materialDesign:PackIcon Kind="DotsVertical" />
+                                            <Button Click="CardMenu_Click" ToolTip="Меню подписки">
+                                                <materialDesign:PackIcon Kind="DotsHorizontal" />
                                             </Button>
                                         </StackPanel>
-                                        <TextBlock
-                                            VerticalAlignment="Center"
-                                            FontSize="15"
-                                            FontWeight="Bold"
-                                            Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                                            Text="{Binding Title}"
-                                            TextTrimming="CharacterEllipsis" />
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock
+                                                FontSize="17"
+                                                FontWeight="Bold"
+                                                Foreground="White"
+                                                Text="{Binding ShortTitle}"
+                                                TextTrimming="CharacterEllipsis"
+                                                ToolTip="{Binding Title}" />
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="#E0FFFFFF"
+                                                Text="{Binding CardStatus}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
                                     </DockPanel>
-                                    <!--  Two framed facts: label, value, detail  -->
-                                    <UniformGrid
-                                        Margin="0,8,0,0"
-                                        Columns="2"
-                                        Visibility="{Binding TrafficText, Converter={StaticResource NotEmptyToVis}}">
-                                        <Border
-                                            Margin="0,0,4,0"
-                                            Padding="12,8"
-                                            BorderBrush="{DynamicResource MaterialDesign.Brush.Primary}"
-                                            BorderThickness="1"
-                                            CornerRadius="14">
-                                            <StackPanel>
-                                                <TextBlock FontSize="11" Style="{StaticResource SubText}" Text="Трафик" />
-                                                <TextBlock
-                                                    FontSize="14"
-                                                    FontWeight="Bold"
-                                                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                                    Text="{Binding TrafficText}"
-                                                    TextTrimming="CharacterEllipsis" />
-                                                <ProgressBar
-                                                    Height="3"
-                                                    Margin="0,4,0,2"
-                                                    materialDesign:TransitionAssist.DisableTransitions="True"
-                                                    Maximum="100"
-                                                    Visibility="{Binding HasProgress, Converter={StaticResource BoolToVis}}"
-                                                    Value="{Binding Progress, Mode=OneWay}" />
-                                                <TextBlock FontSize="11" Style="{StaticResource SubText}" Text="{Binding TrafficDetail}" />
-                                            </StackPanel>
-                                        </Border>
-                                        <Border
-                                            Margin="4,0,0,0"
-                                            Padding="12,8"
-                                            BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
-                                            BorderThickness="1"
-                                            CornerRadius="14"
-                                            Visibility="{Binding ExpireText, Converter={StaticResource NotEmptyToVis}}">
-                                            <StackPanel>
-                                                <TextBlock FontSize="11" Style="{StaticResource SubText}" Text="Подписка" />
-                                                <TextBlock
-                                                    FontSize="14"
-                                                    FontWeight="Bold"
-                                                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                                                    Text="{Binding ExpireText}" />
-                                                <TextBlock FontSize="11" Style="{StaticResource SubText}" Text="{Binding ExpireDetail}" />
-                                            </StackPanel>
-                                        </Border>
-                                    </UniformGrid>
+                                    <DockPanel Margin="0,14,0,0">
+                                        <StackPanel
+                                            Margin="0,0,6,6"
+                                            VerticalAlignment="Bottom"
+                                            DockPanel.Dock="Right">
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="#E6FFFFFF"
+                                                Text="{Binding ExpireText}" />
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontSize="13"
+                                                Foreground="#E6FFFFFF"
+                                                Text="{Binding TrafficText}" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock
+                                                FontSize="46"
+                                                FontWeight="Bold"
+                                                Foreground="White"
+                                                Text="{Binding DaysText}" />
+                                            <TextBlock
+                                                Margin="4,0,0,10"
+                                                VerticalAlignment="Bottom"
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                Foreground="#D9FFFFFF"
+                                                Text="{Binding DaysUnit}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Grid Height="8" Margin="0,8,0,0">
+                                        <Border Background="#38FFFFFF" CornerRadius="4" />
+                                        <ProgressBar
+                                            Height="8"
+                                            materialDesign:TransitionAssist.DisableTransitions="True"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="White"
+                                            Maximum="100"
+                                            Opacity="{Binding UsedOpacity}"
+                                            Value="{Binding UsedPercent, Mode=OneWay}" />
+                                    </Grid>
                                     <!--  Blocking state: expired / out of traffic  -->
                                     <Border
                                         Margin="0,10,0,0"
                                         Padding="12,8"
-                                        Background="#26EF4444"
+                                        Background="#40000000"
                                         CornerRadius="12"
                                         Visibility="{Binding IsBlocking, Converter={StaticResource BoolToVis}}">
                                         <DockPanel>
@@ -344,7 +366,7 @@
                                             <TextBlock
                                                 VerticalAlignment="Center"
                                                 FontWeight="SemiBold"
-                                                Foreground="#EF4444"
+                                                Foreground="White"
                                                 Text="{Binding HealthText}"
                                                 TextWrapping="Wrap" />
                                         </DockPanel>
@@ -354,7 +376,7 @@
                                         Margin="0,10,0,0"
                                         FontFamily="Segoe UI, Segoe UI Emoji, Segoe UI Symbol"
                                         FontSize="13"
-                                        Foreground="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                                        Foreground="#E6FFFFFF"
                                         LineHeight="18"
                                         LineStackingStrategy="BlockLineHeight"
                                         MaxHeight="{Binding AnnounceMaxHeight}"

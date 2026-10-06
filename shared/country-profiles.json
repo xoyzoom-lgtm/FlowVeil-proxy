@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "note": "One list for Android (net/CountryProfiles.kt) and Windows (Handler/CountryProfiles.cs); tests on both sides compare their data with this file. Every geosite/geoip name was checked in the bundled geosite.dat/geoip.dat (Xray, libv2ray v26.9.9).",
+  "countries": [
+    { "id": "ru", "nameRu": "Россия", "nameEn": "Russia", "flag": "🇷🇺", "geoip": "ru", "geosites": ["category-ru", "category-gov-ru", "category-bank-ru", "tld-ru"], "domainSuffixes": ["ru", "su", "xn--p1ai"] },
+    { "id": "by", "nameRu": "Беларусь", "nameEn": "Belarus", "flag": "🇧🇾", "geoip": "by", "geosites": [], "domainSuffixes": ["by", "xn--90ais"] },
+    { "id": "kz", "nameRu": "Казахстан", "nameEn": "Kazakhstan", "flag": "🇰🇿", "geoip": "kz", "geosites": [], "domainSuffixes": ["kz", "xn--80ao21a"] },
+    { "id": "uz", "nameRu": "Узбекистан", "nameEn": "Uzbekistan", "flag": "🇺🇿", "geoip": "uz", "geosites": [], "domainSuffixes": ["uz"] },
+    { "id": "ua", "nameRu": "Украина", "nameEn": "Ukraine", "flag": "🇺🇦", "geoip": "ua", "geosites": [], "domainSuffixes": ["ua", "xn--j1amh"] },
+    { "id": "tr", "nameRu": "Турция", "nameEn": "Turkey", "flag": "🇹🇷", "geoip": "tr", "geosites": [], "domainSuffixes": ["tr"] },
+    { "id": "ae", "nameRu": "ОАЭ", "nameEn": "UAE", "flag": "🇦🇪", "geoip": "ae", "geosites": [], "domainSuffixes": ["ae"] },
+    { "id": "sa", "nameRu": "Саудовская Аравия", "nameEn": "Saudi Arabia", "flag": "🇸🇦", "geoip": "sa", "geosites": [], "domainSuffixes": ["sa"] },
+    { "id": "ir", "nameRu": "Иран", "nameEn": "Iran", "flag": "🇮🇷", "geoip": "ir", "geosites": ["category-ir"], "domainSuffixes": ["ir"] },
+    { "id": "cn", "nameRu": "Китай (материковый)", "nameEn": "China (mainland)", "flag": "🇨🇳", "geoip": "cn", "geosites": ["cn"], "domainSuffixes": ["cn"] },
+    { "id": "cu", "nameRu": "Куба", "nameEn": "Cuba", "flag": "🇨🇺", "geoip": "cu", "geosites": [], "domainSuffixes": ["cu"] }
+  ]
+}

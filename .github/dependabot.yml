@@ -1,0 +1,17 @@
+# Weekly pull requests for outdated build pieces; nothing is merged automatically.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: gradle
+    directory: /android/V2rayNG
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: nuget
+    directory: /windows/v2rayN
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

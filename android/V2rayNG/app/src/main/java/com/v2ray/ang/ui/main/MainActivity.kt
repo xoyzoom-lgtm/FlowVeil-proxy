@@ -1,6 +1,7 @@
 package com.v2ray.ang.ui.main
 
 import com.v2ray.ang.net.ImportPreview
+import com.v2ray.ang.net.ImportSource
 
 import android.content.Intent
 import com.v2ray.ang.net.PairProtocol
@@ -123,6 +124,8 @@ class MainActivity : HelperBaseComponentActivity() {
             val restartService = SettingsChangeManager.consumeRestartService()
             SettingsChangeManager.consumeSetupGroupTab()
             mainViewModel.refreshUiSettings()
+            newHome = MmkvManager.decodeSettingsBool(AppConfig.PREF_NEW_HOME, true)
+            refreshOnboarding()
             // Always resync: a subscription added in settings should show its servers right away.
             mainViewModel.onAction(MainAction.SyncNewSubscriptions)
             if (restartService) LauncherManager.restartService(this)
@@ -131,6 +134,7 @@ class MainActivity : HelperBaseComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainViewModel.onAction(MainAction.Initialize)
+        refreshOnboarding()
         handleImportIntent(intent)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -191,9 +195,7 @@ class MainActivity : HelperBaseComponentActivity() {
                 onDismiss = { showMigration = false },
             )
         }
-        MainScreen(
-            mainViewModel = mainViewModel,
-            onAction = { action ->
+        val homeAction: (MainAction) -> Unit = { action ->
                 when (action) {
                     MainAction.ToggleService -> handleFabAction()
                     MainAction.TestCurrentServer -> handleLayoutTestClick()
@@ -214,10 +216,52 @@ class MainActivity : HelperBaseComponentActivity() {
                     )
                     else -> mainViewModel.onAction(action)
                 }
-            },
-            onNavigate = { route -> navigateTo(route) },
-        )
+        }
+        if (showOnboarding) {
+            com.v2ray.ang.ui.onboarding.OnboardingScreen(
+                onAction = homeAction,
+                onFinish = {
+                    MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_DONE, true)
+                    showOnboarding = false
+                    if (MmkvManager.decodeSubscriptions().isNotEmpty()) toast(R.string.onb_toast_ready)
+                },
+            )
+        } else if (newHome) {
+            com.v2ray.ang.ui.main.home.HomeScreen(
+                mainViewModel = mainViewModel,
+                onAction = homeAction,
+                onNavigate = { route -> navigateTo(route) },
+                onWizard = { showOnboarding = true },
+            )
+        } else {
+            MainScreen(
+                mainViewModel = mainViewModel,
+                onAction = homeAction,
+                onNavigate = { route -> navigateTo(route) },
+            )
+        }
     }
+
+    /** New home screen by default; the old one stays one release behind a switch in "Advanced". */
+    private var newHome by mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_NEW_HOME, true))
+
+    /** First-run wizard: fresh installs only (people who already have subscriptions are not shown it), or on request from Settings. */
+    private var showOnboarding by mutableStateOf(false)
+
+    private fun refreshOnboarding() {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_ONBOARDING_AGAIN, false)) {
+            MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_AGAIN, false)
+            showOnboarding = true
+            return
+        }
+        val done = MmkvManager.decodeSettingsBool(AppConfig.PREF_ONBOARDING_DONE, false)
+        if (!done && (MmkvManager.decodeSubscriptions().isNotEmpty() || MmkvManager.decodeAllServerList().isNotEmpty())) {
+            MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_DONE, true)
+            return
+        }
+        showOnboarding = !done
+    }
+
 
     private fun shareToClipboard(guid: String): Boolean =
         AngConfigManager.share2Clipboard(this, guid) == 0
@@ -261,7 +305,7 @@ class MainActivity : HelperBaseComponentActivity() {
             sharedText = text
         } else {
             // An invite link from a browser or a messenger: never imported before the user confirms it.
-            pendingImport = text
+            offerImport(text)
         }
     }
 
@@ -340,7 +384,7 @@ class MainActivity : HelperBaseComponentActivity() {
             if (scanResult != null) {
                 // a code shown by FlowVeil on a computer is not a config: offer to send a subscription there
                 val qr = PairProtocol.parseQr(scanResult)
-                if (qr != null) pairQr = qr else pendingImport = scanResult
+                if (qr != null) pairQr = qr else offerImport(scanResult)
             }
         }
     }
@@ -362,8 +406,9 @@ class MainActivity : HelperBaseComponentActivity() {
         if (!hasFocus || clipboardOffered || pendingImport != null || sharedText != null) return
         clipboardOffered = true
         if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_CLIPBOARD_OFFER, true)) return
-        val text = runCatching { Utils.getClipboard(this) }.getOrDefault("").trim()
-        if (text.isEmpty() || text == "null" || text.length > ImportPreview.MAX_LENGTH * 4) return
+        val raw = runCatching { Utils.getClipboard(this) }.getOrDefault("").trim()
+        if (raw.isEmpty() || raw == "null" || raw.length > ImportPreview.MAX_LENGTH * 4) return
+        val text = (ImportSource.normalize(raw) as? ImportSource.Result.Text)?.text ?: return
         val preview = ImportPreview.of(text)
         if (preview.kind == ImportPreview.Kind.REJECTED) return
         // Already here: nothing to offer.
@@ -374,12 +419,21 @@ class MainActivity : HelperBaseComponentActivity() {
         pendingImport = text
     }
 
+    /** "Paste from clipboard": the same "Добавить?" window as links and QR codes (host shown, nothing fetched before "Добавить"). */
     private fun importClipboard() {
         try {
-            val text = Utils.getClipboard(this)
-            mainViewModel.onAction(MainAction.ImportBatchConfig(text))
+            offerImport(Utils.getClipboard(this))
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to import config from clipboard", e)
+        }
+    }
+
+    /** Unwraps other clients' links (happ://add, v2rayng://install-sub) and asks before importing; Happ's encrypted links are explained. */
+    private fun offerImport(raw: String?) {
+        when (val r = ImportSource.normalize(raw)) {
+            is ImportSource.Result.Text -> pendingImport = r.text
+            ImportSource.Result.HappEncrypted -> toastError(R.string.import_happ_crypt, true)
+            ImportSource.Result.Empty -> toastError(R.string.import_empty)
         }
     }
 

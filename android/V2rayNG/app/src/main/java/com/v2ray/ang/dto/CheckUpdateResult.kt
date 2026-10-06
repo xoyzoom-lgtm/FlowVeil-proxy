@@ -11,4 +11,6 @@ data class CheckUpdateResult(
     val assetName: String? = null,
     /** `SHA256SUMS.txt` of the release when it has one (the download is checked against it). */
     val sumsUrl: String? = null,
+    val manifestUrl: String? = null,
+    val signatureUrl: String? = null,
 )
