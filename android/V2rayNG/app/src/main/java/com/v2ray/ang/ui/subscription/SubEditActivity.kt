@@ -146,6 +146,13 @@ fun SubEditScreen(
     var isUpdateIntervalError by rememberSaveable { mutableStateOf(false) }
     var allowInsecureUrl by rememberSaveable { mutableStateOf(initial.allowInsecureUrl) }
     var sendHwidCookie by rememberSaveable { mutableStateOf(initial.sendHwidCookie) }
+    // null = follow the general setting; the switch shows what would happen.
+    var autoTest by rememberSaveable { mutableStateOf(initial.autoTest) }
+    var autoRemove by rememberSaveable { mutableStateOf(initial.autoRemoveInvalid) }
+    var autoSort by rememberSaveable { mutableStateOf(initial.autoSort) }
+    val globalTest = MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION, false)
+    val globalRemove = MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_REMOVE_INVALID_AFTER_TEST, false)
+    val globalSort = MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_SORT_AFTER_TEST, false)
     var prevProfile by rememberSaveable { mutableStateOf(initial.prevProfile ?: "") }
     var nextProfile by rememberSaveable { mutableStateOf(initial.nextProfile ?: "") }
 
@@ -167,6 +174,9 @@ fun SubEditScreen(
         subItem.nextProfile = nextProfile
         subItem.allowInsecureUrl = allowInsecureUrl
         subItem.sendHwidCookie = sendHwidCookie
+        subItem.autoTest = autoTest
+        subItem.autoRemoveInvalid = autoRemove
+        subItem.autoSort = autoSort
         return subItem
     }
 
@@ -261,6 +271,23 @@ fun SubEditScreen(
                     checked = sendHwidCookie,
                     onCheckedChange = { sendHwidCookie = it }
                 )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.sub_auto_test),
+                    checked = autoTest ?: globalTest,
+                    onCheckedChange = { autoTest = it }
+                )
+                if (autoTest ?: globalTest) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.sub_auto_remove),
+                        checked = autoRemove ?: globalRemove,
+                        onCheckedChange = { autoRemove = it }
+                    )
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.sub_auto_sort),
+                        checked = autoSort ?: globalSort,
+                        onCheckedChange = { autoSort = it }
+                    )
+                }
             }
             SubSection(stringResource(R.string.sub_edit_advanced)) {
                 FormTextField(stringResource(R.string.sub_setting_user_agent), userAgent, { userAgent = it })

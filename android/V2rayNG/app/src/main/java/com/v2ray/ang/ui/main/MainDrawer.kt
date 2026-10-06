@@ -41,7 +41,6 @@ enum class MainDestination(@DrawableRes val iconRes: Int, @StringRes val labelRe
     Settings(R.drawable.ic_settings_24dp, R.string.title_settings),
     Logcat(R.drawable.ic_logcat_24dp, R.string.title_logcat),
     CheckUpdate(R.drawable.ic_check_update_24dp, R.string.update_check_for_update),
-    BackupRestore(R.drawable.ic_restore_24dp, R.string.title_configuration_backup_restore),
     About(R.drawable.ic_about_24dp, R.string.title_about)
 }
 
@@ -53,7 +52,6 @@ private val primaryDrawerItems = listOf(
 )
 
 private val allDrawerItems = primaryDrawerItems + listOf(
-    MainDestination.BackupRestore,
     MainDestination.Logcat,
     MainDestination.About
 )
@@ -104,7 +102,6 @@ fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) ->
                 }
             }
             drawerItems.forEach { item ->
-                if (item == MainDestination.BackupRestore) AppDivider()
                 NavigationDrawerItem(
                     label = { Text(stringResource(item.labelRes)) },
                     selected = false,

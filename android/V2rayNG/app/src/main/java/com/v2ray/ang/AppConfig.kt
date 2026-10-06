@@ -55,6 +55,8 @@ object AppConfig {
     const val SUBSCRIPTION_UPDATE_TASK_NAME = "subscription_updater"
     const val SUBSCRIPTION_MIN_INTERVAL_MINUTES = 15L
     const val PREF_SPEED_ENABLED = "pref_speed_enabled"
+    /** Traffic and connected time per day (net/TrafficDays.kt). */
+    const val PREF_TRAFFIC_DAYS = "pref_traffic_days"
     const val PREF_CONFIRM_REMOVE = "pref_confirm_remove"
     const val PREF_DOUBLE_COLUMN_DISPLAY = "pref_double_column_display"
     const val PREF_GROUP_ALL_DISPLAY = "pref_group_all_display"
@@ -148,8 +150,6 @@ object AppConfig {
     const val TASKER_EXTRA_BUNDLE_KEY = "tasker_extra_bundle_key"
     const val PREF_AUTOMATION_ENABLED = "pref_automation_enabled"
     const val PREF_CLIPBOARD_OFFER = "pref_clipboard_offer"
-    /** New home screen (cards, bottom panel). The old one stays for one release behind this switch. */
-    const val PREF_NEW_HOME = "pref_new_home"
     /** "Быстрый режим" (see net/FastMode.kt). Off by default. */
     const val PREF_FAST_MODE = "pref_fast_mode"
     /** Interface look: true = glass (translucent surfaces, blur behind sheets), false = solid. */

@@ -46,6 +46,8 @@ class UrlSchemeActivity : BaseComponentActivity() {
     }
 
     private fun linkFromUri(uri: Uri): String? {
+        // A code from a FlowVeil computer: the main screen opens the "send a subscription" window.
+        if (uri.host.equals("pair", ignoreCase = true)) return uri.toString()
         // The provider's name from &name= rides along as the link's #fragment: the importer names the new subscription with it.
         val invite = InviteLink.parse(uri.toString()) ?: return null
         LogUtil.i(AppConfig.TAG, "Import invite link")

@@ -221,9 +221,6 @@
             android:name=".ui.checkupdate.CheckUpdateActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.backup.BackupActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.AboutActivity"
             android:exported="false" />
         <activity

@@ -67,6 +67,9 @@ public class PairTests
     {
         var s = NewSession();
         var url = PairQr.Build("192.168.1.10", 5123, s);
+        await url.StartsWith("flowveil://pair?q=").Should().BeTrue();
+        // an older phone and manual entry use the plain address
+        await (PairQr.Parse(PairQr.BuildHttp("192.168.1.10", 5123, s)) != null).Should().BeTrue();
         var parsed = PairQr.Parse(url);
         await (parsed != null).Should().BeTrue();
         await parsed!.Host.Should().BeEqualTo("192.168.1.10");

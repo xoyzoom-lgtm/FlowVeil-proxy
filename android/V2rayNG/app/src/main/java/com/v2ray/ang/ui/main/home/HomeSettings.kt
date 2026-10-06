@@ -76,6 +76,7 @@ internal fun HomeSettings(
     onClose: () -> Unit,
     onNavigate: (MainDestination) -> Unit,
     onWizard: () -> Unit,
+    onStats: () -> Unit,
     /** Called after a routing switch changed: the screen restarts a running connection so it takes effect now. */
     onRulesChanged: () -> Unit,
 ) {
@@ -92,10 +93,10 @@ internal fun HomeSettings(
     var clipboard by remember { mutableStateOf(flag(AppConfig.PREF_CLIPBOARD_OFFER, true)) }
     var updates by remember { mutableStateOf(UpdateNotifier.isEnabled()) }
     var automation by remember { mutableStateOf(flag(AppConfig.PREF_AUTOMATION_ENABLED, false)) }
-    var newHome by remember { mutableStateOf(flag(AppConfig.PREF_NEW_HOME, true)) }
     var country by remember { mutableStateOf(MmkvManager.decodeSettingsString(ExtraRules.PREF_COUNTRY) ?: CountryProfiles.NONE) }
     var profile by remember { mutableStateOf(RuleProfiles.current()) }
     var picker by remember { mutableStateOf<String?>(null) }
+    var infoRes by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var bypassCount by remember { mutableStateOf(WhitelistBypass.servers().size) }
     // Servers that look like mobile-whitelist servers by themselves (name, VK/Yandex masks, transport): picked automatically when none are chosen.
     var autoBypass by remember { mutableStateOf(-1) }
@@ -147,9 +148,6 @@ internal fun HomeSettings(
                         listOf(happ?.name ?: "—", stringResource(styleName(HomeStyle.mode))).joinToString(" · ")
                     ) { picker = "look" }
                     NavRow(R.drawable.ic_translate_24dp, stringResource(R.string.title_language), if (russian) "Русский" else "English") { picker = "language" }
-                    SwitchRow2(R.drawable.ic_subscriptions_24dp, stringResource(R.string.title_pref_new_home), stringResource(R.string.summary_pref_new_home), newHome) {
-                        newHome = it; save(AppConfig.PREF_NEW_HOME, it)
-                    }
                 }
                 Group(stringResource(R.string.hs_group_subs)) {
                     NavRow(R.drawable.ic_subscriptions_24dp, stringResource(R.string.hs_subscriptions), stringResource(R.string.hs_subscriptions_sub, subs, servers)) {
@@ -158,12 +156,12 @@ internal fun HomeSettings(
                     NavRow(R.drawable.ic_per_apps_24dp, stringResource(R.string.hs_apps), stringResource(R.string.hs_apps_sub)) {
                         onNavigate(MainDestination.PerAppProxy)
                     }
-                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_whitelist_bypass), stringResource(R.string.onb3_auto_sub), bypass) {
+                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_whitelist_bypass), stringResource(R.string.onb3_auto_sub), bypass, info = { infoRes = R.string.title_whitelist_bypass to R.string.info_bypass }) {
                         bypass = it; save(WhitelistBypass.PREF_ENABLED, it)
                     }
                     NavRow(R.drawable.ic_routing_24dp, stringResource(R.string.hs_bypass), if (bypassCount > 0) stringResource(R.string.hs_bypass_sub, bypassCount)
                         else if (autoBypass > 0) stringResource(R.string.hs_bypass_auto, autoBypass)
-                        else stringResource(R.string.hs_bypass_none)) { picker = "bypass" }
+                        else stringResource(R.string.hs_bypass_none), info = { infoRes = R.string.hs_bypass to R.string.info_bypass_servers }) { picker = "bypass" }
                 }
                 Group(stringResource(R.string.hs_group_traffic)) {
                     NavRow(
@@ -177,8 +175,10 @@ internal fun HomeSettings(
                                 null -> R.string.rule_profile_custom
                             }
                         )
+                        , info = { infoRes = R.string.title_rule_profile to R.string.info_rule_profile }
                     ) { picker = "profile" }
-                    NavRow(R.drawable.ic_language_24dp, stringResource(R.string.title_country_direct), CountryProfiles.label(country, stringResource(R.string.country_none), russian)) {
+                    NavRow(R.drawable.ic_speed_24dp, stringResource(R.string.stats_title), stringResource(R.string.stats_sub)) { onStats() }
+                    NavRow(R.drawable.ic_language_24dp, stringResource(R.string.title_country_direct), CountryProfiles.label(country, stringResource(R.string.country_none), russian), info = { infoRes = R.string.title_country_direct to R.string.info_country }) {
                         picker = "country"
                     }
                     SwitchRow2(R.drawable.ic_status_cross, stringResource(R.string.title_pref_adblock), stringResource(R.string.onb3_ads_sub), ads) {
@@ -187,13 +187,13 @@ internal fun HomeSettings(
                     SwitchRow2(R.drawable.ic_telegram_24dp, stringResource(R.string.title_pref_telegram_proxy), stringResource(R.string.onb3_tg_sub), tg) {
                         tg = it; save(ExtraRules.PREF_TELEGRAM_PROXY, it); changed()
                     }
-                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_fast_mode), stringResource(R.string.summary_fast_mode), fast) {
+                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_fast_mode), stringResource(R.string.summary_fast_mode), fast, info = { infoRes = R.string.title_fast_mode to R.string.info_fast }) {
                         fast = it; save(AppConfig.PREF_FAST_MODE, it); onRulesChanged()
                     }
                     SwitchRow2(R.drawable.ic_refresh_24dp, stringResource(R.string.title_pref_auto_failover), null, failover) {
                         failover = it; save(AppConfig.PREF_AUTO_FAILOVER, it)
                     }
-                    SwitchRow2(R.drawable.ic_subscriptions_24dp, stringResource(R.string.title_pref_failover_across_subs), stringResource(R.string.summary_pref_failover_across_subs), failoverSubs) {
+                    SwitchRow2(R.drawable.ic_subscriptions_24dp, stringResource(R.string.title_pref_failover_across_subs), stringResource(R.string.summary_pref_failover_across_subs), failoverSubs, info = { infoRes = R.string.title_pref_failover_across_subs to R.string.info_failover_subs }) {
                         failoverSubs = it; save(AppConfig.PREF_FAILOVER_ACROSS_SUBS, it)
                     }
                 }
@@ -204,7 +204,7 @@ internal fun HomeSettings(
                     SwitchRow2(R.drawable.ic_check_update_24dp, stringResource(R.string.onb3_notify), stringResource(R.string.onb3_notify_sub), updates) {
                         updates = it; UpdateNotifier.setEnabled(context, it)
                     }
-                    SwitchRow2(R.drawable.ic_source_code_24dp, stringResource(R.string.title_pref_automation), stringResource(R.string.summary_pref_automation), automation) {
+                    SwitchRow2(R.drawable.ic_source_code_24dp, stringResource(R.string.title_pref_automation), stringResource(R.string.summary_pref_automation), automation, info = { infoRes = R.string.title_pref_automation to R.string.info_automation }) {
                         automation = it; save(AppConfig.PREF_AUTOMATION_ENABLED, it)
                     }
                 }
@@ -212,7 +212,6 @@ internal fun HomeSettings(
                     NavRow(R.drawable.ic_telegram_24dp, stringResource(R.string.hs_channel), "t.me/FlowVeil") { Utils.openUri(context, "https://t.me/FlowVeil") }
                     NavRow(R.drawable.ic_check_update_24dp, stringResource(R.string.hs_check_update), "build ${BuildConfig.HUPP_BUILD}") { onNavigate(MainDestination.CheckUpdate) }
                     NavRow(R.drawable.ic_play_24dp, stringResource(R.string.title_onboarding_again), stringResource(R.string.summary_onboarding_again)) { onWizard() }
-                    NavRow(R.drawable.ic_backup_24dp, stringResource(R.string.hs_backup), null) { onNavigate(MainDestination.BackupRestore) }
                     NavRow(R.drawable.ic_settings_24dp, stringResource(R.string.hs_expert), stringResource(R.string.hs_expert_sub)) { onNavigate(MainDestination.Settings) }
                     NavRow(R.drawable.ic_about_24dp, stringResource(R.string.title_about), null) { onNavigate(MainDestination.About) }
                 }
@@ -221,6 +220,11 @@ internal fun HomeSettings(
         }
     }
 
+    infoRes?.let { (t, b) ->
+        HomeSheet(onDismiss = { infoRes = null }) {
+            SheetHeading(stringResource(t), stringResource(b))
+        }
+    }
     if (picker == "bypass") {
         BypassServerPickerDialog(onDismiss = { picker = null }, onSaved = { bypassCount = it; picker = null })
     }
@@ -372,7 +376,7 @@ private fun Group(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun RowShell(iconRes: Int, title: String, subtitle: String?, onClick: () -> Unit, trailing: @Composable () -> Unit) {
+private fun RowShell(iconRes: Int, title: String, subtitle: String?, onClick: () -> Unit, info: (() -> Unit)? = null, trailing: @Composable () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -395,15 +399,22 @@ private fun RowShell(iconRes: Int, title: String, subtitle: String?, onClick: ()
                 Text(subtitle, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
-        Spacer(Modifier.width(8.dp))
+        if (info != null) {
+            Icon(
+                painterResource(R.drawable.ic_about_24dp), stringResource(R.string.hs_info),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                modifier = Modifier.size(34.dp).clip(RoundedCornerShape(17.dp)).clickable(onClick = info).padding(8.dp)
+            )
+        }
+        Spacer(Modifier.width(4.dp))
         trailing()
     }
     HorizontalDivider(Modifier.padding(start = 60.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
 }
 
 @Composable
-private fun NavRow(iconRes: Int, title: String, subtitle: String?, onClick: () -> Unit) =
-    RowShell(iconRes, title, subtitle, onClick) {
+private fun NavRow(iconRes: Int, title: String, subtitle: String?, info: (() -> Unit)? = null, onClick: () -> Unit) =
+    RowShell(iconRes, title, subtitle, onClick, info) {
         Icon(
             painterResource(R.drawable.ic_chevron_right_24dp), null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), modifier = Modifier.size(20.dp)
@@ -411,8 +422,8 @@ private fun NavRow(iconRes: Int, title: String, subtitle: String?, onClick: () -
     }
 
 @Composable
-private fun SwitchRow2(iconRes: Int, title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit) =
-    RowShell(iconRes, title, subtitle, { onChange(!checked) }) {
+private fun SwitchRow2(iconRes: Int, title: String, subtitle: String?, checked: Boolean, info: (() -> Unit)? = null, onChange: (Boolean) -> Unit) =
+    RowShell(iconRes, title, subtitle, { onChange(!checked) }, info) {
         Switch(checked = checked, onCheckedChange = onChange)
     }
 

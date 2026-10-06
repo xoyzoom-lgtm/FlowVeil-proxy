@@ -20,7 +20,7 @@ object PairProtocol {
 
     /** Parses the address from the computer's QR code; null for anything else. */
     fun parseQr(text: String?): Qr? {
-        val t = text?.trim() ?: return null
+        val t = unwrap(text?.trim() ?: return null) ?: return null
         if (!t.startsWith("http://")) return null
         val hash = t.indexOf('#')
         if (hash < 0) return null
@@ -44,6 +44,24 @@ object PairProtocol {
         val key = b64Decode(params["k"] ?: return null) ?: return null
         if (key.size != 32) return null
         return Qr(host, port, path[1], token, key)
+    }
+
+    /** The computer's QR in the form `flowveil://pair?q=<encoded http address>`: the address inside, or the text as it is. */
+    private fun unwrap(t: String): String? {
+        if (!t.startsWith("flowveil://pair", ignoreCase = true)) return t
+        val q = t.substringAfter("?q=", "").substringBefore('&')
+        if (q.isEmpty()) return null
+        return runCatching { java.net.URLDecoder.decode(q, "UTF-8") }.getOrNull()
+    }
+
+    /** Looks like a code from a FlowVeil computer (even a broken or old one): never to be imported as a server or a link. */
+    fun looksLikePair(text: String?): Boolean {
+        val t = text?.trim() ?: return false
+        if (t.startsWith("flowveil://pair", ignoreCase = true)) return true
+        if (!t.startsWith("http://")) return false
+        val rest = t.removePrefix("http://")
+        val host = rest.substringBefore(':').substringBefore('/')
+        return isPrivateHost(host) && rest.substringAfter('/', "").startsWith("p/")
     }
 
     /** Only home-network addresses are accepted: a QR must never make the phone talk to the internet. */

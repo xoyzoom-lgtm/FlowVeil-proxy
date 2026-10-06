@@ -106,6 +106,7 @@ fun HomeScreen(
     val context = LocalContext.current
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showSubs by rememberSaveable { mutableStateOf(false) }
+    var showStats by rememberSaveable { mutableStateOf(false) }
     val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
     val isRunning = uiState.isRunning
@@ -559,8 +560,17 @@ fun HomeScreen(
                 // "Subscriptions" opens the new list instead of the old "Groups" screen.
                 onNavigate = { dest -> if (dest == MainDestination.Subscriptions) showSubs = true else onNavigate(dest) },
                 onWizard = { showSettings = false; onWizard() },
+                onStats = { showStats = true },
                 onRulesChanged = { if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context) },
             )
+        }
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showStats,
+            enter = androidx.compose.animation.slideInHorizontally { it },
+            exit = androidx.compose.animation.slideOutHorizontally { it },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            HomeStats(onClose = { showStats = false })
         }
         androidx.compose.animation.AnimatedVisibility(
             visible = showSubs,

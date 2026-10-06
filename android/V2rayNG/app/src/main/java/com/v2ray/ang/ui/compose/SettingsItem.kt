@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.HorizontalDivider
+import com.v2ray.ang.ui.main.home.HomeStyle
+import com.v2ray.ang.ui.main.home.glassEdge
+import com.v2ray.ang.ui.main.home.homeAccent
+import com.v2ray.ang.ui.main.home.homeSurface
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,13 +40,28 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
 
 private val IosSwitchGreen = Color(0xFF34C759)
 
 @Composable
 fun PreferenceGroupHeader(title: String, modifier: Modifier = Modifier) {
+    if (LocalNewLook.current) {
+        Text(
+            text = title.uppercase(),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(start = 22.dp, end = 22.dp, top = 18.dp, bottom = 8.dp)
+        )
+        return
+    }
     Text(
         text = title.uppercase(),
         style = MaterialTheme.typography.labelMedium,
@@ -61,7 +83,7 @@ fun CollapsiblePreferenceGroupHeader(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onExpandedChange(!expanded) }
-            .padding(start = 32.dp, end = 24.dp, top = 20.dp, bottom = 6.dp),
+            .padding(start = if (LocalNewLook.current) 22.dp else 32.dp, end = 24.dp, top = if (LocalNewLook.current) 18.dp else 20.dp, bottom = if (LocalNewLook.current) 8.dp else 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -87,6 +109,20 @@ fun SettingsGroupCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    if (LocalNewLook.current) {
+        // Same surface, corner and edge as the home screen: follows the chosen style (glass / blur / solid).
+        val shape = RoundedCornerShape(HomeStyle.r(22))
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(shape)
+                .background(homeSurface())
+                .glassEdge(shape),
+            content = content
+        )
+        return
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -115,14 +151,23 @@ private fun SettingsItemRow(
     val descriptionColor = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
 
+    val newLook = LocalNewLook.current
     Row(
         modifier = modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier)
-            .padding(16.dp),
+            .padding(if (newLook) PaddingValues(horizontal = 14.dp, vertical = 12.dp) else PaddingValues(16.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (icon != null) {
+        if (icon != null && newLook) {
+            Box(
+                Modifier.size(34.dp).clip(RoundedCornerShape(11.dp)).background(homeAccent().copy(alpha = if (enabled) 0.14f else 0.06f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(painter = icon, contentDescription = null, modifier = Modifier.size(19.dp), tint = if (enabled) homeAccent() else titleColor)
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+        } else if (icon != null) {
             Icon(
                 painter = icon,
                 contentDescription = null,
@@ -147,6 +192,9 @@ private fun SettingsItemRow(
             }
         }
         trailing?.invoke()
+    }
+    if (newLook) {
+        HorizontalDivider(Modifier.padding(start = if (icon != null) 60.dp else 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
     }
 }
 
@@ -280,7 +328,7 @@ fun SettingsSwitchItem(
         } else null,
         modifier = modifier,
         trailing = {
-            val checkedTrack = LocalHappTheme.current?.settingsControlsTintColor?.toHappColor() ?: IosSwitchGreen
+            val checkedTrack = LocalHappTheme.current?.settingsControlsTintColor?.toHappColor() ?: if (LocalNewLook.current) homeAccent() else IosSwitchGreen
             Switch(
                 checked = checked,
                 onCheckedChange = if (enabled) onCheckedChange else null,

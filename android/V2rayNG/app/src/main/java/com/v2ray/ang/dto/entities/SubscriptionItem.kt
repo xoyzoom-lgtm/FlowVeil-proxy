@@ -15,6 +15,10 @@ data class SubscriptionItem(
     var userAgent: String? = null,
     /** Also send the device ID in a Cookie header: some panels read it only from there. Off by default. */
     var sendHwidCookie: Boolean = false,
+    /** After an update: test the servers / drop dead ones / sort by ping. null = follow the general setting. */
+    var autoTest: Boolean? = null,
+    var autoRemoveInvalid: Boolean? = null,
+    var autoSort: Boolean? = null,
     var requestHeaders: String? = null,
     // Provider metadata from response headers; nullable because older stored items lack them.
     var trafficUsed: Long? = null,

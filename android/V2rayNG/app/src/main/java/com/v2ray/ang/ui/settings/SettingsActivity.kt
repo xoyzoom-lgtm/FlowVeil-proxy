@@ -50,7 +50,6 @@ import com.v2ray.ang.handler.MmkvManager.rememberMmkvString
 import com.v2ray.ang.receiver.WidgetProvider
 import com.v2ray.ang.root.RootManager
 import com.v2ray.ang.ui.AboutActivity
-import com.v2ray.ang.ui.backup.BackupActivity
 import com.v2ray.ang.ui.base.BaseComponentActivity
 import com.v2ray.ang.ui.checkupdate.CheckUpdateActivity
 import com.v2ray.ang.ui.logcat.LogcatActivity
@@ -136,7 +135,6 @@ class SettingsActivity : BaseComponentActivity() {
             MainDestination.UserAssets -> UserAssetActivity::class.java
             MainDestination.Logcat -> LogcatActivity::class.java
             MainDestination.CheckUpdate -> CheckUpdateActivity::class.java
-            MainDestination.BackupRestore -> BackupActivity::class.java
             MainDestination.About -> AboutActivity::class.java
             MainDestination.Settings -> return
         }
@@ -150,7 +148,6 @@ private val SettingsSections = listOf(
     MainDestination.PerAppProxy,
     MainDestination.Routing,
     MainDestination.UserAssets,
-    MainDestination.BackupRestore,
     MainDestination.Logcat,
     MainDestination.CheckUpdate,
     MainDestination.About,
@@ -227,7 +224,6 @@ fun SettingsScreen(
     var sendHwid by rememberMmkvBool(AppConfig.PREF_SEND_HWID, true)
     var automation by rememberMmkvBool(AppConfig.PREF_AUTOMATION_ENABLED, false)
     var clipboardOffer by rememberMmkvBool(AppConfig.PREF_CLIPBOARD_OFFER, true)
-    var newHome by rememberMmkvBool(AppConfig.PREF_NEW_HOME, true)
     var countryDirect by rememberMmkvString(ExtraRules.PREF_COUNTRY, com.v2ray.ang.net.CountryProfiles.NONE)
     var showHwid by remember { mutableStateOf(false) }
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
@@ -361,44 +357,6 @@ fun SettingsScreen(
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_connection))
             SettingsGroupCard {
                 SettingsMenuItem(
-                    title = stringResource(R.string.title_rule_profile),
-                    subtitle = ruleProfile?.let { stringResource(ruleProfileTitle(it)) } ?: stringResource(R.string.rule_profile_custom),
-                    onClick = { showRuleProfiles = true }
-                )
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_adblock),
-                    summary = stringResource(R.string.summary_pref_adblock),
-                    checked = adBlock,
-                    onCheckedChange = {
-                        adBlock = it
-                        ExtraRules.apply()
-                        SettingsChangeManager.makeRestartService()
-                    }
-                )
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_telegram_proxy),
-                    summary = stringResource(R.string.summary_pref_telegram_proxy),
-                    checked = telegramProxy,
-                    onCheckedChange = {
-                        telegramProxy = it
-                        ExtraRules.apply()
-                        SettingsChangeManager.makeRestartService()
-                    }
-                )
-                val countryNone = stringResource(R.string.country_none)
-                val russianUi = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "ru"
-                SettingsListItem(
-                    title = stringResource(R.string.title_country_direct),
-                    entries = listOf(countryNone) + com.v2ray.ang.net.CountryProfiles.ALL.map { "${it.flag} ${if (russianUi) it.nameRu else it.nameEn}" },
-                    values = listOf(com.v2ray.ang.net.CountryProfiles.NONE) + com.v2ray.ang.net.CountryProfiles.ALL.map { it.id },
-                    selectedValue = countryDirect,
-                    onSelected = {
-                        countryDirect = it
-                        ExtraRules.apply()
-                        SettingsChangeManager.makeRestartService()
-                    }
-                )
-                SettingsMenuItem(
                     title = stringResource(R.string.title_kill_switch),
                     subtitle = stringResource(R.string.summary_kill_switch),
                     onClick = {
@@ -407,22 +365,6 @@ fun SettingsScreen(
                             .onFailure { settingsContext.toastError(R.string.kill_switch_unavailable) }
                     }
                 )
-                if (showRuleProfiles) {
-                    SelectListDialog(
-                        options = RuleProfiles.Profile.entries,
-                        optionText = { stringResource(ruleProfileTitle(it)) + "\n" + stringResource(ruleProfileHint(it)) },
-                        selectedOption = ruleProfile,
-                        showRadio = true,
-                        title = stringResource(R.string.title_rule_profile),
-                        onSelected = {
-                            showRuleProfiles = false
-                            ruleProfile = it
-                            RuleProfiles.apply(settingsContext, it)
-                            SettingsChangeManager.makeRestartService()
-                        },
-                        onDismiss = { showRuleProfiles = false }
-                    )
-                }
                 SettingsMenuItem(
                     title = stringResource(R.string.title_direct_sites),
                     subtitle = stringResource(R.string.summary_direct_sites, directSitesCount),
@@ -480,20 +422,6 @@ fun SettingsScreen(
                         title = stringResource(R.string.title_pref_noise_delay),
                         value = noiseDelay,
                         onValueChanged = { noiseDelay = it }
-                    )
-                }
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_auto_failover),
-                    summary = stringResource(R.string.summary_pref_auto_failover),
-                    checked = autoFailover,
-                    onCheckedChange = { autoFailover = it }
-                )
-                if (autoFailover) {
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.title_pref_failover_across_subs),
-                        summary = stringResource(R.string.summary_pref_failover_across_subs),
-                        checked = failoverAcrossSubs,
-                        onCheckedChange = { failoverAcrossSubs = it }
                     )
                 }
                 SettingsSwitchItem(
@@ -684,78 +612,6 @@ fun SettingsScreen(
                 if (!showHwid) {
                     SettingsMenuItem(title = stringResource(R.string.hwid_show_title), onClick = { showHwid = true; Utils.setClipboard(settingsContext, deviceHwid) })
                 }
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_clipboard_offer),
-                    summary = stringResource(R.string.summary_pref_clipboard_offer),
-                    checked = clipboardOffer,
-                    onCheckedChange = { clipboardOffer = it }
-                )
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_automation),
-                    summary = stringResource(R.string.summary_pref_automation),
-                    checked = automation,
-                    onCheckedChange = { automation = it }
-                )
-            }
-
-            PreferenceGroupHeader(title = stringResource(R.string.title_ui_settings))
-            SettingsGroupCard {
-                SettingsListItem(
-                    title = stringResource(R.string.title_pref_ui_mode_night),
-                    entries = uiModeNightEntries,
-                    values = uiModeNightValues,
-                    selectedValue = uiModeNight,
-                    onSelected = {
-                        uiModeNight = it
-                        ThemeManager.setThemeMode(it)
-                    }
-                )
-                SettingsListItem(
-                    title = stringResource(R.string.title_language),
-                    entries = languageEntries,
-                    values = languageValues,
-                    selectedValue = language,
-                    onSelected = {
-                        language = it
-                        AppLocaleManager.setApplicationLanguage(it)
-                    }
-                )
-            }
-
-            val context = LocalContext.current
-            val happTheme by HappThemeManager.selected.collectAsStateWithLifecycle()
-            var happThemeCode by rememberSaveable { mutableStateOf("") }
-            PreferenceGroupHeader(title = stringResource(R.string.title_happ_themes))
-            SettingsGroupCard {
-                HappThemePicker(
-                    selectedId = happTheme?.id,
-                    onSelectNone = {
-                        HappThemeManager.clear()
-                        WidgetProvider.refresh(context)
-                    },
-                    onSelectTheme = {
-                        HappThemeManager.selectBuiltIn(it)
-                        WidgetProvider.refresh(context)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                )
-                SettingsEditItem(
-                    title = stringResource(R.string.title_happ_theme_custom_code),
-                    value = happThemeCode,
-                    onValueChanged = { code ->
-                        if (code.isNotBlank()) {
-                            if (HappThemeManager.applyCustomCode(code)) {
-                                WidgetProvider.refresh(context)
-                                context.toastSuccess(R.string.toast_happ_theme_applied)
-                            } else {
-                                context.toastError(R.string.toast_happ_theme_invalid)
-                            }
-                        }
-                        happThemeCode = ""
-                    }
-                )
             }
 
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_developer))
@@ -1135,20 +991,6 @@ fun SettingsScreen(
             )
             if (advancedSettingsExpanded) {
                 SettingsGroupCard {
-                    SettingsMenuItem(
-                        title = stringResource(R.string.title_onboarding_again),
-                        subtitle = stringResource(R.string.summary_onboarding_again),
-                        onClick = {
-                            MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_AGAIN, true)
-                            (settingsContext as? android.app.Activity)?.finish()
-                        }
-                    )
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.title_pref_new_home),
-                        summary = stringResource(R.string.summary_pref_new_home),
-                        checked = newHome,
-                        onCheckedChange = { newHome = it }
-                    )
                     if (systemVpnSettingsAvailable) {
                         SettingsMenuItem(
                             title = stringResource(R.string.title_system_vpn_settings),

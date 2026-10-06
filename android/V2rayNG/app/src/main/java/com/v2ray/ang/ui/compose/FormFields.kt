@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.DropdownMenuItem
@@ -57,9 +58,12 @@ fun FormTextField(
             maxLines = maxLines,
             enabled = enabled,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            shape = RoundedCornerShape(if (LocalNewLook.current) 16.dp else 4.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
+                unfocusedBorderColor = if (LocalNewLook.current) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline,
+                focusedBorderColor = if (LocalNewLook.current) com.v2ray.ang.ui.main.home.homeAccent() else MaterialTheme.colorScheme.primary,
                 cursorColor = MaterialTheme.colorScheme.secondary,
                 selectionColors = TextSelectionColors(
                     handleColor = MaterialTheme.colorScheme.secondary,
@@ -111,9 +115,12 @@ fun FormDropdownField(
             placeholder = { if (placeholder != null) Text(placeholder) },
             supportingText = supportingText?.let { { Text(it) } },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            shape = RoundedCornerShape(if (LocalNewLook.current) 16.dp else 4.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
+                unfocusedBorderColor = if (LocalNewLook.current) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline,
+                focusedBorderColor = if (LocalNewLook.current) com.v2ray.ang.ui.main.home.homeAccent() else MaterialTheme.colorScheme.primary,
                 cursorColor = MaterialTheme.colorScheme.secondary,
                 selectionColors = TextSelectionColors(
                     handleColor = MaterialTheme.colorScheme.secondary,

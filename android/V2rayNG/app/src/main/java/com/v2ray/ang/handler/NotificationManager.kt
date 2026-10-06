@@ -11,6 +11,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.net.TrafficDays
 import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.dto.entities.ProfileItem
@@ -258,6 +259,7 @@ object NotificationManager {
 
         val proxyTotal = proxyUplink + proxyDownlink
         val directTotal = directUplink + directDownlink
+        recordDay(proxyUplink, proxyDownlink, directTotal, if (lastQueryTime > 0L) sinceLastQueryInSeconds.toLong() else 0L)
         val zeroSpeed = proxyTotal + directTotal == 0L
         if (!zeroSpeed || !lastZeroSpeed) {
             val text = StringBuilder()
@@ -287,6 +289,16 @@ object NotificationManager {
         }
         lastQueryTime = queryTime
         return zeroSpeed
+    }
+
+    /** Adds this round to today's totals (statistics screen); the numbers stay on the device. */
+    private fun recordDay(proxyUp: Long, proxyDown: Long, direct: Long, seconds: Long) {
+        if (proxyUp + proxyDown + direct + seconds == 0L) return
+        runCatching {
+            val days = TrafficDays.parse(MmkvManager.decodeSettingsString(AppConfig.PREF_TRAFFIC_DAYS))
+            TrafficDays.add(days, TrafficDays.dayKey(System.currentTimeMillis()), proxyUp, proxyDown, direct, seconds)
+            MmkvManager.encodeSettings(AppConfig.PREF_TRAFFIC_DAYS, TrafficDays.serialize(days))
+        }
     }
 
     /**
