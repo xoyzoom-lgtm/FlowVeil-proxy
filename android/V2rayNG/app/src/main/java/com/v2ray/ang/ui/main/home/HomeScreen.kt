@@ -405,7 +405,11 @@ fun HomeScreen(
         expiredSelected -> DockState.BLOCKED
         else -> DockState.IDLE
     }
-    val serverName = selectedRow?.let { splitFlag(it.remarks).let { (f, n) -> if (f != null && f != n) "$f  $n" else n } }
+    // The chosen server may sit in another subscription than the card on screen: take its name from storage then.
+    val otherName = remember(uiState.selectedGuid, selectedRow == null) {
+        if (selectedRow == null) uiState.selectedGuid?.let { com.v2ray.ang.handler.MmkvManager.decodeServerConfig(it)?.remarks } else null
+    }
+    val serverName = (selectedRow?.remarks ?: otherName)?.let { splitFlag(it).let { (f, n) -> if (f != null && f != n) "$f  $n" else n } }
     val dockTitle = when (dockState) {
         DockState.ERROR -> stringResource(R.string.home_dock_error_title)
         else -> serverName ?: stringResource(R.string.home_choose_server)
