@@ -13,6 +13,8 @@ data class SubscriptionItem(
     var filter: String? = null,
     var allowInsecureUrl: Boolean = false,
     var userAgent: String? = null,
+    /** Also send the device ID in a Cookie header: some panels read it only from there. Off by default. */
+    var sendHwidCookie: Boolean = false,
     var requestHeaders: String? = null,
     // Provider metadata from response headers; nullable because older stored items lack them.
     var trafficUsed: Long? = null,

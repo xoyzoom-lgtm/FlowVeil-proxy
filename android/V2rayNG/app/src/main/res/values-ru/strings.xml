@@ -1158,4 +1158,8 @@
     <string name="tune_corner">Скругление углов</string>
     <string name="tune_blobs">Свечение фона</string>
     <string name="tune_reset">Сбросить тонкую настройку</string>
+    <string name="sub_edit_main">Основное</string>
+    <string name="sub_edit_options">Опции</string>
+    <string name="sub_edit_advanced">Дополнительно</string>
+    <string name="sub_send_hwid_cookie">Отправлять HWID ещё и в Cookie</string>
 </resources>

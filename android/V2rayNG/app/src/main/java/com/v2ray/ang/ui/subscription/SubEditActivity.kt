@@ -2,6 +2,16 @@ package com.v2ray.ang.ui.subscription
 
 import android.os.Bundle
 import android.text.TextUtils
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.draw.clip
+import com.v2ray.ang.ui.main.home.HomeStyle
+import com.v2ray.ang.ui.main.home.glassEdge
+import com.v2ray.ang.ui.main.home.homeSurface
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -135,6 +145,7 @@ fun SubEditScreen(
     var updateInterval by rememberSaveable { mutableStateOf(initial.updateInterval.toString()) }
     var isUpdateIntervalError by rememberSaveable { mutableStateOf(false) }
     var allowInsecureUrl by rememberSaveable { mutableStateOf(initial.allowInsecureUrl) }
+    var sendHwidCookie by rememberSaveable { mutableStateOf(initial.sendHwidCookie) }
     var prevProfile by rememberSaveable { mutableStateOf(initial.prevProfile ?: "") }
     var nextProfile by rememberSaveable { mutableStateOf(initial.nextProfile ?: "") }
 
@@ -155,6 +166,7 @@ fun SubEditScreen(
         subItem.prevProfile = prevProfile
         subItem.nextProfile = nextProfile
         subItem.allowInsecureUrl = allowInsecureUrl
+        subItem.sendHwidCookie = sendHwidCookie
         return subItem
     }
 
@@ -205,66 +217,74 @@ fun SubEditScreen(
                 .padding(vertical = 8.dp)
                 .padding(bottom = 36.dp)
         ) {
-            FormTextField(
-                label = stringResource(R.string.sub_setting_remarks),
-                value = remarks,
-                onValueChange = { remarks = it },
-                isError = isRemarksError
-            )
-            FormTextField(
-                label = stringResource(R.string.sub_setting_url),
-                value = url,
-                onValueChange = { url = it },
-                isError = isUrlError,
-                supportingText = if (isUrlError) stringResource(R.string.toast_invalid_url) else null
-            )
-            FormTextField(stringResource(R.string.sub_setting_user_agent), userAgent, { userAgent = it })
-            FormTextField(stringResource(R.string.sub_setting_request_headers), requestHeaders, { requestHeaders = it })
-            FormTextField(stringResource(R.string.sub_setting_filter), filter, { filter = it })
-            SettingsSwitchItem(
-                title = stringResource(R.string.sub_setting_enable),
-                checked = enabled,
-                onCheckedChange = { enabled = it }
-            )
-
-            SettingsSwitchItem(
-                title = stringResource(R.string.sub_auto_update),
-                checked = autoUpdate,
-                onCheckedChange = { autoUpdate = it }
-            )
-
-            FormTextField(
-                label = stringResource(R.string.title_pref_auto_update_interval),
-                value = updateInterval,
-                onValueChange = { updateInterval = it },
-                keyboardType = KeyboardType.Number,
-                isError = isUpdateIntervalError,
-                supportingText = if (isUpdateIntervalError) stringResource(R.string.toast_invalid_update_interval) else null
-            )
-
-            SettingsSwitchItem(
-                title = stringResource(R.string.sub_allow_insecure_url),
-                checked = allowInsecureUrl,
-                onCheckedChange = { allowInsecureUrl = it }
-            )
-            FormDropdownField(
-                label = stringResource(R.string.sub_setting_pre_profile),
-                placeholder = stringResource(R.string.sub_setting_pre_profile_tip),
-                value = prevProfile,
-                options = profileSuggestions,
-                onValueChange = { prevProfile = it },
-                editable = true,
-                supportingText = stringResource(R.string.sub_setting_entry_proxy_tip)
-            )
-            FormDropdownField(
-                label = stringResource(R.string.sub_setting_next_profile),
-                placeholder = stringResource(R.string.sub_setting_pre_profile_tip),
-                value = nextProfile,
-                options = profileSuggestions,
-                onValueChange = { nextProfile = it },
-                editable = true,
-                supportingText = stringResource(R.string.sub_setting_exit_proxy_tip)
-            )
+            SubSection(stringResource(R.string.sub_edit_main)) {
+                FormTextField(
+                    label = stringResource(R.string.sub_setting_remarks),
+                    value = remarks,
+                    onValueChange = { remarks = it },
+                    isError = isRemarksError
+                )
+                FormTextField(
+                    label = stringResource(R.string.sub_setting_url),
+                    value = url,
+                    onValueChange = { url = it },
+                    isError = isUrlError,
+                    supportingText = if (isUrlError) stringResource(R.string.toast_invalid_url) else null
+                )
+            }
+            SubSection(stringResource(R.string.sub_edit_options)) {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.sub_setting_enable),
+                    checked = enabled,
+                    onCheckedChange = { enabled = it }
+                )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.sub_auto_update),
+                    checked = autoUpdate,
+                    onCheckedChange = { autoUpdate = it }
+                )
+                FormTextField(
+                    label = stringResource(R.string.title_pref_auto_update_interval),
+                    value = updateInterval,
+                    onValueChange = { updateInterval = it },
+                    keyboardType = KeyboardType.Number,
+                    isError = isUpdateIntervalError,
+                    supportingText = if (isUpdateIntervalError) stringResource(R.string.toast_invalid_update_interval) else null
+                )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.sub_allow_insecure_url),
+                    checked = allowInsecureUrl,
+                    onCheckedChange = { allowInsecureUrl = it }
+                )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.sub_send_hwid_cookie),
+                    checked = sendHwidCookie,
+                    onCheckedChange = { sendHwidCookie = it }
+                )
+            }
+            SubSection(stringResource(R.string.sub_edit_advanced)) {
+                FormTextField(stringResource(R.string.sub_setting_user_agent), userAgent, { userAgent = it })
+                FormTextField(stringResource(R.string.sub_setting_request_headers), requestHeaders, { requestHeaders = it })
+                FormTextField(stringResource(R.string.sub_setting_filter), filter, { filter = it })
+                FormDropdownField(
+                    label = stringResource(R.string.sub_setting_pre_profile),
+                    placeholder = stringResource(R.string.sub_setting_pre_profile_tip),
+                    value = prevProfile,
+                    options = profileSuggestions,
+                    onValueChange = { prevProfile = it },
+                    editable = true,
+                    supportingText = stringResource(R.string.sub_setting_entry_proxy_tip)
+                )
+                FormDropdownField(
+                    label = stringResource(R.string.sub_setting_next_profile),
+                    placeholder = stringResource(R.string.sub_setting_pre_profile_tip),
+                    value = nextProfile,
+                    options = profileSuggestions,
+                    onValueChange = { nextProfile = it },
+                    editable = true,
+                    supportingText = stringResource(R.string.sub_setting_exit_proxy_tip)
+                )
+            }
             NavigationBarsSpacer()
         }
     }
@@ -277,4 +297,25 @@ fun SubEditScreen(
             onDismiss = { showDeleteConfirm = false }
         )
     }
+}
+
+/** A titled rounded block, in the style of the home screen (surface and edge follow the chosen look). */
+@Composable
+private fun SubSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    val shape = RoundedCornerShape(HomeStyle.r(20))
+    Text(
+        title,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 28.dp, top = 12.dp, bottom = 6.dp)
+    )
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(homeSurface())
+            .glassEdge(shape),
+        content = content
+    )
 }
