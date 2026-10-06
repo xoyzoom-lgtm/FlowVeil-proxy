@@ -124,6 +124,7 @@ class MainActivity : HelperBaseComponentActivity() {
             SettingsChangeManager.consumeSetupGroupTab()
             mainViewModel.refreshUiSettings()
             newHome = MmkvManager.decodeSettingsBool(AppConfig.PREF_NEW_HOME, true)
+            refreshOnboarding()
             // Always resync: a subscription added in settings should show its servers right away.
             mainViewModel.onAction(MainAction.SyncNewSubscriptions)
             if (restartService) LauncherManager.restartService(this)
@@ -132,6 +133,7 @@ class MainActivity : HelperBaseComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainViewModel.onAction(MainAction.Initialize)
+        refreshOnboarding()
         handleImportIntent(intent)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -214,7 +216,16 @@ class MainActivity : HelperBaseComponentActivity() {
                     else -> mainViewModel.onAction(action)
                 }
         }
-        if (newHome) {
+        if (showOnboarding) {
+            com.v2ray.ang.ui.onboarding.OnboardingScreen(
+                onAction = homeAction,
+                onFinish = {
+                    MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_DONE, true)
+                    showOnboarding = false
+                    if (MmkvManager.decodeSubscriptions().isNotEmpty()) toast(R.string.onb_toast_ready)
+                },
+            )
+        } else if (newHome) {
             com.v2ray.ang.ui.main.home.HomeScreen(
                 mainViewModel = mainViewModel,
                 onAction = homeAction,
@@ -231,6 +242,24 @@ class MainActivity : HelperBaseComponentActivity() {
 
     /** New home screen by default; the old one stays one release behind a switch in "Advanced". */
     private var newHome by mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_NEW_HOME, true))
+
+    /** First-run wizard: fresh installs only (people who already have subscriptions are not shown it), or on request from Settings. */
+    private var showOnboarding by mutableStateOf(false)
+
+    private fun refreshOnboarding() {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_ONBOARDING_AGAIN, false)) {
+            MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_AGAIN, false)
+            showOnboarding = true
+            return
+        }
+        val done = MmkvManager.decodeSettingsBool(AppConfig.PREF_ONBOARDING_DONE, false)
+        if (!done && (MmkvManager.decodeSubscriptions().isNotEmpty() || MmkvManager.decodeAllServerList().isNotEmpty())) {
+            MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_DONE, true)
+            return
+        }
+        showOnboarding = !done
+    }
+
 
     private fun shareToClipboard(guid: String): Boolean =
         AngConfigManager.share2Clipboard(this, guid) == 0

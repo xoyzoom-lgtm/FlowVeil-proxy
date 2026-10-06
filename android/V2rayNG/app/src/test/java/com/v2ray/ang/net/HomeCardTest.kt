@@ -46,6 +46,7 @@ class HomeCardTest {
         }
         assertEquals(0, HomeCard.paletteIndex(""))
         assertEquals(97 % 3, HomeCard.paletteIndex("a"))
+        assertEquals(1, HomeCard.paletteIndex("4dd0918faa9a2cca"))
     }
 
     @Test

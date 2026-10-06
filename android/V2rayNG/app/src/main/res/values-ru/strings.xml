@@ -1041,4 +1041,32 @@
         <item quantity="many">%1$d серверов</item>
         <item quantity="other">%1$d сервера</item>
     </plurals>
+    <string name="onb_skip">Пропустить</string>
+    <string name="onb_back">Назад</string>
+    <string name="onb_next">Дальше</string>
+    <string name="onb_done">Готово</string>
+    <string name="onb1_title">Добавьте ключ</string>
+    <string name="onb1_text">FlowVeil — приложение для подключения. Серверы и ключ выдаёт ваш провайдер.</string>
+    <string name="onb2_title">Как пускать трафик</string>
+    <string name="onb2_text">Выберите сейчас или настройте позже в любое время.</string>
+    <string name="onb2_all">Всё через сервер</string>
+    <string name="onb2_all_sub">Просто и быстро для начала.</string>
+    <string name="onb2_rules">По правилам</string>
+    <string name="onb2_rules_sub">Банки, госуслуги и привычные российские сайты — напрямую.</string>
+    <string name="onb3_title">Главное</string>
+    <string name="onb3_text">Ничего не включается само. Можно изменить в Настройках.</string>
+    <string name="onb3_ads">Блокировка рекламы</string>
+    <string name="onb3_ads_sub">Работает на устройстве, ничего никуда не отправляет</string>
+    <string name="onb3_auto">Автоподбор при ограничениях мобильной сети</string>
+    <string name="onb3_auto_sub">Ищет рабочий сервер, когда мобильный интернет ограничивает доступ</string>
+    <string name="onb3_tg">Telegram через сервер</string>
+    <string name="onb3_tg_sub">Если не открывается напрямую</string>
+    <string name="onb3_notify">Уведомления об обновлениях</string>
+    <string name="onb3_notify_sub">Тихое сообщение, когда выйдет новая сборка FlowVeil</string>
+    <string name="onb3_vpn_note">Android покажет «Запрос на подключение» — разрешите его: так трафик пойдёт через сервер.</string>
+    <string name="onb_toast_ready">Нажмите «Подключить», чтобы подключиться</string>
+    <string name="title_onboarding_again">Мастер настройки</string>
+    <string name="summary_onboarding_again">Пройти первые шаги заново</string>
+    <string name="title_country_direct">Сайты страны напрямую</string>
+    <string name="country_none">Ничего</string>
 </resources>

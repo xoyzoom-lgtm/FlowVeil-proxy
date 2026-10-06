@@ -148,6 +148,10 @@ object AppConfig {
     const val PREF_CLIPBOARD_OFFER = "pref_clipboard_offer"
     /** New home screen (cards, bottom panel). The old one stays for one release behind this switch. */
     const val PREF_NEW_HOME = "pref_new_home"
+    /** First-run wizard finished or skipped; "Мастер настройки" in Settings clears it. */
+    const val PREF_ONBOARDING_DONE = "pref_onboarding_done"
+    /** Set by Settings → "Мастер настройки" to show the wizard once more. */
+    const val PREF_ONBOARDING_AGAIN = "pref_onboarding_again"
     const val PREF_AUTOMATION_KEY = "pref_automation_key"
 
     /** Tags for different proxy modes. */

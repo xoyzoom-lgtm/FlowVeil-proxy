@@ -22,6 +22,30 @@ public abstract class HuppObservable : INotifyPropertyChanged
     protected void Raise(string? name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
+/// <summary>Card gradients of the v4 mockup; same order and hash as Android HomeCard.</summary>
+public static class HuppCardPalette
+{
+    private static readonly string[][] Stops =
+    [
+        ["#4D6BFF", "#7A4DFF", "#A24DD8"],
+        ["#FF9A3D", "#F0585F", "#D8438F"],
+        ["#25C48A", "#1A9A9A", "#1C6FB0"],
+    ];
+    private static readonly string[] Expired = ["#6A7482", "#2F353F"];
+
+    public static System.Windows.Media.Brush Brush(string? id, bool expired)
+    {
+        var stops = expired ? Expired : Stops[ShortName.PaletteIndex(id)];
+        var brush = new System.Windows.Media.LinearGradientBrush { StartPoint = new(0, 0), EndPoint = new(1, 1) };
+        for (var i = 0; i < stops.Length; i++)
+        {
+            brush.GradientStops.Add(new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(stops[i]), i / (double)(stops.Length - 1)));
+        }
+        brush.Freeze();
+        return brush;
+    }
+}
+
 /// <summary>One subscription card on the Happ-style home screen.</summary>
 public sealed class HuppSubCard : HuppObservable
 {
@@ -37,6 +61,17 @@ public sealed class HuppSubCard : HuppObservable
     public string WebPageUrl { get; init; } = string.Empty;
     public double Progress { get; init; }
     public bool HasProgress { get; init; }
+
+    /// <summary>v4 card: short name, avatar letter, gradient by subscription id, big "days left".</summary>
+    public string ShortTitle => ShortName.Of(Title);
+    public string Initial => ShortName.Initial(Title);
+    public System.Windows.Media.Brush CardBrush => HuppCardPalette.Brush(Sub.Id, IsBlocking);
+    public string DaysText { get; init; } = "∞";
+    public string DaysUnit { get; init; } = string.Empty;
+    public string CardStatus { get; init; } = string.Empty;
+    /// <summary>Traffic used, 0..100; full and dimmed when unlimited.</summary>
+    public double UsedPercent { get; init; } = 100;
+    public double UsedOpacity { get; init; } = 0.5;
 
     private bool _isSelected;
     public bool IsSelected { get => _isSelected; set => Set(ref _isSelected, value); }
@@ -640,7 +675,7 @@ public sealed partial class HuppHomeViewModel : HuppObservable
         var blocking = health is SubHealth.Expired or SubHealth.TrafficOver;
         if (info == null)
         {
-            return new HuppSubCard { Sub = sub, Title = title, Health = health, HealthText = healthText, IsBlocking = blocking };
+            return new HuppSubCard { Sub = sub, Title = title, Health = health, HealthText = healthText, IsBlocking = blocking, CardStatus = healthText };
         }
 
         var traffic = string.Empty;
@@ -670,10 +705,17 @@ public sealed partial class HuppHomeViewModel : HuppObservable
             expireDetail = $"осталось {(days <= 0 ? 0 : days > 36500 ? 36500 : (int)days)} дн.";
         }
 
+        var hasDate = info.ExpireSeconds is > 0 and < 253_402_300_799L;
+        var limited = info.Total > 0 && info.Total < 1L << 50;
         return new HuppSubCard
         {
             Sub = sub,
             Title = title,
+            DaysText = hasDate ? Math.Min(ShortName.DaysLeft(info.ExpireSeconds, now), 36500).ToString() : "∞",
+            DaysUnit = hasDate ? "дн." : string.Empty,
+            CardStatus = healthText.IsNotEmpty() ? healthText : expire,
+            UsedPercent = limited ? Math.Clamp(info.Used * 100d / info.Total, 2, 100) : 100,
+            UsedOpacity = limited ? 1 : 0.5,
             TrafficText = traffic,
             TrafficDetail = trafficDetail,
             ExpireDetail = expireDetail,

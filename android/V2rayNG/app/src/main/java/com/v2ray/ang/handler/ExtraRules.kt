@@ -2,6 +2,7 @@ package com.v2ray.ang.handler
 
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.dto.entities.RulesetItem
+import com.v2ray.ang.net.CountryProfiles
 import com.v2ray.ang.net.RuleOrder
 
 /**
@@ -17,7 +18,14 @@ object ExtraRules {
     private const val ID_ADS = "fv-adblock"
     private const val ID_TG_DOMAINS = "fv-telegram-domains"
     private const val ID_TG_IPS = "fv-telegram-ips"
-    private val OWN = setOf(ID_ADS, ID_TG_DOMAINS, ID_TG_IPS)
+    private const val ID_COUNTRY_DOMAINS = "fv-country-domains"
+    private const val ID_COUNTRY_IPS = "fv-country-ips"
+    private val OWN = setOf(ID_ADS, ID_TG_DOMAINS, ID_TG_IPS, ID_COUNTRY_DOMAINS, ID_COUNTRY_IPS)
+
+    /** "Сайты страны напрямую": id from [CountryProfiles], or [CountryProfiles.NONE]. Off by default. */
+    const val PREF_COUNTRY = "pref_country_direct"
+
+    fun country(): CountryProfiles.Country? = CountryProfiles.byId(MmkvManager.decodeSettingsString(PREF_COUNTRY))
 
     fun adBlock(): Boolean = MmkvManager.decodeSettingsBool(PREF_ADBLOCK, false)
     fun telegramProxy(): Boolean = MmkvManager.decodeSettingsBool(PREF_TELEGRAM_PROXY, false)
@@ -29,6 +37,11 @@ object ExtraRules {
             if (telegramProxy()) {
                 add(RulesetItem(id = ID_TG_DOMAINS, remarks = "FlowVeil: Telegram через сервер", domain = listOf("geosite:telegram"), outboundTag = AppConfig.TAG_PROXY, locked = true))
                 add(RulesetItem(id = ID_TG_IPS, remarks = "FlowVeil: Telegram через сервер", ip = listOf("geoip:telegram"), outboundTag = AppConfig.TAG_PROXY, locked = true))
+            }
+            // Below ads and Telegram, above everything else; the server's own address is kept direct by the core config.
+            country()?.let { c ->
+                add(RulesetItem(id = ID_COUNTRY_DOMAINS, remarks = "FlowVeil: ${c.nameRu} напрямую", domain = CountryProfiles.domains(c), outboundTag = AppConfig.TAG_DIRECT, locked = true))
+                add(RulesetItem(id = ID_COUNTRY_IPS, remarks = "FlowVeil: ${c.nameRu} напрямую", ip = CountryProfiles.ips(c), outboundTag = AppConfig.TAG_DIRECT, locked = true))
             }
         }
         val rules = MmkvManager.decodeRoutingRulesets() ?: mutableListOf()

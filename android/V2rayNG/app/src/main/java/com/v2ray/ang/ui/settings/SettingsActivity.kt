@@ -228,6 +228,7 @@ fun SettingsScreen(
     var automation by rememberMmkvBool(AppConfig.PREF_AUTOMATION_ENABLED, false)
     var clipboardOffer by rememberMmkvBool(AppConfig.PREF_CLIPBOARD_OFFER, true)
     var newHome by rememberMmkvBool(AppConfig.PREF_NEW_HOME, true)
+    var countryDirect by rememberMmkvString(ExtraRules.PREF_COUNTRY, com.v2ray.ang.net.CountryProfiles.NONE)
     var showHwid by remember { mutableStateOf(false) }
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
     var failoverAcrossSubs by rememberMmkvBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, false)
@@ -380,6 +381,19 @@ fun SettingsScreen(
                     checked = telegramProxy,
                     onCheckedChange = {
                         telegramProxy = it
+                        ExtraRules.apply()
+                        SettingsChangeManager.makeRestartService()
+                    }
+                )
+                val countryNone = stringResource(R.string.country_none)
+                val russianUi = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "ru"
+                SettingsListItem(
+                    title = stringResource(R.string.title_country_direct),
+                    entries = listOf(countryNone) + com.v2ray.ang.net.CountryProfiles.ALL.map { "${it.flag} ${if (russianUi) it.nameRu else it.nameEn}" },
+                    values = listOf(com.v2ray.ang.net.CountryProfiles.NONE) + com.v2ray.ang.net.CountryProfiles.ALL.map { it.id },
+                    selectedValue = countryDirect,
+                    onSelected = {
+                        countryDirect = it
                         ExtraRules.apply()
                         SettingsChangeManager.makeRestartService()
                     }
@@ -1121,6 +1135,14 @@ fun SettingsScreen(
             )
             if (advancedSettingsExpanded) {
                 SettingsGroupCard {
+                    SettingsMenuItem(
+                        title = stringResource(R.string.title_onboarding_again),
+                        subtitle = stringResource(R.string.summary_onboarding_again),
+                        onClick = {
+                            MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_AGAIN, true)
+                            (settingsContext as? android.app.Activity)?.finish()
+                        }
+                    )
                     SettingsSwitchItem(
                         title = stringResource(R.string.title_pref_new_home),
                         summary = stringResource(R.string.summary_pref_new_home),

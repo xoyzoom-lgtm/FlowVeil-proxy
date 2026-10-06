@@ -1043,4 +1043,32 @@
         <item quantity="one">%1$d server</item>
         <item quantity="other">%1$d servers</item>
     </plurals>
+    <string name="onb_skip">Skip</string>
+    <string name="onb_back">Back</string>
+    <string name="onb_next">Next</string>
+    <string name="onb_done">Done</string>
+    <string name="onb1_title">Add a key</string>
+    <string name="onb1_text">FlowVeil is an app for connecting. Your provider gives you the servers and the key.</string>
+    <string name="onb2_title">How to send traffic</string>
+    <string name="onb2_text">Choose now or change it later at any time.</string>
+    <string name="onb2_all">Everything through the server</string>
+    <string name="onb2_all_sub">Simple and fast to start with.</string>
+    <string name="onb2_rules">By rules</string>
+    <string name="onb2_rules_sub">Banks, public services and popular Russian sites go directly.</string>
+    <string name="onb3_title">The main things</string>
+    <string name="onb3_text">Nothing is turned on until you switch it on. You can change it in Settings.</string>
+    <string name="onb3_ads">Ad blocking</string>
+    <string name="onb3_ads_sub">Works on the device, sends nothing anywhere</string>
+    <string name="onb3_auto">Auto pick on restricted mobile networks</string>
+    <string name="onb3_auto_sub">Looks for a server that works when the mobile network limits access</string>
+    <string name="onb3_tg">Telegram through the server</string>
+    <string name="onb3_tg_sub">If it does not open directly</string>
+    <string name="onb3_notify">Update notifications</string>
+    <string name="onb3_notify_sub">A quiet notice when a new FlowVeil build comes out</string>
+    <string name="onb3_vpn_note">Android will show a «Connection request»: allow it so traffic can go through the server.</string>
+    <string name="onb_toast_ready">Tap «Connect» to connect</string>
+    <string name="title_onboarding_again">Setup wizard</string>
+    <string name="summary_onboarding_again">Go through the first-run steps again</string>
+    <string name="title_country_direct">Country sites directly</string>
+    <string name="country_none">Nothing</string>
 </resources>

@@ -90,7 +90,7 @@ private enum class Sheet { NONE, SUB, ADD, MANUAL, NOTE, SHARE }
 /**
  * New home screen (mockup v4): subscription cards on top, servers below, one fixed bottom panel with the main
  * button. Uses only the existing [MainViewModel] state and [MainAction]s.
- * Phones: one column. Tablets and large screens (840dp+): cards on the left, servers on the right.
+ * Phones: one column (centred, at most 720dp wide). Tablets, foldables and landscape (700dp+): cards on the left, servers on the right.
  */
 @Composable
 fun HomeScreen(
@@ -440,7 +440,7 @@ fun HomeScreen(
     Box(Modifier.fillMaxSize()) {
         MainBackground()
         BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding()) {
-            val twoPane = maxWidth >= 840.dp
+            val twoPane = maxWidth >= 700.dp
             Column(Modifier.fillMaxSize()) {
                 HomeTopBar(
                     onAdd = { sheet = Sheet.ADD },

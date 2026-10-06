@@ -79,6 +79,7 @@ internal fun RoundAction(
     size: androidx.compose.ui.unit.Dp = 46.dp,
 ) {
     val accent = homeAccent()
+    val still = animationsOff()
     val transition = rememberInfiniteTransition(label = "roundAction")
     val angle by transition.animateFloat(
         0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "spin"
@@ -105,8 +106,8 @@ internal fun RoundAction(
             modifier = Modifier
                 .size(size * 0.46f)
                 .graphicsLayer {
-                    if (spinning) rotationZ = angle
-                    if (pulsing) alpha = pulse
+                    if (spinning && !still) rotationZ = angle
+                    if (pulsing && !still) alpha = pulse
                 }
         )
     }

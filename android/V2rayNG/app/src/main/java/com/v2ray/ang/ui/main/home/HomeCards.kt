@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -173,16 +174,24 @@ private fun SubscriptionCardV4(
         else -> pluralStringResource(R.plurals.home_servers_n, servers.size, servers.size)
     }
 
+    val a11y = buildString {
+        append(fullName).append(", ").append(statusText)
+        if (days != null) append(", ").append(days).append(' ').append(stringResource(R.string.home_days))
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(196.dp)
+            .semantics(mergeDescendants = true) { contentDescription = a11y }
             .clip(RoundedCornerShape(28.dp))
             .background(cardBrush(group, now))
             .background(HomeTokens.cardShade)
             .clickable(onClick = onMore)
     ) {
-        Column(Modifier.fillMaxSize().padding(start = 18.dp, end = 12.dp, top = 14.dp, bottom = 16.dp)) {
+        // Grows with large fonts instead of clipping; at normal size it is 196dp tall.
+        Column(
+            Modifier.fillMaxWidth().heightIn(min = 196.dp).padding(start = 18.dp, end = 12.dp, top = 14.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(onCard.copy(alpha = 0.22f)),
@@ -217,7 +226,8 @@ private fun SubscriptionCardV4(
                     Icon(painterResource(R.drawable.ic_more_vert_24dp), null, tint = onCard, modifier = Modifier.size(20.dp))
                 }
             }
-            Spacer(Modifier.weight(1f))
+            Column {
+            Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.weight(1f)) {
                     when {
@@ -268,12 +278,28 @@ private fun SubscriptionCardV4(
                     )
                 }
             }
+            }
         }
+    }
+}
+
+/** System "remove animations" (animator scale 0): no pulses or spinning. */
+@Composable
+internal fun animationsOff(): Boolean {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    return androidx.compose.runtime.remember {
+        runCatching {
+            android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+        }.getOrDefault(false)
     }
 }
 
 @Composable
 internal fun PulsingDot(color: Color, size: androidx.compose.ui.unit.Dp = 8.dp) {
+    if (animationsOff()) {
+        Box(Modifier.size(size).clip(CircleShape).background(color))
+        return
+    }
     val transition = rememberInfiniteTransition(label = "dot")
     val a by transition.animateFloat(
         initialValue = 1f, targetValue = 0.35f,
