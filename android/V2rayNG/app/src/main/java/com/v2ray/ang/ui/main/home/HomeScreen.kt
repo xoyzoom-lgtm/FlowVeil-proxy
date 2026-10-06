@@ -97,8 +97,10 @@ fun HomeScreen(
     mainViewModel: MainViewModel,
     onAction: (MainAction) -> Unit,
     onNavigate: (MainDestination) -> Unit,
+    onWizard: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
     val isRunning = uiState.isRunning
@@ -444,7 +446,7 @@ fun HomeScreen(
             Column(Modifier.fillMaxSize()) {
                 HomeTopBar(
                     onAdd = { sheet = Sheet.ADD },
-                    onSettings = { onNavigate(MainDestination.Settings) },
+                    onSettings = { showSettings = true },
                     maxWidth = if (twoPane) Dp.Unspecified else 720.dp,
                 )
                 if (twoPane) {
@@ -491,6 +493,18 @@ fun HomeScreen(
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showSettings,
+            enter = androidx.compose.animation.slideInHorizontally { it },
+            exit = androidx.compose.animation.slideOutHorizontally { it },
+        ) {
+            HomeSettings(
+                onClose = { showSettings = false },
+                onNavigate = onNavigate,
+                onWizard = { showSettings = false; onWizard() },
+                onRulesChanged = { if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context) },
+            )
+        }
     }
 }
 

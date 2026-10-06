@@ -1077,4 +1077,21 @@
     <string name="update_unsigned_text">У этого релиза пока нет подписи FlowVeil, поэтому приложение не может подтвердить, что файл настоящий. Установить всё равно?\n\nПосле этого Android может показать проверку Play Защиты — это обычно для приложений не из магазина. Выберите «Проверить» или «Установить без проверки».</string>
     <string name="update_unsigned_no">Нет</string>
     <string name="update_unsigned_yes">Установить всё равно</string>
+    <string name="hs_group_subs">Подписки и серверы</string>
+    <string name="hs_subscriptions">Подписки</string>
+    <string name="hs_subscriptions_sub">Подписок: %1$d · серверов: %2$d</string>
+    <string name="hs_apps">Выбор приложений</string>
+    <string name="hs_apps_sub">Какие приложения идут через сервер</string>
+    <string name="hs_bypass">Серверы для мобильной сети</string>
+    <string name="hs_bypass_sub">Выбрано: %1$d · сохраняются при обновлении подписки</string>
+    <string name="hs_group_traffic">Трафик</string>
+    <string name="hs_group_look">Вид</string>
+    <string name="hs_theme_sub">17 цветовых тем</string>
+    <string name="hs_group_about">О приложении</string>
+    <string name="hs_channel">Канал FlowVeil</string>
+    <string name="hs_check_update">Проверить обновление</string>
+    <string name="hs_backup">Резервная копия</string>
+    <string name="hs_expert">Для опытных</string>
+    <string name="hs_expert_sub">Ядро, маршрутизация, DNS, журналы и все остальные настройки</string>
+    <string name="hs_country_hint">Сайты выбранной страны — банки, госуслуги, привычные сервисы — открываются напрямую, остальное через сервер.</string>
 </resources>

@@ -1079,4 +1079,21 @@
     <string name="update_unsigned_text">This release has no FlowVeil signature yet, so the app cannot confirm the file is genuine. Install anyway?\n\nAndroid may then show a Play Protect check: this is normal for apps not from a store. Choose «Scan» or «Install without scanning».</string>
     <string name="update_unsigned_no">No</string>
     <string name="update_unsigned_yes">Install anyway</string>
+    <string name="hs_group_subs">Subscriptions and servers</string>
+    <string name="hs_subscriptions">Subscriptions</string>
+    <string name="hs_subscriptions_sub">%1$d subscriptions · %2$d servers</string>
+    <string name="hs_apps">Choose apps</string>
+    <string name="hs_apps_sub">Which apps go through the server</string>
+    <string name="hs_bypass">Servers for the mobile network</string>
+    <string name="hs_bypass_sub">Chosen: %1$d · kept when the subscription updates</string>
+    <string name="hs_group_traffic">Traffic</string>
+    <string name="hs_group_look">Look</string>
+    <string name="hs_theme_sub">17 colour themes</string>
+    <string name="hs_group_about">About</string>
+    <string name="hs_channel">FlowVeil channel</string>
+    <string name="hs_check_update">Check for updates</string>
+    <string name="hs_backup">Backup and restore</string>
+    <string name="hs_expert">For advanced users</string>
+    <string name="hs_expert_sub">Core, routing, DNS, logs and all other settings</string>
+    <string name="hs_country_hint">The chosen country\'s sites (banks, public services, usual services) open directly, the rest goes through the server.</string>
 </resources>

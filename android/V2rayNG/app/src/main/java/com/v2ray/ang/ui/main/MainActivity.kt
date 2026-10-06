@@ -230,6 +230,7 @@ class MainActivity : HelperBaseComponentActivity() {
                 mainViewModel = mainViewModel,
                 onAction = homeAction,
                 onNavigate = { route -> navigateTo(route) },
+                onWizard = { showOnboarding = true },
             )
         } else {
             MainScreen(
