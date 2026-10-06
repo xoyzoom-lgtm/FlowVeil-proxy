@@ -103,7 +103,8 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
             } catch (e: Exception) {
                 LogUtil.e(AppConfig.TAG, "Update download failed", e)
                 _downloadProgress.value = null
-                toastError(R.string.update_download_failed)
+                val why = (e as? ApkUpdateInstaller.DownloadFailed)?.reason?.take(80)
+                if (why != null) toastError(app.getString(R.string.update_download_failed_why, why)) else toastError(R.string.update_download_failed)
             }
         }
     }

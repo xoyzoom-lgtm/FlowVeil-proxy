@@ -1162,4 +1162,6 @@
     <string name="sub_edit_options">Опции</string>
     <string name="sub_edit_advanced">Дополнительно</string>
     <string name="sub_send_hwid_cookie">Отправлять HWID ещё и в Cookie</string>
+    <string name="update_download_failed_why">Не удалось скачать обновление (%1$s). Проверьте интернет и попробуйте ещё раз.</string>
+    <string name="subs_hint_drag">Удерживайте подписку и перетащите, чтобы поменять порядок.</string>
 </resources>

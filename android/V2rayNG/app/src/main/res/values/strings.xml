@@ -1164,4 +1164,6 @@
     <string name="sub_edit_options">Options</string>
     <string name="sub_edit_advanced">Advanced</string>
     <string name="sub_send_hwid_cookie">Send device ID in Cookie too</string>
+    <string name="update_download_failed_why">Could not download the update (%1$s). Check the internet and try again.</string>
+    <string name="subs_hint_drag">Press and hold a subscription, then drag it to change the order.</string>
 </resources>

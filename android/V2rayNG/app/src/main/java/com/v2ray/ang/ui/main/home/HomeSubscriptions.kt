@@ -4,7 +4,19 @@ import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,11 +69,21 @@ internal fun HomeSubscriptions(
     onAdd: () -> Unit,
     onRefreshAll: () -> Unit,
     onToggle: (GroupMapItem, Boolean) -> Unit,
+    onReorder: (List<String>) -> Unit,
 ) {
     BackHandler(onBack = onClose)
     val subs = groups.filter { it.subscription != null }
     val enabled = remember { mutableStateMapOf<String, Boolean>() }
-    Box(Modifier.fillMaxSize().screenBase()) {
+    // Order on screen: follows the stored order, and while a row is dragged it swaps places live.
+    val order = remember { mutableStateListOf<String>() }
+    val ids = subs.map { it.id }
+    LaunchedEffect(ids) { order.clear(); order.addAll(ids) }
+    var draggingId by remember { mutableStateOf<String?>(null) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    var rowHeight by remember { mutableFloatStateOf(0f) }
+    val haptic = LocalHapticFeedback.current
+    val byId = subs.associateBy { it.id }
+    Box(Modifier.fillMaxSize().screenBase(solid = true)) {
         MainBackground()
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(
@@ -80,16 +102,43 @@ internal fun HomeSubscriptions(
                     Text(stringResource(R.string.home_empty_text), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.padding(24.dp))
                 }
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(HomeStyle.r(22))).background(homeSurface()).glassEdge(RoundedCornerShape(HomeStyle.r(22)))) {
-                    subs.forEach { g ->
+                    order.toList().forEach { id ->
+                        val g = byId[id] ?: return@forEach
+                        androidx.compose.runtime.key(g.id) {
                         val sub = g.subscription!!
                         val on = enabled[g.id] ?: sub.enabled
+                        val dragging = draggingId == g.id
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 68.dp)
+                                .onSizeChanged { if (it.height > 0) rowHeight = it.height.toFloat() }
+                                .zIndex(if (dragging) 1f else 0f)
+                                .graphicsLayer { translationY = if (dragging) dragOffset else 0f; scaleX = if (dragging) 1.02f else 1f; scaleY = if (dragging) 1.02f else 1f }
+                                .then(if (dragging) Modifier.shadow(12.dp, RoundedCornerShape(HomeStyle.r(16))).background(homeSurface(selected = true)) else Modifier)
                                 .semantics { role = Role.Button }
                                 .clickable { onOpen(g) }
+                                .pointerInput(g.id) {
+                                    detectDragGesturesAfterLongPress(
+                                        onDragStart = { draggingId = g.id; dragOffset = 0f; haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                        onDragEnd = { draggingId = null; dragOffset = 0f; onReorder(order.toList()) },
+                                        onDragCancel = { draggingId = null; dragOffset = 0f },
+                                        onDrag = { change, delta ->
+                                            change.consume()
+                                            dragOffset += delta.y
+                                            val h = rowHeight
+                                            if (h > 0f) {
+                                                val i = order.indexOf(g.id)
+                                                if (dragOffset > h / 2 && i < order.lastIndex) {
+                                                    order.add(i + 1, order.removeAt(i)); dragOffset -= h
+                                                } else if (dragOffset < -h / 2 && i > 0) {
+                                                    order.add(i - 1, order.removeAt(i)); dragOffset += h
+                                                }
+                                            }
+                                        },
+                                    )
+                                }
                                 .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
                             SubAvatar(g, 44.dp, 14.dp, 19)
@@ -104,9 +153,10 @@ internal fun HomeSubscriptions(
                             Switch(checked = on, onCheckedChange = { enabled[g.id] = it; onToggle(g, it) })
                         }
                         HorizontalDivider(Modifier.padding(start = 70.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                        }
                     }
                 }
-                Text(stringResource(R.string.subs_hint), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp))
+                Text(stringResource(R.string.subs_hint) + " " + stringResource(R.string.subs_hint_drag), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp))
             }
         }
     }
