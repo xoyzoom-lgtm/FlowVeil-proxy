@@ -1098,4 +1098,6 @@
     <string name="hs_country_hint">The chosen country\'s sites (banks, public services, usual services) open directly, the rest goes through the server.</string>
     <string name="import_happ_crypt">This is an encrypted Happ link: only Happ can open it. Ask your provider for a normal subscription link (it starts with https://).</string>
     <string name="import_empty">The clipboard is empty</string>
+    <string name="home_banner_expiring">«%1$s» ends in %2$d d.</string>
+    <string name="home_banner_renew">Renew</string>
 </resources>

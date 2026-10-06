@@ -1096,4 +1096,6 @@
     <string name="hs_country_hint">Сайты выбранной страны — банки, госуслуги, привычные сервисы — открываются напрямую, остальное через сервер.</string>
     <string name="import_happ_crypt">Это зашифрованная ссылка Happ — открыть её может только Happ. Попросите у провайдера обычную ссылку подписки (начинается с https://).</string>
     <string name="import_empty">Буфер обмена пуст</string>
+    <string name="home_banner_expiring">«%1$s» закончится через %2$d дн.</string>
+    <string name="home_banner_renew">Продлить</string>
 </resources>

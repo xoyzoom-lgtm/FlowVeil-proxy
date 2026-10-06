@@ -366,7 +366,22 @@ fun HomeScreen(
         item(key = "dock-space") { DockSpacer() }
     }
 
+    var expiryHidden by rememberSaveable { mutableStateOf<String?>(null) }
     val banner: @Composable () -> Unit = {
+        // One notice at a time: the update first, then a subscription that ends within 3 days.
+        val g = selectedGroup
+        val sub = g?.subscription
+        val days = HomeCard.daysLeft(sub?.expireAt, now)
+        if (updateBanner == null && g != null && sub != null && days != null && days in 1..3 && expiryHidden != g.id) {
+            val renew = sub.webPageUrl?.takeIf { it.isNotBlank() } ?: sub.supportUrl?.takeIf { it.isNotBlank() }
+            HomeBanner(
+                text = stringResource(R.string.home_banner_expiring, ShortName.of(groupFullName(g)), days.toInt()),
+                action = if (renew != null) stringResource(R.string.home_banner_renew) else stringResource(R.string.home_banner_later),
+                onAction = { if (renew != null) Utils.openUri(context, renew) else expiryHidden = g.id },
+                dismiss = stringResource(R.string.home_banner_later),
+                onDismiss = { expiryHidden = g.id },
+            )
+        }
         updateBanner?.let { update ->
             HomeBanner(
                 text = stringResource(R.string.home_banner_update) + " · build-${update.build}",
@@ -400,6 +415,11 @@ fun HomeScreen(
         DockState.CONNECTED -> listOfNotNull(
             if (uiState.connectedSince > 0L) HomeCard.clock(now - uiState.connectedSince) else stringResource(R.string.home_status_connected),
             pingText,
+            uiState.speed?.let { (up, down) ->
+                val mbit = stringResource(R.string.unit_mbit)
+                val gbit = stringResource(R.string.unit_gbit)
+                "↓ ${com.v2ray.ang.ui.main.formatBitRate(down, mbit, gbit)} ↑ ${com.v2ray.ang.ui.main.formatBitRate(up, mbit, gbit)}"
+            },
         ).joinToString(" · ")
         DockState.CONNECTING -> stringResource(R.string.home_dock_connecting)
         DockState.ERROR -> stringResource(R.string.home_dock_error)
