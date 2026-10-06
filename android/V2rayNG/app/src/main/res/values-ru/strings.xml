@@ -1130,4 +1130,5 @@
     <string name="look_bg_change">Сменить фон</string>
     <string name="look_bg_remove">Убрать фон</string>
     <string name="look_reset">Вернуть автоматический вид</string>
+    <string name="subs_hint">Нажмите на подписку — откроется её меню: обновить, проверить, поделиться, внешний вид, изменить, удалить. Переключатель включает и выключает подписку.</string>
 </resources>

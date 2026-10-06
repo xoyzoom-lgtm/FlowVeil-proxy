@@ -104,6 +104,7 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var showSubs by rememberSaveable { mutableStateOf(false) }
     val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
     val isRunning = uiState.isRunning
@@ -251,7 +252,7 @@ fun HomeScreen(
                         SubSheetAction.Message -> sheet = Sheet.NOTE
                         SubSheetAction.Support -> g.subscription?.supportUrl?.let { Utils.openUri(context, it) }
                         SubSheetAction.CopyLink -> { Utils.setClipboard(context, url); context.toastSuccess(R.string.toast_success) }
-                        SubSheetAction.AllSubscriptions -> { closeSheet(); onNavigate(MainDestination.Subscriptions) }
+                        SubSheetAction.AllSubscriptions -> { closeSheet(); showSubs = true }
                         SubSheetAction.SortByPing -> { closeSheet(); onAction(MainAction.SortByTestResults) }
                         SubSheetAction.TestTcping -> { closeSheet(); onAction(MainAction.TestAllServers) }
                         SubSheetAction.ExportAll -> { closeSheet(); onAction(MainAction.ExportAll) }
@@ -547,9 +548,32 @@ fun HomeScreen(
         ) {
             HomeSettings(
                 onClose = { showSettings = false },
-                onNavigate = onNavigate,
+                // "Subscriptions" opens the new list instead of the old "Groups" screen.
+                onNavigate = { dest -> if (dest == MainDestination.Subscriptions) showSubs = true else onNavigate(dest) },
                 onWizard = { showSettings = false; onWizard() },
                 onRulesChanged = { if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context) },
+            )
+        }
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showSubs,
+            enter = androidx.compose.animation.slideInHorizontally { it },
+            exit = androidx.compose.animation.slideOutHorizontally { it },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            HomeSubscriptions(
+                groups = groups,
+                now = now,
+                onClose = { showSubs = false },
+                onOpen = { g -> sheetGroup = g; sheet = Sheet.SUB },
+                onAdd = { sheet = Sheet.ADD },
+                onRefreshAll = { context.toastSuccess(R.string.home_toast_updating); onAction(MainAction.UpdateSubscriptions) },
+                onToggle = { g, on ->
+                    com.v2ray.ang.handler.MmkvManager.decodeSubscription(g.id)?.let { item ->
+                        item.enabled = on
+                        com.v2ray.ang.handler.MmkvManager.encodeSubscription(g.id, item)
+                    }
+                    onAction(MainAction.RefreshGroups)
+                },
             )
         }
     }

@@ -1132,4 +1132,5 @@
     <string name="look_bg_change">Change background</string>
     <string name="look_bg_remove">Remove background</string>
     <string name="look_reset">Back to automatic look</string>
+    <string name="subs_hint">Tap a subscription for its menu: update, check, share, appearance, edit, delete. The switch turns it on or off.</string>
 </resources>
