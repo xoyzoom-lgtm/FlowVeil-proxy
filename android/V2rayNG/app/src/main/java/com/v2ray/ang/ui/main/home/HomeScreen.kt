@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -473,8 +474,16 @@ fun HomeScreen(
 
     Box(Modifier.fillMaxSize()) {
         MainBackground()
-        BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding()) {
+        // The list shrinks above the keyboard (the window is edge-to-edge, so this is not automatic).
+        BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
             val twoPane = maxWidth >= 700.dp
+            // Opening the search brings its field to the top, so the field and the results stay above the keyboard.
+            LaunchedEffect(showSearch, twoPane) {
+                if (showSearch) {
+                    delay(120)
+                    runCatching { listState.animateScrollToItem(if (twoPane) 1 else 3) }
+                }
+            }
             Column(Modifier.fillMaxSize()) {
                 HomeTopBar(
                     onAdd = { sheet = Sheet.ADD },
@@ -513,7 +522,9 @@ fun HomeScreen(
                 }
             }
         }
-        ConnectDock(
+        // The bottom panel steps aside while the keyboard is open.
+        val keyboardOpen = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0
+        if (!keyboardOpen) ConnectDock(
             state = dockState,
             title = dockTitle,
             subtitle = dockSubtitle,
