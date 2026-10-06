@@ -123,7 +123,7 @@ fun OnboardingScreen(onAction: (MainAction) -> Unit, onFinish: () -> Unit) {
                         val go: (MainAction) -> Unit = { onAction(it); step = 1 }
                         SheetRow(R.drawable.ic_copy, stringResource(R.string.home_add_paste)) { go(MainAction.ImportClipboard) }
                         SheetRow(R.drawable.ic_scan_24dp, stringResource(R.string.home_add_scan)) { go(MainAction.ImportQRcode) }
-                        SheetRow(R.drawable.ic_qu_switch_24dp, stringResource(R.string.home_add_transfer)) { go(MainAction.OpenMigration) }
+                        SheetRow(R.drawable.ic_cloud_download_24dp, stringResource(R.string.home_add_transfer)) { go(MainAction.OpenMigration) }
                         SheetRow(R.drawable.ic_edit_24dp, stringResource(R.string.home_add_manual)) {
                             go(MainAction.ImportManually(com.v2ray.ang.enums.EConfigType.VLESS.value))
                         }

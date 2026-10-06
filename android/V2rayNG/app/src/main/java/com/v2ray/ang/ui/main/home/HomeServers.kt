@@ -256,7 +256,7 @@ internal fun ServerRowV4(
     val accent = homeAccent()
     val (flag, name) = remember(row.remarks) { splitFlag(row.remarks) }
     val gaming = remember(row.remarks) { HomeCard.isGaming(row.remarks) }
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(HomeStyle.r(20))
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -268,7 +268,7 @@ internal fun ServerRowV4(
                 if (selected) Brush.horizontalGradient(listOf(accent.copy(alpha = 0.20f), homeSurface()))
                 else SolidColor(homeSurface())
             )
-            .border(1.5.dp, if (selected) accent else Color.Transparent, shape)
+            .then(if (selected) Modifier.border(1.5.dp, accent, shape) else Modifier.glassEdge(shape))
             .semantics { this.selected = selected }
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(horizontal = 12.dp, vertical = 10.dp)
@@ -321,7 +321,7 @@ internal fun ServerRowV4(
 @Composable
 internal fun AutoBestRow(bestName: String?, bestDelay: Long, onClick: () -> Unit) {
     val accent = homeAccent()
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(HomeStyle.r(20))
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier

@@ -1150,4 +1150,12 @@
     <string name="te_paste_failed">В буфере нет кода темы</string>
     <string name="hs_style_blur">Размытие</string>
     <string name="hs_style_blur_hint">Экран за меню и настройками размывается, как на iPhone (Android 12 и новее).</string>
+    <string name="hs_bypass_auto">Подбираются сами: подходящих %1$d. Нажмите, чтобы выбрать вручную</string>
+    <string name="hs_bypass_none">Пока не выбрано</string>
+    <string name="tune_title">Тонкая настройка</string>
+    <string name="tune_alpha">Прозрачность стекла</string>
+    <string name="tune_blur">Сила размытия</string>
+    <string name="tune_corner">Скругление углов</string>
+    <string name="tune_blobs">Свечение фона</string>
+    <string name="tune_reset">Сбросить тонкую настройку</string>
 </resources>

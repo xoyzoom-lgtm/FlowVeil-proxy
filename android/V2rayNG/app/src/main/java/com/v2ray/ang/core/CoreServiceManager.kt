@@ -12,6 +12,7 @@ import android.os.ParcelFileDescriptor
 import android.system.OsConstants
 import androidx.core.content.ContextCompat
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.handler.PortGuard
 import com.v2ray.ang.contracts.IDialerService
 import com.v2ray.ang.contracts.ServiceControl
 import com.v2ray.ang.dto.ConnectionTestResult
@@ -102,6 +103,7 @@ object CoreServiceManager {
             return false
         }
 
+        runCatching { PortGuard.ensureFree() }
         try {
             doStartCoreLoop(service, vpnInterface)
             return true

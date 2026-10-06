@@ -481,7 +481,7 @@ fun HomeScreen(
     // Blur style: everything under an open sheet or full-screen layer is blurred (Android 12+; older phones just dim).
     val layerOpen = sheet != Sheet.NONE || showSettings || showSubs
     val blurRadius by androidx.compose.animation.core.animateDpAsState(
-        if (HomeStyle.mode == HomeStyle.Mode.BLUR && layerOpen) 22.dp else 0.dp, label = "homeBlur"
+        if (HomeStyle.mode == HomeStyle.Mode.BLUR && layerOpen) HomeStyle.blurDp.dp else 0.dp, label = "homeBlur"
     )
     Box(Modifier.fillMaxSize()) {
       Box(Modifier.fillMaxSize().then(if (blurRadius > 0.dp) Modifier.blur(blurRadius) else Modifier)) {

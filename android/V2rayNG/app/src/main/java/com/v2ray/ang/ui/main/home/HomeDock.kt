@@ -55,7 +55,7 @@ internal fun ConnectDock(
     val accent = homeAccent()
     val onAccent = mainOnAccentColor()
     val haptic = LocalHapticFeedback.current
-    val shape = RoundedCornerShape(30.dp)
+    val shape = RoundedCornerShape(HomeStyle.r(30))
     val border by animateColorAsState(
         when (state) {
             DockState.CONNECTED -> accent

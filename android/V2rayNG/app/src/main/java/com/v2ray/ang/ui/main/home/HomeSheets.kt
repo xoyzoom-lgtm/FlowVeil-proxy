@@ -105,8 +105,9 @@ internal fun SheetRow(iconRes: Int?, title: String, subtitle: String? = null, da
             .fillMaxWidth()
             .padding(vertical = 3.dp)
             .heightIn(min = 54.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(HomeStyle.r(16)))
             .background(homeSurface())
+            .glassEdge(RoundedCornerShape(HomeStyle.r(16)))
             .semantics { role = Role.Button }
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp)
@@ -290,7 +291,7 @@ internal fun AddSheet(
         SheetTitle(stringResource(R.string.home_add_title))
         SheetRow(R.drawable.ic_copy, stringResource(R.string.home_add_paste), onClick = onPaste)
         SheetRow(R.drawable.ic_scan_24dp, stringResource(R.string.home_add_scan), onClick = onScan)
-        SheetRow(R.drawable.ic_qu_switch_24dp, stringResource(R.string.home_add_transfer), onClick = onTransfer)
+        SheetRow(R.drawable.ic_cloud_download_24dp, stringResource(R.string.home_add_transfer), onClick = onTransfer)
         SheetRow(R.drawable.ic_edit_24dp, stringResource(R.string.home_add_manual), onClick = onManual)
         SheetRow(R.drawable.ic_file_24dp, stringResource(R.string.home_add_file), onClick = onFile)
         Text(

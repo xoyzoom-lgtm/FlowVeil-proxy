@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
+import com.v2ray.ang.ui.main.home.HomeStyle
 import com.v2ray.ang.ui.compose.LocalHappTheme
 import com.v2ray.ang.ui.compose.colorFabActive
 import com.v2ray.ang.ui.compose.toHappColor
@@ -119,9 +120,9 @@ internal fun MainBackground(modifier: Modifier = Modifier) {
         val w = size.width
         val h = size.height
         val spots = listOf(
-            Triple(Offset(w * (0.10f + 0.10f * drift), h * 0.08f), w * 0.70f, 0.30f),
-            Triple(Offset(w * (0.95f - 0.12f * drift), h * (0.22f + 0.05f * drift)), w * 0.60f, 0.24f),
-            Triple(Offset(w * (0.35f + 0.15f * drift), h * 0.55f), w * 0.75f, 0.14f),
+            Triple(Offset(w * (0.10f + 0.10f * drift), h * 0.08f), w * 0.70f, (0.30f * HomeStyle.blobs).coerceAtMost(0.9f)),
+            Triple(Offset(w * (0.95f - 0.12f * drift), h * (0.22f + 0.05f * drift)), w * 0.60f, (0.24f * HomeStyle.blobs).coerceAtMost(0.9f)),
+            Triple(Offset(w * (0.35f + 0.15f * drift), h * 0.55f), w * 0.75f, (0.14f * HomeStyle.blobs).coerceAtMost(0.9f)),
         )
         spots.forEachIndexed { index, (center, radius, alpha) ->
             val color = blobColors[index % blobColors.size]

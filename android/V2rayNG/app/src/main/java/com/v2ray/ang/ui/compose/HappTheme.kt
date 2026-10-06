@@ -661,7 +661,27 @@ object HappThemeCatalog {
             buttonTimerColor = "#000000FF",
             elipseColors = listOf("#00A8FFFF", "#0070CCFF", "#FFFFFFFF"),
         ),
-    )
+    ) + com.v2ray.ang.net.FlowVeilPalettes.ALL.map { themeFromColors(it.id, it.name, it.colors) }
+
+    /** A full theme from five colours; the same derivation as [com.v2ray.ang.net.ThemeBuilder.build]. */
+    fun themeFromColors(id: String, name: String, c: com.v2ray.ang.net.ThemeBuilder.Colors): HappColorTheme {
+        fun q(hex: String, alpha: String = "FF") = "#$hex$alpha"
+        val onAccent = com.v2ray.ang.net.ThemeBuilder.onColor(c.accent)
+        return HappColorTheme(
+            id = id, name = name,
+            backgroundColors = listOf(q(c.backgroundTop), q(c.backgroundBottom)),
+            serverRowBackgroundColor = q(c.card), selectedServerRowColor = q(c.accent, "55"), subsHeaderColor = q(c.card),
+            buttonColor = q(c.accent), buttonTextColor = q(onAccent), powerIconColor = q(c.accent),
+            serverRowTitleTextColor = q(c.text), serverRowSubTitleTextColor = q(c.text, "B3"),
+            topBarButtonsColor = q(c.accent), supportIconColor = q(c.accent), subHeaderButtonColor = q(c.accent),
+            settingsControlsTintColor = q(c.accent), subscriptionInfoBackgroundColor = q(c.card),
+            subscriptionTrafficBackgroundColor = q(c.card), subscriptionInfoTextColor = q(c.text),
+            disclosureHeaderTextColor = q(c.text), disclosureSubHeaderTextColor = q(c.text, "B3"),
+            serverRowChevronColor = q(c.accent), additionalOptionsButtonColor = q(c.accent), buttonTimerColor = q(onAccent),
+            elipseColors = listOf(q(c.accent), q(c.backgroundTop)),
+            buttonImageType = if (onAccent == "FFFFFF") "light" else "dark",
+        )
+    }
 
     fun findById(id: String?): HappColorTheme? = builtIn.find { it.id == id }
 }

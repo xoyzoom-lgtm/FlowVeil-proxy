@@ -97,6 +97,16 @@ internal fun HomeSettings(
     var profile by remember { mutableStateOf(RuleProfiles.current()) }
     var picker by remember { mutableStateOf<String?>(null) }
     var bypassCount by remember { mutableStateOf(WhitelistBypass.servers().size) }
+    // Servers that look like mobile-whitelist servers by themselves (name, VK/Yandex masks, transport): picked automatically when none are chosen.
+    var autoBypass by remember { mutableStateOf(-1) }
+    androidx.compose.runtime.LaunchedEffect(bypassCount) {
+        autoBypass = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            MmkvManager.decodeAllServerList().count { guid ->
+                val level = com.v2ray.ang.handler.BypassRating.rate(guid, bucket = null)?.rating?.level
+                level == com.v2ray.ang.net.BypassLevel.STRONG || level == com.v2ray.ang.net.BypassLevel.LIKELY
+            }
+        }
+    }
     val subs = remember { MmkvManager.decodeSubscriptions().size }
     val servers = remember { MmkvManager.decodeAllServerList().size }
     val happ by HappThemeManager.selected.collectAsStateWithLifecycle()
@@ -151,7 +161,9 @@ internal fun HomeSettings(
                     SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_whitelist_bypass), stringResource(R.string.onb3_auto_sub), bypass) {
                         bypass = it; save(WhitelistBypass.PREF_ENABLED, it)
                     }
-                    NavRow(R.drawable.ic_routing_24dp, stringResource(R.string.hs_bypass), stringResource(R.string.hs_bypass_sub, bypassCount)) { picker = "bypass" }
+                    NavRow(R.drawable.ic_routing_24dp, stringResource(R.string.hs_bypass), if (bypassCount > 0) stringResource(R.string.hs_bypass_sub, bypassCount)
+                        else if (autoBypass > 0) stringResource(R.string.hs_bypass_auto, autoBypass)
+                        else stringResource(R.string.hs_bypass_none)) { picker = "bypass" }
                 }
                 Group(stringResource(R.string.hs_group_traffic)) {
                     NavRow(
@@ -288,6 +300,9 @@ internal fun HomeSettings(
             Text(stringResource(R.string.te_full).uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 2.dp))
             Text(stringResource(R.string.te_full_hint), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 10.dp))
             ThemeEditor()
+            Spacer(Modifier.height(18.dp))
+            Text(stringResource(R.string.tune_title).uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
+            StyleTuning()
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -348,8 +363,9 @@ private fun Group(title: String, content: @Composable () -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(HomeStyle.r(22)))
             .background(homeSurface())
+            .glassEdge(RoundedCornerShape(HomeStyle.r(22)))
     ) {
         content()
     }

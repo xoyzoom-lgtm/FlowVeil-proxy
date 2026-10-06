@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.net.BestPick
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.handler.MmkvManager
@@ -969,20 +970,64 @@ class MainViewModel(
     private var pingAfterAvailability = false
     private var connectBestAfterTest = false
 
-    /** Tests every server of the open subscription, then selects the fastest one and connects. */
+    private var bestQueue: List<String> = emptyList()
+    private var bestWave = 0
+    private val bestTested = HashSet<String>()
+
+    /**
+     * Picks the fastest server of the open subscription and connects. With many servers it does not wait for a test of
+     * all of them: the most promising are tested first, in waves, and the search ends as soon as one is fast enough.
+     */
     private fun connectBest() {
-        if (currentServers().isEmpty()) {
+        val servers = currentServers()
+        if (servers.isEmpty()) {
             toastError(R.string.connect_best_no_servers)
             return
         }
         toast(R.string.connect_best_testing)
-        testAllRealPing()
+        cancelAllPing()
+        val favorites = FavoriteServers.all()
+        bestQueue = BestPick.order(servers.map { s ->
+            BestPick.Candidate(s.guid, s.guid in favorites, dataSource.decodeAffiliationInfo(s.guid)?.testDelayMillis ?: 0L, ServerCountry.isRussian(s.profile.remarks))
+        })
+        bestWave = 0
+        bestTested.clear()
+        if (bestQueue.isEmpty()) {
+            toastError(R.string.connect_best_none_working)
+            return
+        }
         connectBestAfterTest = true
+        runBestWave()
     }
 
-    // Servers in Russia answer fastest but do not help, so "Best" never picks them.
+    private fun runBestWave() {
+        val size = BestPick.waveSize(bestWave++)
+        val wave = bestQueue.take(size)
+        bestQueue = bestQueue.drop(size)
+        bestTested += wave
+        startSubsetTest(wave)
+    }
+
+    /** One real-ping run over [guids] only; results of other servers stay as they are. */
+    private fun startSubsetTest(guids: List<String>) {
+        val groupId = uiState.value.selectedGroupId
+        val request = testRequests.beginBulk(groupId)
+        val message = TestServiceMessage(
+            key = AppConfig.MSG_MEASURE_CONFIG_START,
+            subscriptionId = groupId,
+            serverGuids = guids,
+            onlyTcp = false
+        )
+        _uiState.update { it.copy(isTesting = true, status = MainStatus.Testing) }
+        bulkTestJob = viewModelScope.launch {
+            withContext(ioDispatcher) { dataSource.clearAllTestDelayResults(guids) }
+            dataSource.sendMsg2TestService(message, request.id)
+        }
+    }
+
+    // Servers in Russia answer fastest but do not help, so "Best" never picks them. Only servers tested in this search count.
     private fun pickBestServer(): String? =
-        currentServers().filterNot { ServerCountry.isRussian(it.profile.remarks) }.map { it.guid }
+        currentServers().filter { it.guid in bestTested }.filterNot { ServerCountry.isRussian(it.profile.remarks) }.map { it.guid }
             .mapNotNull { guid -> dataSource.decodeAffiliationInfo(guid)?.testDelayMillis?.takeIf { it > 0 }?.let { guid to it } }
             .minByOrNull { it.second }
             ?.first
@@ -1066,8 +1111,15 @@ class MainViewModel(
         if (testRequests.completeBulk(requestId) == null) return
         resetTestStatus()
         if (connectBestAfterTest) {
+            val found = pickBestServer()
+            val foundDelay = found?.let { dataSource.decodeAffiliationInfo(it)?.testDelayMillis }
+            if (!BestPick.enough(foundDelay, bestQueue.size)) {
+                // Nothing fast enough yet: the next, larger wave.
+                runBestWave()
+                return
+            }
             connectBestAfterTest = false
-            val best = pickBestServer()
+            val best = found
             if (best == null) {
                 toastError(R.string.connect_best_none_working)
             } else {
