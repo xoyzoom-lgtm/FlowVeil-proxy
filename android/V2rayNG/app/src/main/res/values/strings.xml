@@ -1150,4 +1150,6 @@
     <string name="te_paste">Paste theme code</string>
     <string name="te_paste_sub">From the clipboard: your own or a ready one</string>
     <string name="te_paste_failed">The clipboard has no theme code</string>
+    <string name="hs_style_blur">Blur</string>
+    <string name="hs_style_blur_hint">The screen behind a menu or settings is blurred, like on iPhone (Android 12 and newer).</string>
 </resources>

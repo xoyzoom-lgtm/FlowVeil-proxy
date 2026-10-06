@@ -152,6 +152,8 @@ object AppConfig {
     const val PREF_FAST_MODE = "pref_fast_mode"
     /** Interface look: true = glass (translucent surfaces, blur behind sheets), false = solid. */
     const val PREF_GLASS = "pref_ui_glass"
+    /** "glass", "blur" or "solid" (see ui/main/home/HomeStyle.kt). */
+    const val PREF_UI_STYLE = "pref_ui_style"
     /** First-run wizard finished or skipped; "Мастер настройки" in Settings clears it. */
     const val PREF_ONBOARDING_DONE = "pref_onboarding_done"
     /** Set by Settings → "Мастер настройки" to show the wizard once more. */

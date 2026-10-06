@@ -1148,4 +1148,6 @@
     <string name="te_paste">Вставить код темы</string>
     <string name="te_paste_sub">Из буфера обмена: свою или готовую</string>
     <string name="te_paste_failed">В буфере нет кода темы</string>
+    <string name="hs_style_blur">Размытие</string>
+    <string name="hs_style_blur_hint">Экран за меню и настройками размывается, как на iPhone (Android 12 и новее).</string>
 </resources>

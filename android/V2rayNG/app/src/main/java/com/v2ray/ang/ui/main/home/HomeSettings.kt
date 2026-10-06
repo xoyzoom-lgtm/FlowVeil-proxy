@@ -134,7 +134,7 @@ internal fun HomeSettings(
                 Group(stringResource(R.string.hs_group_look)) {
                     NavRow(
                         R.drawable.ic_image_24dp, stringResource(R.string.hs_appearance),
-                        listOf(happ?.name ?: "—", stringResource(if (HomeStyle.glass) R.string.hs_style_glass else R.string.hs_style_solid)).joinToString(" · ")
+                        listOf(happ?.name ?: "—", stringResource(styleName(HomeStyle.mode))).joinToString(" · ")
                     ) { picker = "look" }
                     NavRow(R.drawable.ic_translate_24dp, stringResource(R.string.title_language), if (russian) "Русский" else "English") { picker = "language" }
                     SwitchRow2(R.drawable.ic_subscriptions_24dp, stringResource(R.string.title_pref_new_home), stringResource(R.string.summary_pref_new_home), newHome) {
@@ -261,9 +261,16 @@ internal fun HomeSettings(
             val modeNames = listOf(R.string.te_mode_auto, R.string.te_mode_light, R.string.te_mode_dark).map { stringResource(it) }
             Segmented(modeNames, modeValues.indexOf(themeMode).coerceAtLeast(0)) { ThemeManager.setThemeMode(modeValues[it]) }
             Spacer(Modifier.height(12.dp))
-            Segmented(listOf(stringResource(R.string.hs_style_glass), stringResource(R.string.hs_style_solid)), if (HomeStyle.glass) 0 else 1) { HomeStyle.chooseGlass(it == 0) }
+            val modes = HomeStyle.Mode.entries
+            Segmented(modes.map { stringResource(styleName(it)) }, modes.indexOf(HomeStyle.mode)) { HomeStyle.choose(modes[it]) }
             Text(
-                stringResource(if (HomeStyle.glass) R.string.hs_style_glass_hint else R.string.hs_style_solid_hint),
+                stringResource(
+                    when (HomeStyle.mode) {
+                        HomeStyle.Mode.GLASS -> R.string.hs_style_glass_hint
+                        HomeStyle.Mode.BLUR -> R.string.hs_style_blur_hint
+                        HomeStyle.Mode.SOLID -> R.string.hs_style_solid_hint
+                    }
+                ),
                 fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, top = 6.dp)
             )
             Spacer(Modifier.height(14.dp))
@@ -284,6 +291,12 @@ internal fun HomeSettings(
             Spacer(Modifier.height(8.dp))
         }
     }
+}
+
+private fun styleName(mode: HomeStyle.Mode): Int = when (mode) {
+    HomeStyle.Mode.GLASS -> R.string.hs_style_glass
+    HomeStyle.Mode.BLUR -> R.string.hs_style_blur
+    HomeStyle.Mode.SOLID -> R.string.hs_style_solid
 }
 
 @Composable

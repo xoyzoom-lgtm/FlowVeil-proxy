@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
@@ -477,7 +478,13 @@ fun HomeScreen(
         if (index >= 0) scope.launch { runCatching { listState.animateScrollToItem(index + 1) } }
     }
 
+    // Blur style: everything under an open sheet or full-screen layer is blurred (Android 12+; older phones just dim).
+    val layerOpen = sheet != Sheet.NONE || showSettings || showSubs
+    val blurRadius by androidx.compose.animation.core.animateDpAsState(
+        if (HomeStyle.mode == HomeStyle.Mode.BLUR && layerOpen) 22.dp else 0.dp, label = "homeBlur"
+    )
     Box(Modifier.fillMaxSize()) {
+      Box(Modifier.fillMaxSize().then(if (blurRadius > 0.dp) Modifier.blur(blurRadius) else Modifier)) {
         MainBackground()
         // The list shrinks above the keyboard (the window is edge-to-edge, so this is not automatic).
         BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
@@ -541,6 +548,7 @@ fun HomeScreen(
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )
+      }
         androidx.compose.animation.AnimatedVisibility(
             visible = showSettings,
             enter = androidx.compose.animation.slideInHorizontally { it },
