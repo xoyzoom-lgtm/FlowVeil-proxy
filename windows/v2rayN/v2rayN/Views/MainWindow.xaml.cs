@@ -329,10 +329,14 @@ public partial class MainWindow
 
     public async Task AddServerViaClipboardAsync()
     {
-        var clipboardData = WindowsUtils.GetClipboardData();
-        if (clipboardData.IsNotEmpty() && ViewModel != null)
+        switch (ImportSource.Normalize(WindowsUtils.GetClipboardData()))
         {
-            await ViewModel.AddServerViaClipboardAsync(clipboardData);
+            case ImportSource.Result.HappEncrypted:
+                NoticeManager.Instance.Enqueue(ImportSource.HappEncryptedMessage);
+                break;
+            case ImportSource.Result.Text t when ViewModel != null:
+                await ViewModel.AddServerViaClipboardAsync(t.Value);
+                break;
         }
     }
 

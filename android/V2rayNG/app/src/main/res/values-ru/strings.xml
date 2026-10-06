@@ -1094,4 +1094,6 @@
     <string name="hs_expert">Для опытных</string>
     <string name="hs_expert_sub">Ядро, маршрутизация, DNS, журналы и все остальные настройки</string>
     <string name="hs_country_hint">Сайты выбранной страны — банки, госуслуги, привычные сервисы — открываются напрямую, остальное через сервер.</string>
+    <string name="import_happ_crypt">Это зашифрованная ссылка Happ — открыть её может только Happ. Попросите у провайдера обычную ссылку подписки (начинается с https://).</string>
+    <string name="import_empty">Буфер обмена пуст</string>
 </resources>
