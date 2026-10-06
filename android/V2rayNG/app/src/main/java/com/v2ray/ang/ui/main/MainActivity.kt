@@ -147,6 +147,8 @@ class MainActivity : HelperBaseComponentActivity() {
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {}
     }
 
+    override val newLook: Boolean = false
+
     @Composable
     override fun ScreenContent() {
         BackHandler { moveTaskToBack(false) }

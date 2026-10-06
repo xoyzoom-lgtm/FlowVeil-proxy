@@ -15,11 +15,14 @@ abstract class BaseComponentActivity : AppCompatActivity() {
         AppLocaleManager.onActivityCreated(this)
         enableEdgeToEdge()
         setContent {
-            AppTheme {
+            AppTheme(newLook = newLook) {
                 ScreenContent()
             }
         }
     }
+
+    /** Screens drawn in the new style get the themed background and transparent bars; the home screen turns this off (it draws its own). */
+    protected open val newLook: Boolean = true
 
     @Composable
     protected abstract fun ScreenContent()
