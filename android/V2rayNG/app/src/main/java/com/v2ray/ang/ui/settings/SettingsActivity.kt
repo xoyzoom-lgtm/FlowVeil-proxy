@@ -227,6 +227,7 @@ fun SettingsScreen(
     var sendHwid by rememberMmkvBool(AppConfig.PREF_SEND_HWID, true)
     var automation by rememberMmkvBool(AppConfig.PREF_AUTOMATION_ENABLED, false)
     var clipboardOffer by rememberMmkvBool(AppConfig.PREF_CLIPBOARD_OFFER, true)
+    var newHome by rememberMmkvBool(AppConfig.PREF_NEW_HOME, true)
     var showHwid by remember { mutableStateOf(false) }
     var autoFailover by rememberMmkvBool(AppConfig.PREF_AUTO_FAILOVER, true)
     var failoverAcrossSubs by rememberMmkvBool(AppConfig.PREF_FAILOVER_ACROSS_SUBS, false)
@@ -1120,6 +1121,12 @@ fun SettingsScreen(
             )
             if (advancedSettingsExpanded) {
                 SettingsGroupCard {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.title_pref_new_home),
+                        summary = stringResource(R.string.summary_pref_new_home),
+                        checked = newHome,
+                        onCheckedChange = { newHome = it }
+                    )
                     if (systemVpnSettingsAvailable) {
                         SettingsMenuItem(
                             title = stringResource(R.string.title_system_vpn_settings),

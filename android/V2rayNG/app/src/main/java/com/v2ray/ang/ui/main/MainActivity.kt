@@ -123,6 +123,7 @@ class MainActivity : HelperBaseComponentActivity() {
             val restartService = SettingsChangeManager.consumeRestartService()
             SettingsChangeManager.consumeSetupGroupTab()
             mainViewModel.refreshUiSettings()
+            newHome = MmkvManager.decodeSettingsBool(AppConfig.PREF_NEW_HOME, true)
             // Always resync: a subscription added in settings should show its servers right away.
             mainViewModel.onAction(MainAction.SyncNewSubscriptions)
             if (restartService) LauncherManager.restartService(this)
@@ -191,9 +192,7 @@ class MainActivity : HelperBaseComponentActivity() {
                 onDismiss = { showMigration = false },
             )
         }
-        MainScreen(
-            mainViewModel = mainViewModel,
-            onAction = { action ->
+        val homeAction: (MainAction) -> Unit = { action ->
                 when (action) {
                     MainAction.ToggleService -> handleFabAction()
                     MainAction.TestCurrentServer -> handleLayoutTestClick()
@@ -214,10 +213,24 @@ class MainActivity : HelperBaseComponentActivity() {
                     )
                     else -> mainViewModel.onAction(action)
                 }
-            },
-            onNavigate = { route -> navigateTo(route) },
-        )
+        }
+        if (newHome) {
+            com.v2ray.ang.ui.main.home.HomeScreen(
+                mainViewModel = mainViewModel,
+                onAction = homeAction,
+                onNavigate = { route -> navigateTo(route) },
+            )
+        } else {
+            MainScreen(
+                mainViewModel = mainViewModel,
+                onAction = homeAction,
+                onNavigate = { route -> navigateTo(route) },
+            )
+        }
     }
+
+    /** New home screen by default; the old one stays one release behind a switch in "Advanced". */
+    private var newHome by mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_NEW_HOME, true))
 
     private fun shareToClipboard(guid: String): Boolean =
         AngConfigManager.share2Clipboard(this, guid) == 0

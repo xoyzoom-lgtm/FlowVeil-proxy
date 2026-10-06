@@ -121,6 +121,23 @@ val toastInfoBg = Color(0xD93F51B5) // Indigo Blue
 val toastIconCircleBg = Color(0x33FFFFFF) // Semi-transparent White
 val toastTextColor = Color.White // White
 
+/**
+ * Home screen tokens (docs/design/flowveil-new-theme-v4.html). Card gradients are fixed so a subscription keeps
+ * its colour in every theme; the accent, background and surfaces still come from the chosen theme.
+ */
+object HomeTokens {
+    val cardGradients = com.v2ray.ang.net.HomeCard.GRADIENTS.map { stops -> stops.map { Color(it) } }
+    val cardExpired = com.v2ray.ang.net.HomeCard.EXPIRED.map { Color(it) }
+    /** Darkening laid over every card so white text keeps at least 3:1 (checked in HomeCardTest). */
+    val cardShade = Color.Black.copy(alpha = com.v2ray.ang.net.HomeCard.SHADE)
+    /** Text on the card gradients. */
+    val onCard = Color.White
+    val good = Color(0xFF22C58B)
+    val warn = Color(0xFFFFB84D)
+    val bad = Color(0xFFFF7A7A)
+    val qrBackground = Color.White
+}
+
 object ThemeManager {
     private val _themeMode = MutableStateFlow(
         MmkvManager.decodeSettingsString(AppConfig.PREF_UI_MODE_NIGHT, "0") ?: "0"
