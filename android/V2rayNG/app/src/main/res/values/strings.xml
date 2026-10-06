@@ -1152,4 +1152,12 @@
     <string name="te_paste_failed">The clipboard has no theme code</string>
     <string name="hs_style_blur">Blur</string>
     <string name="hs_style_blur_hint">The screen behind a menu or settings is blurred, like on iPhone (Android 12 and newer).</string>
+    <string name="hs_bypass_auto">Picked automatically: %1$d suitable. Tap to choose yourself</string>
+    <string name="hs_bypass_none">None chosen yet</string>
+    <string name="tune_title">Fine tuning</string>
+    <string name="tune_alpha">Glass transparency</string>
+    <string name="tune_blur">Blur strength</string>
+    <string name="tune_corner">Corner roundness</string>
+    <string name="tune_blobs">Background glow</string>
+    <string name="tune_reset">Reset fine tuning</string>
 </resources>

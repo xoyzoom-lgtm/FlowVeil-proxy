@@ -226,7 +226,7 @@ private fun SubscriptionCardV4(
         modifier = modifier
             .fillMaxWidth()
             .semantics(mergeDescendants = true) { contentDescription = a11y }
-            .clip(RoundedCornerShape(28.dp))
+            .clip(RoundedCornerShape(HomeStyle.r(28)))
             .background(cardBrush(group, now))
             .background(HomeTokens.cardShade)
             .clickable(onClick = onMore)

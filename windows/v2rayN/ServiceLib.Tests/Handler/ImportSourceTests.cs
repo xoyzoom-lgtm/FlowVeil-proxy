@@ -36,4 +36,28 @@ public class ImportSourceTests
         await (ImportSource.Normalize("   ") is ImportSource.Result.Empty).Should().BeTrue();
         await (ImportSource.Normalize(null) is ImportSource.Result.Empty).Should().BeTrue();
     }
+
+    [Test]
+    public async Task OtherAppsWrappers()
+    {
+        const string link = "https://sub.example.com/abc/def";
+        const string enc = "https%3A%2F%2Fsub.example.com%2Fabc%2Fdef";
+        await Text("hiddify://import/" + link).Should().BeEqualTo(link);
+        await Text("hiddify://import/" + link + "#Name").Should().BeEqualTo(link + "#Name");
+        await Text("v2raytun://import/" + link).Should().BeEqualTo(link);
+        await Text("clash://install-config?url=" + enc + "&name=x").Should().BeEqualTo(link);
+        await Text("sing-box://import-remote-profile?url=" + enc + "#Name").Should().BeEqualTo(link);
+        await Text("v2box://install-sub?url=" + enc + "&name=x").Should().BeEqualTo(link);
+        await Text("someapp://import/" + enc).Should().BeEqualTo(link);
+        await Text("sub://" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(link))).Should().BeEqualTo(link);
+    }
+
+    [Test]
+    public async Task ServerLinksAndGarbageUntouched()
+    {
+        const string vless = "vless://id@host:443?security=tls&host=https://x.example#n";
+        await Text(vless).Should().BeEqualTo(vless);
+        await Text("myapp://nothing/here").Should().BeEqualTo("myapp://nothing/here");
+        await Text("sub://@@@").Should().BeEqualTo("sub://@@@");
+    }
 }

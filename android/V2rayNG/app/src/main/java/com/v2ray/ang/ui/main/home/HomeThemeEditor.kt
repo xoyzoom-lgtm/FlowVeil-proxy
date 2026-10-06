@@ -139,3 +139,25 @@ private fun ColorField(label: String, hex: String, onHex: (String) -> Unit) {
         }
     }
 }
+
+/** Fine tuning of the look: how clear the glass is, how strong the blur, how round the corners, how bright the background blobs. */
+@Composable
+internal fun StyleTuning() {
+    @Composable
+    fun Row2(label: String, value: Float, range: ClosedFloatingPointRange<Float>, shown: String, onChange: (Float) -> Unit) {
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(16.dp)).background(homeSurface()).padding(horizontal = 14.dp, vertical = 8.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(label, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                Text(shown, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, fontFamily = FontFamily.Monospace)
+            }
+            Slider(value = value, onValueChange = onChange, valueRange = range)
+        }
+    }
+    Row2(stringResource(R.string.tune_alpha), HomeStyle.glassAlpha, 0.30f..0.95f, "${(HomeStyle.glassAlpha * 100).toInt()}%") { HomeStyle.tuneAlpha(it) }
+    Row2(stringResource(R.string.tune_blur), HomeStyle.blurDp, 8f..40f, "${HomeStyle.blurDp.toInt()}") { HomeStyle.tuneBlur(it) }
+    Row2(stringResource(R.string.tune_corner), HomeStyle.corner, 0.5f..1.5f, "${(HomeStyle.corner * 100).toInt()}%") { HomeStyle.tuneCorner(it) }
+    Row2(stringResource(R.string.tune_blobs), HomeStyle.blobs, 0f..1.5f, "${(HomeStyle.blobs * 100).toInt()}%") { HomeStyle.tuneBlobs(it) }
+    SheetRow(R.drawable.ic_restore_24dp, stringResource(R.string.tune_reset), danger = true) { HomeStyle.resetTuning() }
+}

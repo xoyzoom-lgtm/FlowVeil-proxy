@@ -79,7 +79,7 @@ internal fun HomeSubscriptions(
                 if (subs.isEmpty()) {
                     Text(stringResource(R.string.home_empty_text), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.padding(24.dp))
                 }
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(homeSurface())) {
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(HomeStyle.r(22))).background(homeSurface()).glassEdge(RoundedCornerShape(HomeStyle.r(22)))) {
                     subs.forEach { g ->
                         val sub = g.subscription!!
                         val on = enabled[g.id] ?: sub.enabled
