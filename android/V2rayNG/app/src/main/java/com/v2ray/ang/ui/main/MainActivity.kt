@@ -348,18 +348,16 @@ class MainActivity : HelperBaseComponentActivity() {
     }
 
     private fun startV2Ray() {
-        if (mainViewModel.uiState.value.selectedGuid.isNullOrEmpty() &&
-            com.v2ray.ang.net.FastMode.connectPicksBest(
-                MmkvManager.decodeSettingsBool(AppConfig.PREF_FAST_MODE, false), false,
-                MmkvManager.decodeAllServerList().size,
-            )
-        ) {
-            // Fast mode, nothing chosen yet: pick the best server and connect to it.
+        val selected = mainViewModel.uiState.value.selectedGuid
+        val chosen = !selected.isNullOrEmpty() && MmkvManager.decodeServerConfig(selected) != null
+        val count = MmkvManager.decodeAllServerList().size
+        if (com.v2ray.ang.net.FastMode.connectPicksBest(chosen, count)) {
+            // Nothing chosen yet (fresh subscription) or the chosen server is gone: pick the best server and connect.
             mainViewModel.onAction(MainAction.ConnectBest)
             return
         }
-        if (mainViewModel.uiState.value.selectedGuid.isNullOrEmpty()) {
-            toast(R.string.title_file_chooser)
+        if (!chosen) {
+            toast(R.string.connect_best_no_servers)
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN

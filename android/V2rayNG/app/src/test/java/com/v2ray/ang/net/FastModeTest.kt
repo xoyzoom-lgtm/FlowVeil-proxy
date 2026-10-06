@@ -25,9 +25,9 @@ class FastModeTest {
 
     @Test
     fun connectPicksBest() {
-        assertTrue(FastMode.connectPicksBest(true, false, 5))
-        assertFalse(FastMode.connectPicksBest(true, true, 5))
-        assertFalse(FastMode.connectPicksBest(false, false, 5))
-        assertFalse(FastMode.connectPicksBest(true, false, 1))
+        assertTrue(FastMode.connectPicksBest(false, 5))
+        assertTrue(FastMode.connectPicksBest(false, 1))
+        assertFalse(FastMode.connectPicksBest(true, 5))
+        assertFalse(FastMode.connectPicksBest(false, 0))
     }
 }
