@@ -69,6 +69,7 @@ internal fun HomeSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
         onDismissRequest = onDismiss,
         sheetState = state,
         containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = if (HomeStyle.glass) 0.9f else 1f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
         BlurBehindDialog()

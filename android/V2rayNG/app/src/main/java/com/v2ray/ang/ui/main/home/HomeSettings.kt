@@ -255,13 +255,12 @@ internal fun HomeSettings(
         }
         "look" -> HomeSheet(onDismiss = { picker = null }) {
             SheetHeading(stringResource(R.string.hs_appearance))
-            // Day / night
-            val modeNames = stringArrayResource(R.array.ui_mode_night).toList()
+            // A little: day / night, glass or solid, ready colour themes
+            Text(stringResource(R.string.te_quick).uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
             val modeValues = stringArrayResource(R.array.ui_mode_night_value).toList()
+            val modeNames = listOf(R.string.te_mode_auto, R.string.te_mode_light, R.string.te_mode_dark).map { stringResource(it) }
             Segmented(modeNames, modeValues.indexOf(themeMode).coerceAtLeast(0)) { ThemeManager.setThemeMode(modeValues[it]) }
-            Spacer(Modifier.height(14.dp))
-            // Style: glass or solid
-            Text(stringResource(R.string.hs_style), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
+            Spacer(Modifier.height(12.dp))
             Segmented(listOf(stringResource(R.string.hs_style_glass), stringResource(R.string.hs_style_solid)), if (HomeStyle.glass) 0 else 1) { HomeStyle.chooseGlass(it == 0) }
             Text(
                 stringResource(if (HomeStyle.glass) R.string.hs_style_glass_hint else R.string.hs_style_solid_hint),
@@ -275,6 +274,13 @@ internal fun HomeSettings(
                 onSelectTheme = { HappThemeManager.selectBuiltIn(it) },
                 modifier = Modifier.padding(horizontal = 0.dp),
             )
+            Spacer(Modifier.height(22.dp))
+            // A lot: every colour by hand, theme codes
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            Spacer(Modifier.height(16.dp))
+            Text(stringResource(R.string.te_full).uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 2.dp))
+            Text(stringResource(R.string.te_full_hint), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 10.dp))
+            ThemeEditor()
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -282,7 +288,7 @@ internal fun HomeSettings(
 
 @Composable
 private fun SheetHeading(title: String, hint: String? = null) {
-    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = if (hint == null) 12.dp else 4.dp))
+    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = if (hint == null) 12.dp else 4.dp))
     if (hint != null) Text(hint, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 12.dp))
 }
 

@@ -1133,4 +1133,21 @@
     <string name="look_bg_remove">Remove background</string>
     <string name="look_reset">Back to automatic look</string>
     <string name="subs_hint">Tap a subscription for its menu: update, check, share, appearance, edit, delete. The switch turns it on or off.</string>
+    <string name="te_quick">Quick</string>
+    <string name="te_mode_auto">Auto</string>
+    <string name="te_mode_light">Light</string>
+    <string name="te_mode_dark">Dark</string>
+    <string name="te_full">Full customisation</string>
+    <string name="te_full_hint">Pick five colours — the whole app changes at once. Tap a colour for sliders or type its code.</string>
+    <string name="te_bg_top">Background, top</string>
+    <string name="te_bg_bottom">Background, bottom</string>
+    <string name="te_accent">Accent</string>
+    <string name="te_card">Cards</string>
+    <string name="te_text">Text</string>
+    <string name="te_unreadable">This text is hard to read on these colours</string>
+    <string name="te_copy">Copy theme code</string>
+    <string name="te_copy_sub">To keep it or send it to another phone</string>
+    <string name="te_paste">Paste theme code</string>
+    <string name="te_paste_sub">From the clipboard: your own or a ready one</string>
+    <string name="te_paste_failed">The clipboard has no theme code</string>
 </resources>

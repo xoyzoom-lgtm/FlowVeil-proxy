@@ -1131,4 +1131,21 @@
     <string name="look_bg_remove">Убрать фон</string>
     <string name="look_reset">Вернуть автоматический вид</string>
     <string name="subs_hint">Нажмите на подписку — откроется её меню: обновить, проверить, поделиться, внешний вид, изменить, удалить. Переключатель включает и выключает подписку.</string>
+    <string name="te_quick">Быстро</string>
+    <string name="te_mode_auto">Авто</string>
+    <string name="te_mode_light">Светлая</string>
+    <string name="te_mode_dark">Тёмная</string>
+    <string name="te_full">Полная настройка</string>
+    <string name="te_full_hint">Выберите пять цветов — всё приложение меняется сразу. Нажмите на цвет, чтобы открыть ползунки, или впишите его код.</string>
+    <string name="te_bg_top">Фон сверху</string>
+    <string name="te_bg_bottom">Фон снизу</string>
+    <string name="te_accent">Акцент</string>
+    <string name="te_card">Карточки</string>
+    <string name="te_text">Текст</string>
+    <string name="te_unreadable">Такой текст плохо читается на этих цветах</string>
+    <string name="te_copy">Скопировать код темы</string>
+    <string name="te_copy_sub">Чтобы сохранить или отправить на другой телефон</string>
+    <string name="te_paste">Вставить код темы</string>
+    <string name="te_paste_sub">Из буфера обмена: свою или готовую</string>
+    <string name="te_paste_failed">В буфере нет кода темы</string>
 </resources>
