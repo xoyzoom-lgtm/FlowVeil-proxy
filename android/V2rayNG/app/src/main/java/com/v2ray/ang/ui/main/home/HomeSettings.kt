@@ -45,6 +45,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.BuildConfig
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.res.stringArrayResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.v2ray.ang.AppConfig
+import com.v2ray.ang.handler.AppLocaleManager
+import com.v2ray.ang.handler.UpdateNotifier
+import com.v2ray.ang.ui.compose.HappThemeManager
+import com.v2ray.ang.ui.compose.HappThemePicker
+import com.v2ray.ang.ui.compose.ThemeManager
+import com.v2ray.ang.ui.main.mainOnAccentColor
+import com.v2ray.ang.ui.settings.BypassServerPickerDialog
+
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.ExtraRules
 import com.v2ray.ang.handler.MmkvManager
@@ -56,8 +69,8 @@ import com.v2ray.ang.ui.main.MainDestination
 import com.v2ray.ang.util.Utils
 
 /**
- * Top-level settings of the new design (mockup #scrSettings): the everyday switches grouped in five blocks.
- * Everything else stays in the full settings ("Для опытных"), nothing is removed.
+ * Settings of the new design (mockup #scrSettings), grouped like iOS. Everyday switches work right here; only the lists
+ * of subscriptions and apps, backup, about and "For advanced users" open their own (older looking) screens.
  */
 @Composable
 internal fun HomeSettings(
@@ -70,19 +83,30 @@ internal fun HomeSettings(
     BackHandler(onBack = onClose)
     val context = LocalContext.current
     val russian = LocalConfiguration.current.locales[0].language == "ru"
+    fun flag(key: String, default: Boolean) = MmkvManager.decodeSettingsBool(key, default)
     var ads by remember { mutableStateOf(ExtraRules.adBlock()) }
     var tg by remember { mutableStateOf(ExtraRules.telegramProxy()) }
-    var fast by remember { mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_FAST_MODE, false)) }
+    var fast by remember { mutableStateOf(flag(AppConfig.PREF_FAST_MODE, false)) }
+    var failover by remember { mutableStateOf(flag(AppConfig.PREF_AUTO_FAILOVER, true)) }
+    var failoverSubs by remember { mutableStateOf(flag(AppConfig.PREF_FAILOVER_ACROSS_SUBS, false)) }
+    var bypass by remember { mutableStateOf(flag(WhitelistBypass.PREF_ENABLED, false)) }
+    var clipboard by remember { mutableStateOf(flag(AppConfig.PREF_CLIPBOARD_OFFER, true)) }
+    var updates by remember { mutableStateOf(UpdateNotifier.isEnabled()) }
+    var automation by remember { mutableStateOf(flag(AppConfig.PREF_AUTOMATION_ENABLED, false)) }
+    var newHome by remember { mutableStateOf(flag(AppConfig.PREF_NEW_HOME, true)) }
     var country by remember { mutableStateOf(MmkvManager.decodeSettingsString(ExtraRules.PREF_COUNTRY) ?: CountryProfiles.NONE) }
     var profile by remember { mutableStateOf(RuleProfiles.current()) }
     var picker by remember { mutableStateOf<String?>(null) }
+    var bypassCount by remember { mutableStateOf(WhitelistBypass.servers().size) }
     val subs = remember { MmkvManager.decodeSubscriptions().size }
     val servers = remember { MmkvManager.decodeAllServerList().size }
-    val bypass = remember { WhitelistBypass.servers().size }
+    val happ by HappThemeManager.selected.collectAsStateWithLifecycle()
+    val themeMode by ThemeManager.themeMode.collectAsStateWithLifecycle()
     val changed = {
         ExtraRules.apply()
         onRulesChanged()
     }
+    fun save(key: String, value: Boolean) = MmkvManager.encodeSettings(key, value)
 
     Box(Modifier.fillMaxSize()) {
         MainBackground()
@@ -108,6 +132,16 @@ internal fun HomeSettings(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
+                Group(stringResource(R.string.hs_group_look)) {
+                    NavRow(
+                        R.drawable.ic_image_24dp, stringResource(R.string.hs_appearance),
+                        listOf(happ?.name ?: "—", stringResource(if (HomeStyle.glass) R.string.hs_style_glass else R.string.hs_style_solid)).joinToString(" · ")
+                    ) { picker = "look" }
+                    NavRow(R.drawable.ic_translate_24dp, stringResource(R.string.title_language), if (russian) "Русский" else "English") { picker = "language" }
+                    SwitchRow2(R.drawable.ic_subscriptions_24dp, stringResource(R.string.title_pref_new_home), stringResource(R.string.summary_pref_new_home), newHome) {
+                        newHome = it; save(AppConfig.PREF_NEW_HOME, it)
+                    }
+                }
                 Group(stringResource(R.string.hs_group_subs)) {
                     NavRow(R.drawable.ic_subscriptions_24dp, stringResource(R.string.hs_subscriptions), stringResource(R.string.hs_subscriptions_sub, subs, servers)) {
                         onNavigate(MainDestination.Subscriptions)
@@ -115,9 +149,10 @@ internal fun HomeSettings(
                     NavRow(R.drawable.ic_per_apps_24dp, stringResource(R.string.hs_apps), stringResource(R.string.hs_apps_sub)) {
                         onNavigate(MainDestination.PerAppProxy)
                     }
-                    NavRow(R.drawable.ic_flash_on_24dp, stringResource(R.string.hs_bypass), stringResource(R.string.hs_bypass_sub, bypass)) {
-                        onNavigate(MainDestination.Settings)
+                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_whitelist_bypass), stringResource(R.string.onb3_auto_sub), bypass) {
+                        bypass = it; save(WhitelistBypass.PREF_ENABLED, it)
                     }
+                    NavRow(R.drawable.ic_routing_24dp, stringResource(R.string.hs_bypass), stringResource(R.string.hs_bypass_sub, bypassCount)) { picker = "bypass" }
                 }
                 Group(stringResource(R.string.hs_group_traffic)) {
                     NavRow(
@@ -136,24 +171,31 @@ internal fun HomeSettings(
                         picker = "country"
                     }
                     SwitchRow2(R.drawable.ic_status_cross, stringResource(R.string.title_pref_adblock), stringResource(R.string.onb3_ads_sub), ads) {
-                        ads = it
-                        MmkvManager.encodeSettings(ExtraRules.PREF_ADBLOCK, it)
-                        changed()
-                    }
-                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_fast_mode), stringResource(R.string.summary_fast_mode), fast) {
-                        fast = it
-                        MmkvManager.encodeSettings(AppConfig.PREF_FAST_MODE, it)
-                        onRulesChanged()
+                        ads = it; save(ExtraRules.PREF_ADBLOCK, it); changed()
                     }
                     SwitchRow2(R.drawable.ic_telegram_24dp, stringResource(R.string.title_pref_telegram_proxy), stringResource(R.string.onb3_tg_sub), tg) {
-                        tg = it
-                        MmkvManager.encodeSettings(ExtraRules.PREF_TELEGRAM_PROXY, it)
-                        changed()
+                        tg = it; save(ExtraRules.PREF_TELEGRAM_PROXY, it); changed()
+                    }
+                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_fast_mode), stringResource(R.string.summary_fast_mode), fast) {
+                        fast = it; save(AppConfig.PREF_FAST_MODE, it); onRulesChanged()
+                    }
+                    SwitchRow2(R.drawable.ic_refresh_24dp, stringResource(R.string.title_pref_auto_failover), null, failover) {
+                        failover = it; save(AppConfig.PREF_AUTO_FAILOVER, it)
+                    }
+                    SwitchRow2(R.drawable.ic_subscriptions_24dp, stringResource(R.string.title_pref_failover_across_subs), stringResource(R.string.summary_pref_failover_across_subs), failoverSubs) {
+                        failoverSubs = it; save(AppConfig.PREF_FAILOVER_ACROSS_SUBS, it)
                     }
                 }
-                Group(stringResource(R.string.hs_group_look)) {
-                    NavRow(R.drawable.ic_image_24dp, stringResource(R.string.title_happ_themes), stringResource(R.string.hs_theme_sub)) { onNavigate(MainDestination.Settings) }
-                    NavRow(R.drawable.ic_translate_24dp, stringResource(R.string.title_language), if (russian) "Русский" else "English") { onNavigate(MainDestination.Settings) }
+                Group(stringResource(R.string.hs_group_safety)) {
+                    SwitchRow2(R.drawable.ic_copy, stringResource(R.string.title_pref_clipboard_offer), null, clipboard) {
+                        clipboard = it; save(AppConfig.PREF_CLIPBOARD_OFFER, it)
+                    }
+                    SwitchRow2(R.drawable.ic_check_update_24dp, stringResource(R.string.onb3_notify), stringResource(R.string.onb3_notify_sub), updates) {
+                        updates = it; UpdateNotifier.setEnabled(context, it)
+                    }
+                    SwitchRow2(R.drawable.ic_source_code_24dp, stringResource(R.string.title_pref_automation), stringResource(R.string.summary_pref_automation), automation) {
+                        automation = it; save(AppConfig.PREF_AUTOMATION_ENABLED, it)
+                    }
                 }
                 Group(stringResource(R.string.hs_group_about)) {
                     NavRow(R.drawable.ic_telegram_24dp, stringResource(R.string.hs_channel), "t.me/FlowVeil") { Utils.openUri(context, "https://t.me/FlowVeil") }
@@ -163,13 +205,17 @@ internal fun HomeSettings(
                     NavRow(R.drawable.ic_settings_24dp, stringResource(R.string.hs_expert), stringResource(R.string.hs_expert_sub)) { onNavigate(MainDestination.Settings) }
                     NavRow(R.drawable.ic_about_24dp, stringResource(R.string.title_about), null) { onNavigate(MainDestination.About) }
                 }
+                Spacer(Modifier.height(24.dp))
             }
         }
     }
 
+    if (picker == "bypass") {
+        BypassServerPickerDialog(onDismiss = { picker = null }, onSaved = { bypassCount = it; picker = null })
+    }
     when (picker) {
         "profile" -> HomeSheet(onDismiss = { picker = null }) {
-            Text(stringResource(R.string.title_rule_profile), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+            SheetHeading(stringResource(R.string.title_rule_profile))
             listOf(
                 RuleProfiles.Profile.RU_DIRECT to (R.string.rule_profile_ru to R.string.rule_profile_ru_hint),
                 RuleProfiles.Profile.ALL_PROXY to (R.string.rule_profile_all to R.string.rule_profile_all_hint),
@@ -184,8 +230,7 @@ internal fun HomeSettings(
             }
         }
         "country" -> HomeSheet(onDismiss = { picker = null }) {
-            Text(stringResource(R.string.title_country_direct), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
-            Text(stringResource(R.string.hs_country_hint), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 12.dp))
+            SheetHeading(stringResource(R.string.title_country_direct), stringResource(R.string.hs_country_hint))
             val pick: (String) -> Unit = { id ->
                 country = id
                 MmkvManager.encodeSettings(ExtraRules.PREF_COUNTRY, id)
@@ -195,6 +240,78 @@ internal fun HomeSettings(
             SheetRow(if (country == CountryProfiles.NONE) R.drawable.ic_action_done else null, stringResource(R.string.country_none)) { pick(CountryProfiles.NONE) }
             CountryProfiles.ALL.forEach { c ->
                 SheetRow(if (country == c.id) R.drawable.ic_action_done else null, "${c.flag} ${if (russian) c.nameRu else c.nameEn}") { pick(c.id) }
+            }
+        }
+        "language" -> HomeSheet(onDismiss = { picker = null }) {
+            SheetHeading(stringResource(R.string.title_language))
+            val names = stringArrayResource(R.array.language_select).toList()
+            val codes = stringArrayResource(R.array.language_select_value).toList()
+            val current = MmkvManager.decodeSettingsString(AppConfig.PREF_LANGUAGE, "auto") ?: "auto"
+            names.zip(codes).forEach { (name, code) ->
+                SheetRow(if (code == current) R.drawable.ic_action_done else null, if (code == "auto") stringResource(R.string.hs_language_auto) else name) {
+                    picker = null
+                    AppLocaleManager.setApplicationLanguage(code)
+                }
+            }
+        }
+        "look" -> HomeSheet(onDismiss = { picker = null }) {
+            SheetHeading(stringResource(R.string.hs_appearance))
+            // Day / night
+            val modeNames = stringArrayResource(R.array.ui_mode_night).toList()
+            val modeValues = stringArrayResource(R.array.ui_mode_night_value).toList()
+            Segmented(modeNames, modeValues.indexOf(themeMode).coerceAtLeast(0)) { ThemeManager.setThemeMode(modeValues[it]) }
+            Spacer(Modifier.height(14.dp))
+            // Style: glass or solid
+            Text(stringResource(R.string.hs_style), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
+            Segmented(listOf(stringResource(R.string.hs_style_glass), stringResource(R.string.hs_style_solid)), if (HomeStyle.glass) 0 else 1) { HomeStyle.setGlass(it == 0) }
+            Text(
+                stringResource(if (HomeStyle.glass) R.string.hs_style_glass_hint else R.string.hs_style_solid_hint),
+                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, top = 6.dp)
+            )
+            Spacer(Modifier.height(14.dp))
+            Text(stringResource(R.string.title_happ_themes), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
+            HappThemePicker(
+                selectedId = happ?.id,
+                onSelectNone = { HappThemeManager.clear() },
+                onSelectTheme = { HappThemeManager.selectBuiltIn(it) },
+                modifier = Modifier.padding(horizontal = 0.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun SheetHeading(title: String, hint: String? = null) {
+    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = if (hint == null) 12.dp else 4.dp))
+    if (hint != null) Text(hint, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 12.dp))
+}
+
+/** iOS-style segmented control. */
+@Composable
+private fun Segmented(items: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(homeSurface())
+            .padding(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        items.forEachIndexed { i, label ->
+            val on = i == selected
+            Box(
+                Modifier
+                    .weight(1f)
+                    .heightIn(min = 40.dp)
+                    .clip(RoundedCornerShape(11.dp))
+                    .background(if (on) homeAccent() else androidx.compose.ui.graphics.Color.Transparent)
+                    .semantics { role = Role.RadioButton }
+                    .clickable { onSelect(i) }
+                    .padding(horizontal = 6.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, color = if (on) mainOnAccentColor() else MaterialTheme.colorScheme.onSurface)
             }
         }
     }

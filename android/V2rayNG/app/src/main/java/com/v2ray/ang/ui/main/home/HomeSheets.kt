@@ -68,9 +68,10 @@ internal fun HomeSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = state,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = if (HomeStyle.glass) 0.9f else 1f),
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
+        BlurBehindDialog()
         Column(
             Modifier
                 .fillMaxWidth()

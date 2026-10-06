@@ -1105,4 +1105,12 @@
     <string name="title_fast_mode">Fast mode</string>
     <string name="summary_fast_mode">Fewer extras while connected: only warnings in the log, background checks half as often, one tap on Connect picks the best server. Protection and DNS are not touched</string>
     <string name="home_fast_tag">Fast</string>
+    <string name="hs_group_safety">Convenience and safety</string>
+    <string name="hs_appearance">Appearance</string>
+    <string name="hs_style">Style</string>
+    <string name="hs_style_glass">Glass</string>
+    <string name="hs_style_solid">Solid</string>
+    <string name="hs_style_glass_hint">Translucent surfaces; the sheets blur what is behind them on phones that allow it.</string>
+    <string name="hs_style_solid_hint">Plain opaque surfaces, no blur.</string>
+    <string name="hs_language_auto">As in the system</string>
 </resources>

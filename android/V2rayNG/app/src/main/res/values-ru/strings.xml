@@ -1103,4 +1103,12 @@
     <string name="title_fast_mode">Быстрый режим</string>
     <string name="summary_fast_mode">Меньше лишнего при подключении: в журнал только предупреждения, фоновые проверки вдвое реже, одно нажатие «Подключить» выбирает лучший сервер. Защита и DNS не меняются</string>
     <string name="home_fast_tag">Быстрый</string>
+    <string name="hs_group_safety">Удобство и безопасность</string>
+    <string name="hs_appearance">Оформление</string>
+    <string name="hs_style">Стиль</string>
+    <string name="hs_style_glass">Стекло</string>
+    <string name="hs_style_solid">Плотный</string>
+    <string name="hs_style_glass_hint">Полупрозрачные поверхности; шторки размывают то, что за ними, на телефонах, где это разрешено.</string>
+    <string name="hs_style_solid_hint">Обычные непрозрачные поверхности, без размытия.</string>
+    <string name="hs_language_auto">Как в системе</string>
 </resources>

@@ -72,7 +72,7 @@ internal fun ConnectDock(
             .fillMaxWidth()
             .shadow(if (state == DockState.CONNECTED) 18.dp else 10.dp, shape, ambientColor = accent, spotColor = if (state == DockState.CONNECTED) accent else surface)
             .clip(shape)
-            .background(surface.copy(alpha = 0.96f))
+            .background(surface.copy(alpha = if (HomeStyle.glass) 0.82f else 1f))
             .border(if (state == DockState.CONNECTED || state == DockState.ERROR) 1.5.dp else 1.dp, border, shape)
             .clickable(onClick = onBody)
             .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
