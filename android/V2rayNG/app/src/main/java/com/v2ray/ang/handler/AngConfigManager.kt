@@ -551,14 +551,14 @@ object AngConfigManager {
                 responseHeaders = secure.second
                 useSecureDns = configText.isNotEmpty()
             }
-            val redirectMark = lastNetworkError.orEmpty()
-            if (configText.isEmpty() && userAgent.isNullOrBlank() && redirectMark.startsWith(HttpUtil.REDIRECT_APP_LINK)) {
-                // The panel sent this client to an app link: other well-known clients are served the list itself.
-                for (agent in listOf("v2rayN/7.25.2", "clash-verge/v2.2.3")) {
-                    val retry = fetch(agent, viaProxy = false, secureDns = false)
+            if (configText.isEmpty() && userAgent.isNullOrBlank() && com.v2ray.ang.net.ClientAgents.retryable(lastNetworkError)) {
+                // The panel refused us or sent us to an app link: other well-known clients are served the list itself.
+                for (agent in com.v2ray.ang.net.ClientAgents.FALLBACK) {
+                    val retry = fetch(agent, viaProxy = false, secureDns = useSecureDns)
                     if (retry.first.isNotEmpty()) {
                         configText = retry.first
                         responseHeaders = retry.second
+                        lastNetworkError = null
                         break
                     }
                 }
@@ -588,7 +588,7 @@ object AngConfigManager {
             var count = parseConfigViaSub(configText, it.guid, false)
             if (count <= 0 && userAgent.isNullOrBlank()) {
                 // Some panels answer each client in its own format: ask as the desktop client, then as Clash.
-                for (agent in listOf("v2rayN/7.25.2", "clash-verge/v2.2.3")) {
+                for (agent in com.v2ray.ang.net.ClientAgents.FALLBACK) {
                     val retry = fetch(agent, viaProxy = false, secureDns = useSecureDns)
                     if (retry.first.isEmpty()) continue
                     count = parseConfigViaSub(retry.first, it.guid, false)
