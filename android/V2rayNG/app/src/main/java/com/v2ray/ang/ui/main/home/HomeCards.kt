@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -66,12 +67,55 @@ internal fun groupFullName(group: GroupMapItem): String =
         ?: if (group.subscription == null) stringResource(R.string.home_local_servers) else group.remarks
 
 internal fun cardBrush(group: GroupMapItem, now: Long): Brush {
-    val colors = if (HomeCard.expired(group.subscription?.expireAt, now)) {
-        HomeTokens.cardExpired
-    } else {
-        HomeTokens.cardGradients[HomeCard.paletteIndex(group.id)]
+    val look = com.v2ray.ang.handler.SubLookStore.get(group.id)
+    val colors = when {
+        // An ended subscription is always grey, whatever colour was chosen.
+        HomeCard.expired(group.subscription?.expireAt, now) -> HomeTokens.cardExpired
+        look.gradient in HomeTokens.cardGradients.indices -> HomeTokens.cardGradients[look.gradient]
+        else -> HomeTokens.cardGradients[HomeCard.paletteIndex(group.id)]
     }
     return Brush.linearGradient(colors)
+}
+
+/** A picture file of the subscription's look, decoded off the main thread; null while loading or when there is none. */
+@Composable
+internal fun rememberLookImage(file: java.io.File, rev: Long, enabled: Boolean): androidx.compose.ui.graphics.ImageBitmap? {
+    val state = androidx.compose.runtime.produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, file.path, rev, enabled) {
+        value = if (!enabled) null else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { android.graphics.BitmapFactory.decodeFile(file.path)?.asImageBitmap() }.getOrNull()
+        }
+    }
+    return state.value
+}
+
+/** The tile of a subscription: its picture, its emoji or the first letter of its name. */
+@Composable
+internal fun SubAvatar(
+    group: GroupMapItem,
+    size: androidx.compose.ui.unit.Dp,
+    radius: androidx.compose.ui.unit.Dp,
+    letterSp: Int,
+    modifier: Modifier = Modifier,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val look = com.v2ray.ang.handler.SubLookStore.get(group.id)
+    val photo = rememberLookImage(
+        com.v2ray.ang.handler.SubLookStore.avatarFile(context, group.id), look.rev, look.avatar == com.v2ray.ang.net.SubLook.Avatar.PHOTO
+    )
+    Box(
+        modifier.size(size).clip(RoundedCornerShape(radius)).background(HomeTokens.onCard.copy(alpha = 0.22f)),
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            photo != null -> androidx.compose.foundation.Image(
+                bitmap = photo, contentDescription = null, contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            look.avatar == com.v2ray.ang.net.SubLook.Avatar.EMOJI && look.emoji.isNotEmpty() ->
+                Text(look.emoji, fontSize = (letterSp * 1.15f).sp)
+            else -> Text(ShortName.initial(groupFullName(group)), color = HomeTokens.onCard, fontWeight = FontWeight.Bold, fontSize = letterSp.sp)
+        }
+    }
 }
 
 internal fun formatBytes(bytes: Long): String {
@@ -187,18 +231,24 @@ private fun SubscriptionCardV4(
             .background(HomeTokens.cardShade)
             .clickable(onClick = onMore)
     ) {
+        val look = com.v2ray.ang.handler.SubLookStore.get(group.id)
+        val cardContext = androidx.compose.ui.platform.LocalContext.current
+        val backdrop = rememberLookImage(com.v2ray.ang.handler.SubLookStore.backgroundFile(cardContext, group.id), look.rev, look.background)
+        if (backdrop != null) {
+            // The user's picture under a dark veil, so the white text stays readable on any photo.
+            androidx.compose.foundation.Image(
+                bitmap = backdrop, contentDescription = null, contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.40f), Color.Black.copy(alpha = 0.62f)))))
+        }
         // Grows with large fonts instead of clipping; at normal size it is 196dp tall.
         Column(
             Modifier.fillMaxWidth().heightIn(min = 196.dp).padding(start = 18.dp, end = 12.dp, top = 14.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(onCard.copy(alpha = 0.22f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(ShortName.initial(fullName), color = onCard, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                }
+                SubAvatar(group, 40.dp, 14.dp, 18)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(

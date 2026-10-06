@@ -88,7 +88,7 @@ import kotlinx.coroutines.launch
 /** How long "connecting" may last before the panel says it failed (counted only while the app is on screen). */
 private const val CONNECT_TIMEOUT_MS = 20_000L
 
-private enum class Sheet { NONE, SUB, ADD, MANUAL, NOTE, SHARE }
+private enum class Sheet { NONE, SUB, ADD, MANUAL, NOTE, SHARE, LOOK }
 
 /**
  * New home screen (mockup v4): subscription cards on top, servers below, one fixed bottom panel with the main
@@ -247,6 +247,7 @@ fun HomeScreen(
                         SubSheetAction.Check -> { closeSheet(); onAction(MainAction.CheckServers) }
                         SubSheetAction.Share -> sheet = Sheet.SHARE
                         SubSheetAction.Edit -> { closeSheet(); onAction(MainAction.EditSubscription(g.id)) }
+                        SubSheetAction.Look -> sheet = Sheet.LOOK
                         SubSheetAction.Message -> sheet = Sheet.NOTE
                         SubSheetAction.Support -> g.subscription?.supportUrl?.let { Utils.openUri(context, it) }
                         SubSheetAction.CopyLink -> { Utils.setClipboard(context, url); context.toastSuccess(R.string.toast_success) }
@@ -257,7 +258,7 @@ fun HomeScreen(
                         SubSheetAction.RemoveDuplicate -> { closeSheet(); showDelDuplicate = true }
                         SubSheetAction.RemoveInvalid -> { closeSheet(); showDelInvalid = true }
                         // The sheet already asked twice ("tap again"), so delete straight away.
-                        SubSheetAction.Delete -> { closeSheet(); onAction(MainAction.RemoveSubscription(g.id)) }
+                        SubSheetAction.Delete -> { closeSheet(); com.v2ray.ang.handler.SubLookStore.reset(context, g.id); onAction(MainAction.RemoveSubscription(g.id)) }
                     }
                 },
             )
@@ -277,6 +278,7 @@ fun HomeScreen(
         Sheet.SHARE -> sheetGroup?.subscription?.let { s ->
             ShareSheet(s.url, onCopy = { Utils.setClipboard(context, s.url); context.toastSuccess(R.string.toast_success) }, onDismiss = closeSheet)
         }
+        Sheet.LOOK -> sheetGroup?.let { g -> AppearanceSheet(g, now, onDismiss = { sheet = Sheet.SUB }) }
         Sheet.NONE -> Unit
     }
 

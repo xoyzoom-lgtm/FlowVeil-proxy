@@ -9,6 +9,12 @@ object HomeCard {
         listOf(0xFF4D6BFF, 0xFF7A4DFF, 0xFFA24DD8),
         listOf(0xFFFF9A3D, 0xFFF0585F, 0xFFD8438F),
         listOf(0xFF25C48A, 0xFF1A9A9A, 0xFF1C6FB0),
+        // Extra choices of the appearance picker (never picked automatically: the automatic choice stays hash % 3).
+        listOf(0xFFE0457B, 0xFFB5179E, 0xFF7209B7),
+        listOf(0xFF2D6CDF, 0xFF1E3A8A, 0xFF0F172A),
+        listOf(0xFFD97706, 0xFFB45309, 0xFF7C2D12),
+        listOf(0xFF16A34A, 0xFF047857, 0xFF064E3B),
+        listOf(0xFF64748B, 0xFF334155, 0xFF1E293B),
     )
     val EXPIRED: List<Long> = listOf(0xFF6A7482, 0xFF2F353F)
     /** Black overlay alpha on cards. */

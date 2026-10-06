@@ -1112,4 +1112,22 @@
     <string name="hs_style_solid_hint">Обычные непрозрачные поверхности, без размытия.</string>
     <string name="hs_language_auto">Как в системе</string>
     <string name="sub_error_app_link">Сервер провайдера перенаправляет эту ссылку в приложение «%1$s» вместо списка серверов. Попросите у провайдера обычную ссылку подписки (начинается с https://), которая отдаёт список серверов.</string>
+    <string name="look_title">Внешний вид</string>
+    <string name="look_sub">Картинка, эмодзи, цвет, фон</string>
+    <string name="look_avatar">Картинка</string>
+    <string name="look_photo">Фото из галереи</string>
+    <string name="look_telegram_hint">Telegram: t.me/имя или @имя</string>
+    <string name="look_telegram_take">Взять</string>
+    <string name="look_telegram_note">Один раз берёт аватар публичного бота или канала и хранит у вас на телефоне. Нужен доступ к t.me.</string>
+    <string name="look_telegram_failed">Картинка не найдена. Проверьте имя и что t.me открывается</string>
+    <string name="look_done">Готово</string>
+    <string name="look_failed">Не удалось использовать эту картинку</string>
+    <string name="look_emoji">Эмодзи</string>
+    <string name="look_color">Цвет карточки</string>
+    <string name="look_auto">Авто</string>
+    <string name="look_background">Фоновая картинка</string>
+    <string name="look_bg_pick">Выбрать фон</string>
+    <string name="look_bg_change">Сменить фон</string>
+    <string name="look_bg_remove">Убрать фон</string>
+    <string name="look_reset">Вернуть автоматический вид</string>
 </resources>
