@@ -1102,4 +1102,7 @@
     <string name="home_banner_renew">Renew</string>
     <string name="home_sub_use">Use this subscription</string>
     <string name="home_sub_use_hint">When off it is not updated and takes no part in automatic switching</string>
+    <string name="title_fast_mode">Fast mode</string>
+    <string name="summary_fast_mode">Fewer extras while connected: only warnings in the log, background checks half as often, one tap on Connect picks the best server. Protection and DNS are not touched</string>
+    <string name="home_fast_tag">Fast</string>
 </resources>

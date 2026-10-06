@@ -435,7 +435,8 @@ fun HomeScreen(
         DockState.CONNECTING -> stringResource(R.string.home_dock_connecting)
         DockState.ERROR -> stringResource(R.string.home_dock_error)
         DockState.BLOCKED -> if (expiredSelected) stringResource(R.string.home_status_expired) else stringResource(R.string.home_dock_off_plain)
-        DockState.IDLE -> subShort?.let { stringResource(R.string.home_dock_off, it) } ?: stringResource(R.string.home_dock_off_plain)
+        DockState.IDLE -> (subShort?.let { stringResource(R.string.home_dock_off, it) } ?: stringResource(R.string.home_dock_off_plain))
+            .let { if (com.v2ray.ang.handler.MmkvManager.decodeSettingsBool(AppConfig.PREF_FAST_MODE, false)) stringResource(R.string.home_fast_tag) + " · " + it else it }
     }
     val dockButton = when (dockState) {
         DockState.CONNECTED -> stringResource(R.string.home_btn_disconnect)

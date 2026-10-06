@@ -81,7 +81,14 @@ object ConnectionWatchdog {
     internal val switchLock = Mutex()
 
     /** On the mobile network with the switch on a restriction costs seconds, so the check comes more often (the screen is on). */
-    private fun checkInterval(): Long = if (WhitelistBypass.isEnabled() && BypassController.applies()) CHECK_INTERVAL_CELLULAR_MS else CHECK_INTERVAL_MS
+    private fun checkInterval(): Long {
+        val restricted = WhitelistBypass.isEnabled() && BypassController.applies()
+        return com.v2ray.ang.net.FastMode.checkInterval(
+            if (restricted) CHECK_INTERVAL_CELLULAR_MS else CHECK_INTERVAL_MS,
+            MmkvManager.decodeSettingsBool(AppConfig.PREF_FAST_MODE, false),
+            restricted,
+        )
+    }
 
     fun isEnabled(): Boolean = MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_FAILOVER, true)
 

@@ -148,6 +148,8 @@ object AppConfig {
     const val PREF_CLIPBOARD_OFFER = "pref_clipboard_offer"
     /** New home screen (cards, bottom panel). The old one stays for one release behind this switch. */
     const val PREF_NEW_HOME = "pref_new_home"
+    /** "Быстрый режим" (see net/FastMode.kt). Off by default. */
+    const val PREF_FAST_MODE = "pref_fast_mode"
     /** First-run wizard finished or skipped; "Мастер настройки" in Settings clears it. */
     const val PREF_ONBOARDING_DONE = "pref_onboarding_done"
     /** Set by Settings → "Мастер настройки" to show the wizard once more. */

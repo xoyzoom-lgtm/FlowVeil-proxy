@@ -24,7 +24,7 @@ public partial class HuppHomeViewModel
     {
         while (true)
         {
-            await Task.Delay(FailoverInterval);
+            await Task.Delay(FastMode.CheckInterval(FailoverInterval, FastMode.Enabled));
             try
             {
                 await FailoverTickAsync();

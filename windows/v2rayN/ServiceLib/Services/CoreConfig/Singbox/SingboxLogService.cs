@@ -6,12 +6,13 @@ public partial class CoreConfigSingboxService
     {
         try
         {
-            switch (_config.CoreBasicItem.Loglevel)
+            var logLevel = FastMode.LogLevel(FastMode.Enabled, _config.CoreBasicItem.Loglevel);
+            switch (logLevel)
             {
                 case "debug":
                 case "info":
                 case "error":
-                    _coreConfig.log.level = _config.CoreBasicItem.Loglevel;
+                    _coreConfig.log.level = logLevel;
                     break;
 
                 case "warning":

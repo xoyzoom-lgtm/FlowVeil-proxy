@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.v2ray.ang.AppConfig
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.ExtraRules
@@ -71,6 +72,7 @@ internal fun HomeSettings(
     val russian = LocalConfiguration.current.locales[0].language == "ru"
     var ads by remember { mutableStateOf(ExtraRules.adBlock()) }
     var tg by remember { mutableStateOf(ExtraRules.telegramProxy()) }
+    var fast by remember { mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_FAST_MODE, false)) }
     var country by remember { mutableStateOf(MmkvManager.decodeSettingsString(ExtraRules.PREF_COUNTRY) ?: CountryProfiles.NONE) }
     var profile by remember { mutableStateOf(RuleProfiles.current()) }
     var picker by remember { mutableStateOf<String?>(null) }
@@ -137,6 +139,11 @@ internal fun HomeSettings(
                         ads = it
                         MmkvManager.encodeSettings(ExtraRules.PREF_ADBLOCK, it)
                         changed()
+                    }
+                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_fast_mode), stringResource(R.string.summary_fast_mode), fast) {
+                        fast = it
+                        MmkvManager.encodeSettings(AppConfig.PREF_FAST_MODE, it)
+                        onRulesChanged()
                     }
                     SwitchRow2(R.drawable.ic_telegram_24dp, stringResource(R.string.title_pref_telegram_proxy), stringResource(R.string.onb3_tg_sub), tg) {
                         tg = it

@@ -1100,4 +1100,7 @@
     <string name="home_banner_renew">Продлить</string>
     <string name="home_sub_use">Использовать подписку</string>
     <string name="home_sub_use_hint">Выключенная не обновляется и не участвует в автопереключении</string>
+    <string name="title_fast_mode">Быстрый режим</string>
+    <string name="summary_fast_mode">Меньше лишнего при подключении: в журнал только предупреждения, фоновые проверки вдвое реже, одно нажатие «Подключить» выбирает лучший сервер. Защита и DNS не меняются</string>
+    <string name="home_fast_tag">Быстрый</string>
 </resources>

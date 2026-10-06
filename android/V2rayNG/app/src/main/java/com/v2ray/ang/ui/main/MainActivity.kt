@@ -346,6 +346,16 @@ class MainActivity : HelperBaseComponentActivity() {
     }
 
     private fun startV2Ray() {
+        if (mainViewModel.uiState.value.selectedGuid.isNullOrEmpty() &&
+            com.v2ray.ang.net.FastMode.connectPicksBest(
+                MmkvManager.decodeSettingsBool(AppConfig.PREF_FAST_MODE, false), false,
+                MmkvManager.decodeAllServerList().size,
+            )
+        ) {
+            // Fast mode, nothing chosen yet: pick the best server and connect to it.
+            mainViewModel.onAction(MainAction.ConnectBest)
+            return
+        }
         if (mainViewModel.uiState.value.selectedGuid.isNullOrEmpty()) {
             toast(R.string.title_file_chooser)
             return
