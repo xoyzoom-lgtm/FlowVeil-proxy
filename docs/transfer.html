@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Перенос из другого приложения — FlowVeil</title>
+<meta name="description" content="Как перенести подписку из Happ или v2rayNG в FlowVeil: где взять ссылку или QR-код и как добавить её.">
+<meta name="theme-color" content="#040C23">
+<link rel="icon" href="/FlowVeil-proxy/favicon.ico" sizes="any">
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+body{background:#040C23;color:#F2F7FA;font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px 16px 64px}
+main{max-width:680px;margin:0 auto}
+a{color:#3BE0B0}
+.back{display:inline-block;margin-bottom:24px;text-decoration:none;font-weight:700}
+h1{font-size:30px;line-height:1.2;margin-bottom:12px}
+h2{font-size:20px;margin:32px 0 10px}
+p,li{color:#C9D7DF}
+p{margin-bottom:12px}
+ol,ul{padding-left:22px;margin-bottom:12px}
+li{margin-bottom:6px}
+code{background:#0F1A35;border-radius:6px;padding:1px 6px;font-size:14px;color:#F2F7FA}
+.box{background:#0F1A35;border:1px solid #1E2C4F;border-radius:18px;padding:16px 18px;margin:16px 0}
+.warn{border-color:#5A4520;background:#1C1608}
+.warn b{color:#FFB84D}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="/FlowVeil-proxy/">‹ FlowVeil</a>
+<h1>Перенос из другого приложения</h1>
+<p>Подписка живёт у вашего провайдера, а не в приложении. Чтобы пользоваться ею в FlowVeil, нужна та же ссылка подписки — обычный адрес, который начинается с <code>https://</code>. После переноса подписка продолжает работать и в старом приложении.</p>
+
+<h2>Из Happ</h2>
+<ol>
+<li>Откройте Happ → подписка → «Поделиться».</li>
+<li>Выберите QR-код или «Скопировать ссылку».</li>
+<li>В FlowVeil нажмите «＋» → «Сканировать QR» или «Вставить из буфера».</li>
+</ol>
+<div class="box warn"><b>Зашифрованная ссылка.</b> Если ссылка начинается с <code>happ://crypt</code>, её может открыть только Happ — FlowVeil её не расшифровывает. Попросите у провайдера обычную ссылку подписки (<code>https://…</code>).</div>
+<p>Ссылки вида <code>happ://add/https://…</code> FlowVeil понимает сам: адрес внутри будет показан перед добавлением.</p>
+
+<h2>Из v2rayNG</h2>
+<ol>
+<li>Откройте v2rayNG → список подписок (меню «Группы» или «Подписки»).</li>
+<li>У нужной подписки: «Поделиться» → QR-код или «Скопировать ссылку».</li>
+<li>В FlowVeil: «＋» → «Сканировать QR» или «Вставить из буфера».</li>
+</ol>
+<p>Есть резервная копия v2rayNG (.zip)? В FlowVeil «＋» → «Перенос из другого приложения» → «Из файла резервной копии v2rayNG» — FlowVeil возьмёт из неё только ссылки подписок.</p>
+
+<h2>Что происходит при добавлении</h2>
+<p>FlowVeil сначала показывает окно «Добавить подписку?» с адресом крупно. Пока вы не нажали «Добавить», ничего не скачивается и никуда не отправляется.</p>
+
+<h2>С телефона на компьютер</h2>
+<p>В FlowVeil на Windows откройте «Добавить» → «С телефона» и отсканируйте показанный QR-код в FlowVeil на телефоне: ссылка уйдёт по домашней сети, без облака. Оба устройства должны быть в одной сети.</p>
+
+</main>
+</body>
+</html>
