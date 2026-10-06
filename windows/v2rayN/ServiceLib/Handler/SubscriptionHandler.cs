@@ -133,10 +133,17 @@ public static class SubscriptionHandler
             result = await downloadHandle.TryDownloadString(url, false, userAgent);
         }
 
-        // Some panels only answer clients they know: retry as the Android client, which works there.
-        if (result.IsNullOrEmpty() && userAgent.IsNullOrEmpty())
+        // Some panels only answer clients they know: when ours is refused, ask under the names of other well-known clients.
+        if (result.IsNullOrEmpty() && userAgent.IsNullOrEmpty() && ClientAgents.Retryable(downloadHandle.LastStatusCode))
         {
-            result = await downloadHandle.TryDownloadString(url, false, "v2rayNG/1.10.5");
+            foreach (var agent in ClientAgents.Fallback)
+            {
+                result = await downloadHandle.TryDownloadString(url, false, agent);
+                if (result.IsNotEmpty())
+                {
+                    break;
+                }
+            }
         }
 
         if (result.IsNullOrEmpty())
