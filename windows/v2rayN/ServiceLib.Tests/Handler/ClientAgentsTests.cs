@@ -22,8 +22,8 @@ public class ClientAgentsTests
     }
 
     [Test]
-    public async Task HappFirst()
+    public async Task NeverPretendsToBeHapp()
     {
-        await ClientAgents.Fallback[0].StartsWith("Happ/").Should().BeTrue();
+        await ClientAgents.Fallback.Any(a => a.StartsWith("Happ", StringComparison.OrdinalIgnoreCase)).Should().BeFalse();
     }
 }
