@@ -179,9 +179,13 @@ fun resolveDarkTheme(): Boolean {
 
 val LocalDarkTheme = compositionLocalOf { false }
 
+/** True on the screens drawn in the new style (themed background, transparent bars); the old home screen draws itself. */
+val LocalNewLook = compositionLocalOf { false }
+
 @Composable
 fun AppTheme(
     darkTheme: Boolean = resolveDarkTheme(),
+    newLook: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val dynamicColor by ThemeManager.dynamicColorEnabled.collectAsState()
@@ -214,6 +218,7 @@ fun AppTheme(
     CompositionLocalProvider(
         LocalDarkTheme provides (happTheme?.isLight?.not() ?: darkTheme),
         LocalHappTheme provides happTheme,
+        LocalNewLook provides newLook,
         LocalAppSnackbar provides snackbarController
     ) {
         MaterialTheme(
@@ -227,8 +232,14 @@ fun AppTheme(
                         else Modifier
                     )
             ) {
+                // New look: the same background with soft colour blobs as the home screen; bars and the page itself are transparent.
+                if (newLook) com.v2ray.ang.ui.main.MainBackground()
                 AppSnackbarBridge(controller = snackbarController)
-                content()
+                if (newLook) {
+                    MaterialTheme(colorScheme = colorScheme.copy(background = Color.Transparent)) { content() }
+                } else {
+                    content()
+                }
                 AppSnackbarHost(hostState = snackbarController.hostState)
             }
         }

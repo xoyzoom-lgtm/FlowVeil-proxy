@@ -75,7 +75,7 @@ fun AppTopBar(
     onSearchClose: () -> Unit = {},
     searchPlaceholder: String? = null,
     navigationIcon: @Composable (() -> Unit)? = null,
-    containerColor: Color = MaterialTheme.colorScheme.surface,
+    containerColor: Color = if (LocalNewLook.current) Color.Transparent else MaterialTheme.colorScheme.surface,
     largeTitle: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
@@ -86,11 +86,11 @@ fun AppTopBar(
                 onQueryChange = onSearchQueryChange,
                 placeholder = searchPlaceholder
             )
-        } else if (largeTitle) {
+        } else if (largeTitle || LocalNewLook.current) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
+                style = if (LocalNewLook.current) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
+                fontWeight = if (LocalNewLook.current) FontWeight.ExtraBold else FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -123,7 +123,7 @@ fun AppTopBar(
         actionIconContentColor = MaterialTheme.colorScheme.onSurface
     )
     Column {
-        if (isSearchActive || largeTitle) {
+        if (isSearchActive || largeTitle || LocalNewLook.current) {
             TopAppBar(
                 title = titleContent,
                 navigationIcon = navigationContent,
