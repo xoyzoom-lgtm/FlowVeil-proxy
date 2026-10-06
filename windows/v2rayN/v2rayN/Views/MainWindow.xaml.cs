@@ -625,6 +625,14 @@ public partial class MainWindow
                 NoticeManager.Instance.Enqueue("Применится при следующем подключении");
                 BuildSettingsPage(vm);
             });
+        var fast = FastMode.Enabled;
+        Row(tunnel, PackIconKind.LightningBolt, $"Быстрый режим: {(fast ? "включено" : "выключено")}",
+            "Меньше лишнего при подключении: в журнал только предупреждения, фоновые проверки вдвое реже. Защита и DNS не меняются", () =>
+            {
+                FastMode.Set(!fast);
+                NoticeManager.Instance.Enqueue("Применится при следующем подключении");
+                BuildSettingsPage(vm);
+            });
         var country = CountryProfiles.Current;
         Row(tunnel, PackIconKind.Earth, $"Сайты страны напрямую: {(country == null ? "ничего" : $"{country.Flag} {country.NameRu}")}",
             "Банки, госуслуги и сайты выбранной страны открываются без сервера, остальное через сервер", () => OpenCountryMenu(vm));

@@ -176,7 +176,7 @@ object CoreConfigManager {
         val primaryResolvedOutbound = configContext.resolvedOutbounds.first()
 
         val v2rayConfig = initV2rayConfig(configContext)
-        v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
+        v2rayConfig.log.loglevel = com.v2ray.ang.net.FastMode.logLevel(MmkvManager.decodeSettingsBool(AppConfig.PREF_FAST_MODE, false), MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL))
         v2rayConfig.remarks = primaryResolvedOutbound.profile.remarks
 
         configureInbounds(v2rayConfig)
@@ -439,7 +439,7 @@ object CoreConfigManager {
      * Trim runtime sections that are not needed for latency testing.
      */
     private fun postProcessForSpeedtest(v2rayConfig: V2rayConfig) {
-        v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
+        v2rayConfig.log.loglevel = com.v2ray.ang.net.FastMode.logLevel(MmkvManager.decodeSettingsBool(AppConfig.PREF_FAST_MODE, false), MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL))
         v2rayConfig.inbounds.clear()
         v2rayConfig.routing.rules.clear()
         v2rayConfig.dns = null
