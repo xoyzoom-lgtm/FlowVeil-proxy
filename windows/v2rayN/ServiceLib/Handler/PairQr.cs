@@ -3,11 +3,34 @@ namespace ServiceLib.Handler;
 /// <summary>The address inside the QR: http://ip:port/p/SID#t=TOKEN&k=KEY&v=1 (secrets live in the fragment, so they never travel in a request line).</summary>
 public sealed record PairQr(string Host, int Port, string Sid, string Token, string Key)
 {
-    public static string Build(string host, int port, PairSession s) =>
+    /// <summary>The plain address (also what a manual entry or an older phone understands).</summary>
+    public static string BuildHttp(string host, int port, PairSession s) =>
         $"http://{host}:{port}/p/{s.Sid}#t={s.Token}&k={PairCrypto.B64.Encode(s.Key)}&v=1";
+
+    /// <summary>What the QR shows: an app link, so a scanner that opens links offers FlowVeil, and FlowVeil's own scanner shows its menu.</summary>
+    public static string Build(string host, int port, PairSession s) =>
+        "flowveil://pair?q=" + Uri.EscapeDataString(BuildHttp(host, port, s));
+
+    private static string? Unwrap(string? text)
+    {
+        var t = text?.Trim();
+        if (t is null || !t.StartsWith("flowveil://pair", StringComparison.OrdinalIgnoreCase))
+        {
+            return t;
+        }
+        var i = t.IndexOf("?q=", StringComparison.Ordinal);
+        if (i < 0)
+        {
+            return null;
+        }
+        var q = t[(i + 3)..];
+        var amp = q.IndexOf('&');
+        return Uri.UnescapeDataString(amp >= 0 ? q[..amp] : q);
+    }
 
     public static PairQr? Parse(string? text)
     {
+        text = Unwrap(text);
         if (string.IsNullOrWhiteSpace(text) || !Uri.TryCreate(text.Trim(), UriKind.Absolute, out var uri) || uri.Scheme != "http")
         {
             return null;

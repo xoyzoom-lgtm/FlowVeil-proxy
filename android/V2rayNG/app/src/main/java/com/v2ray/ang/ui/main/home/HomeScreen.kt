@@ -62,6 +62,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.currentStateAsState
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.ui.main.ServerRowUiModel
 import com.v2ray.ang.R
 import com.v2ray.ang.core.LauncherManager
 import com.v2ray.ang.dto.GroupMapItem
@@ -106,6 +107,8 @@ fun HomeScreen(
     val context = LocalContext.current
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showSubs by rememberSaveable { mutableStateOf(false) }
+    var showStats by rememberSaveable { mutableStateOf(false) }
+    val foldedCountries = remember { androidx.compose.runtime.mutableStateListOf<String>() }
     val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
     val isRunning = uiState.isRunning
@@ -162,10 +165,34 @@ fun HomeScreen(
     var showDelInvalid by remember { mutableStateOf(false) }
     var deleteSubId by remember { mutableStateOf<String?>(null) }
     var updateBanner by remember { mutableStateOf(UpdateNotifier.bannerCandidate()) }
+    var updatePopup by remember { mutableStateOf<com.v2ray.ang.net.UpdateCandidate?>(null) }
     LaunchedEffect(Unit) {
         UpdateNotifier.schedule(context)
+        // The pop-up may come from a check made earlier, so show it without waiting for the network.
+        if (!UpdateNotifier.popupShown) UpdateNotifier.popupCandidate()?.let { UpdateNotifier.popupShown = true; updatePopup = it }
         UpdateNotifier.checkIfDue(context)
         updateBanner = UpdateNotifier.bannerCandidate()
+        if (!UpdateNotifier.popupShown) UpdateNotifier.popupCandidate()?.let { UpdateNotifier.popupShown = true; updatePopup = it }
+    }
+    updatePopup?.let { update ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { updatePopup = null },
+            title = { Text(stringResource(R.string.update_popup_title)) },
+            text = { Text(stringResource(R.string.update_popup_body, update.build)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    updatePopup = null
+                    context.startActivity(
+                        Intent(context, com.v2ray.ang.ui.checkupdate.CheckUpdateActivity::class.java)
+                            .putExtra(com.v2ray.ang.ui.checkupdate.CheckUpdateActivity.EXTRA_AUTO_UPDATE, true)
+                    )
+                }) { Text(stringResource(R.string.update_now)) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { updatePopup = null }) { Text(stringResource(R.string.update_later)) }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     }
 
     // Connecting / failed, kept here because the service only reports "running" or not.
@@ -247,6 +274,7 @@ fun HomeScreen(
                     when (a) {
                         SubSheetAction.Update -> { closeSheet(); context.toastSuccess(R.string.home_toast_updating); onAction(MainAction.UpdateSubscriptions) }
                         SubSheetAction.Check -> { closeSheet(); onAction(MainAction.CheckServers) }
+                        SubSheetAction.Diagnose -> { closeSheet(); onAction(MainAction.OpenDiagnosis) }
                         SubSheetAction.Share -> sheet = Sheet.SHARE
                         SubSheetAction.Edit -> { closeSheet(); onAction(MainAction.EditSubscription(g.id)) }
                         SubSheetAction.Look -> sheet = Sheet.LOOK
@@ -364,7 +392,8 @@ fun HomeScreen(
                     )
                 }
             }
-            items(rows, key = { "server-" + it.guid }) { row ->
+            val byCountry = com.v2ray.ang.handler.MmkvManager.decodeSettingsBool(AppConfig.PREF_GROUP_COUNTRY, false) && query.isEmpty() && rows.size > 1
+            val row: @Composable (ServerRowUiModel) -> Unit = { row ->
                 ServerRowV4(
                     row = row,
                     selected = row.guid == uiState.selectedGuid,
@@ -375,6 +404,22 @@ fun HomeScreen(
                     onClick = { onAction(MainAction.SelectServer(row.guid)) },
                     onLongClick = { shareTarget = row.guid to row.profile },
                 )
+            }
+            if (byCountry) {
+                // Groups in the order their first server appears; the servers keep their order inside.
+                val grouped = rows.groupBy { splitFlag(it.remarks).first }
+                grouped.forEach { (flag, list) ->
+                    val key = flag ?: "other"
+                    val folded = key in foldedCountries
+                    item(key = "country-$key") {
+                        CountryHeader(flag, list.size, folded) {
+                            if (folded) foldedCountries.remove(key) else foldedCountries.add(key)
+                        }
+                    }
+                    if (!folded) items(list, key = { "server-" + it.guid }) { r -> row(r) }
+                }
+            } else {
+                items(rows, key = { "server-" + it.guid }) { r -> row(r) }
             }
         }
         item(key = "dock-space") { DockSpacer() }
@@ -559,8 +604,17 @@ fun HomeScreen(
                 // "Subscriptions" opens the new list instead of the old "Groups" screen.
                 onNavigate = { dest -> if (dest == MainDestination.Subscriptions) showSubs = true else onNavigate(dest) },
                 onWizard = { showSettings = false; onWizard() },
+                onStats = { showStats = true },
                 onRulesChanged = { if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context) },
             )
+        }
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showStats,
+            enter = androidx.compose.animation.slideInHorizontally { it },
+            exit = androidx.compose.animation.slideOutHorizontally { it },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            HomeStats(onClose = { showStats = false })
         }
         androidx.compose.animation.AnimatedVisibility(
             visible = showSubs,

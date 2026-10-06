@@ -34,8 +34,31 @@ class PairProtocolTest {
     }
 
     @Test
+    fun wrappedQrIsUnderstood() {
+        val plain = "http://192.168.1.10:5123/p/SID123#t=TOK&k=${PairProtocol.b64Encode(key)}&v=1"
+        val wrapped = "flowveil://pair?q=" + java.net.URLEncoder.encode(plain, "UTF-8")
+        val qr = PairProtocol.parseQr(wrapped)
+        assertNotNull(qr)
+        assertEquals("SID123", qr!!.sid)
+        assertEquals("TOK", qr.token)
+        assertTrue(PairProtocol.looksLikePair(wrapped))
+    }
+
+    @Test
+    fun looksLikePairCatchesBrokenCodes() {
+        assertTrue(PairProtocol.looksLikePair("http://192.168.1.10:5123/p/abc"))
+        assertTrue(PairProtocol.looksLikePair("flowveil://pair?x=1"))
+        assertFalse(PairProtocol.looksLikePair("http://example.com/p/abc"))
+        assertFalse(PairProtocol.looksLikePair("https://sub.example/s/abc"))
+        assertFalse(PairProtocol.looksLikePair("vless://abc"))
+        assertFalse(PairProtocol.looksLikePair(null))
+    }
+
+    @Test
     fun qrRejectsForeign() {
         assertNull(PairProtocol.parseQr("https://example.com/p/a#t=1&k=AAAA&v=1"))
+        assertNull(PairProtocol.parseQr("flowveil://pair"))
+        assertNull(PairProtocol.parseQr("flowveil://pair?q="))
         assertNull(PairProtocol.parseQr("http://192.168.1.10:5123/p/a"))
         assertNull(PairProtocol.parseQr("http://192.168.1.10:5123/x/a#t=1&k=${PairProtocol.b64Encode(key)}&v=1"))
         assertNull(PairProtocol.parseQr("http://192.168.1.10:5123/p/a#t=1&k=AAAA&v=1"))

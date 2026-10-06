@@ -42,7 +42,6 @@ import com.v2ray.ang.handler.V2rayNgBackupReader
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.ui.AboutActivity
-import com.v2ray.ang.ui.backup.BackupActivity
 import com.v2ray.ang.ui.base.HelperBaseComponentActivity
 import com.v2ray.ang.ui.checkupdate.CheckUpdateActivity
 import com.v2ray.ang.ui.logcat.LogcatActivity
@@ -124,7 +123,6 @@ class MainActivity : HelperBaseComponentActivity() {
             val restartService = SettingsChangeManager.consumeRestartService()
             SettingsChangeManager.consumeSetupGroupTab()
             mainViewModel.refreshUiSettings()
-            newHome = MmkvManager.decodeSettingsBool(AppConfig.PREF_NEW_HOME, true)
             refreshOnboarding()
             // Always resync: a subscription added in settings should show its servers right away.
             mainViewModel.onAction(MainAction.SyncNewSubscriptions)
@@ -228,24 +226,15 @@ class MainActivity : HelperBaseComponentActivity() {
                     if (MmkvManager.decodeSubscriptions().isNotEmpty()) toast(R.string.onb_toast_ready)
                 },
             )
-        } else if (newHome) {
+        } else {
             com.v2ray.ang.ui.main.home.HomeScreen(
                 mainViewModel = mainViewModel,
                 onAction = homeAction,
                 onNavigate = { route -> navigateTo(route) },
                 onWizard = { showOnboarding = true },
             )
-        } else {
-            MainScreen(
-                mainViewModel = mainViewModel,
-                onAction = homeAction,
-                onNavigate = { route -> navigateTo(route) },
-            )
         }
     }
-
-    /** New home screen by default; the old one stays one release behind a switch in "Advanced". */
-    private var newHome by mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_NEW_HOME, true))
 
     /** First-run wizard: fresh installs only (people who already have subscriptions are not shown it), or on request from Settings. */
     private var showOnboarding by mutableStateOf(false)
@@ -287,7 +276,6 @@ class MainActivity : HelperBaseComponentActivity() {
             MainDestination.Settings -> Intent(this, SettingsActivity::class.java)
             MainDestination.Logcat -> Intent(this, LogcatActivity::class.java)
             MainDestination.CheckUpdate -> Intent(this, CheckUpdateActivity::class.java)
-            MainDestination.BackupRestore -> Intent(this, BackupActivity::class.java)
             MainDestination.About -> Intent(this, AboutActivity::class.java)
         }
         settingsActivityLauncher.launch(intent)
@@ -302,6 +290,11 @@ class MainActivity : HelperBaseComponentActivity() {
     private fun handleImportIntent(intent: Intent?) {
         val text = intent?.getStringExtra(EXTRA_IMPORT_TEXT)?.takeIf { it.isNotBlank() } ?: return
         intent.removeExtra(EXTRA_IMPORT_TEXT)
+        if (PairProtocol.looksLikePair(text)) {
+            val qr = PairProtocol.parseQr(text)
+            if (qr != null) pairQr = qr else toast(R.string.pair_not_recognized)
+            return
+        }
         if (intent.getBooleanExtra(EXTRA_SHARED, false)) {
             intent.removeExtra(EXTRA_SHARED)
             sharedText = text
@@ -394,7 +387,9 @@ class MainActivity : HelperBaseComponentActivity() {
             if (scanResult != null) {
                 // a code shown by FlowVeil on a computer is not a config: offer to send a subscription there
                 val qr = PairProtocol.parseQr(scanResult)
-                if (qr != null) pairQr = qr else offerImport(scanResult)
+                if (qr != null) pairQr = qr
+                else if (PairProtocol.looksLikePair(scanResult)) toast(R.string.pair_not_recognized)
+                else offerImport(scanResult)
             }
         }
     }

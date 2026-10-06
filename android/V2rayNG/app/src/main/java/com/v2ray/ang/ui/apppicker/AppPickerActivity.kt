@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.AppInfo
@@ -34,7 +35,6 @@ import com.v2ray.ang.ui.base.BaseComponentActivity
 import com.v2ray.ang.ui.compose.AppDropdownMenuItems
 import com.v2ray.ang.ui.compose.AppListItem
 import com.v2ray.ang.ui.compose.AppTopBar
-import com.v2ray.ang.ui.compose.ItemDivider
 import com.v2ray.ang.ui.compose.NavigationBarsBottomPadding
 import com.v2ray.ang.ui.compose.verticalScrollbar
 
@@ -186,7 +186,7 @@ fun AppPickerScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScrollbar(listState),
-            contentPadding = NavigationBarsBottomPadding()
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 4.dp, bottom = 24.dp)
         ) {
             items(items = apps, key = { it.packageName }) { app ->
                 val checked = selectedPackages.contains(app.packageName)
@@ -197,7 +197,6 @@ fun AppPickerScreen(
                     checked = checked,
                     onCheckedChange = { onToggleApp(app.packageName) }
                 )
-                ItemDivider()
             }
         }
     }

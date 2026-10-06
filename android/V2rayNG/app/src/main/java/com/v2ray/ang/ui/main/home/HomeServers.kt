@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -254,7 +255,8 @@ internal fun ServerRowV4(
     onLongClick: () -> Unit,
 ) {
     val accent = homeAccent()
-    val (flag, name) = remember(row.remarks) { splitFlag(row.remarks) }
+    val smart = com.v2ray.ang.handler.MmkvManager.decodeSettingsBool(com.v2ray.ang.AppConfig.PREF_SMART_NAMES, false)
+    val (flag, name) = remember(row.remarks, smart) { splitFlag(row.remarks).let { (f, n) -> f to if (smart) com.v2ray.ang.net.ServerName.clean(n) else n } }
     val gaming = remember(row.remarks) { HomeCard.isGaming(row.remarks) }
     val shape = RoundedCornerShape(HomeStyle.r(20))
     Row(
@@ -365,4 +367,41 @@ internal fun AutoBestRow(bestName: String?, bestDelay: Long, onClick: () -> Unit
             PingTag(bestDelay, null, false, false)
         }
     }
+}
+
+/** A country heading in the grouped list: flag, name of the group's first server's country mark, count, fold arrow. */
+@Composable
+internal fun CountryHeader(flag: String?, count: Int, collapsed: Boolean, onClick: () -> Unit) {
+    val rotation by androidx.compose.animation.core.animateFloatAsState(if (collapsed) -90f else 0f, label = "countryArrow")
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 2.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .semantics { role = androidx.compose.ui.semantics.Role.Button }
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 10.dp)
+    ) {
+        Text(flag ?: "🌐", fontSize = 20.sp)
+        Spacer(Modifier.width(10.dp))
+        Text(
+            if (flag == null) stringResource(R.string.country_group_other) else flagCountryName(flag),
+            fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Text(count.toString(), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(6.dp))
+        Icon(
+            painterResource(R.drawable.ic_expand_more_24dp), null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp).rotate(rotation)
+        )
+    }
+}
+
+/** "🇩🇪" → "DE", the two letters of the flag (no country table needed). */
+private fun flagCountryName(flag: String): String {
+    val cps = flag.codePoints().toArray()
+    return cps.filter { it in 0x1F1E6..0x1F1FF }.map { ('A'.code + (it - 0x1F1E6)).toChar() }.joinToString("").ifEmpty { flag }
 }

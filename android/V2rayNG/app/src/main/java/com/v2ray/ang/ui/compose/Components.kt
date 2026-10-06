@@ -4,7 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import com.v2ray.ang.ui.main.home.glassEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -197,11 +200,21 @@ fun AppListItem(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val newLook = LocalNewLook.current
+    val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(com.v2ray.ang.ui.main.home.HomeStyle.r(18))
     Row(
         modifier = modifier
+            .then(
+                if (newLook) Modifier
+                    .padding(horizontal = 16.dp, vertical = 3.dp)
+                    .clip(cardShape)
+                    .background(com.v2ray.ang.ui.main.home.homeSurface(selected = checked))
+                    .then(Modifier.glassEdge(cardShape))
+                else Modifier
+            )
             .fillMaxWidth()
             .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = if (newLook) 12.dp else 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val model = remember(icon, packageName) {

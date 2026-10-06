@@ -700,6 +700,16 @@ class MainViewModel(
                         setupGroupTab(forceRefresh = true)
                         refreshSelectedGuid()
                     }
+                    // Subscriptions set to "test servers after update": the service tests them (and drops / sorts, per their options).
+                    val post = (if (subId.isEmpty()) dataSource.getSubscriptions() else dataSource.getSubscriptions().filter { it.guid == subId })
+                        .filter { it.subscription.enabled && it.subscription.url.isNotEmpty() && it.subscription.autoTest == true }
+                        .map { it.guid }
+                    if (post.isNotEmpty()) {
+                        com.v2ray.ang.helper.MessageHelper.sendMsg2SubscriptionService(
+                            app,
+                            com.v2ray.ang.dto.SubscriptionUpdateMessage(AppConfig.MSG_SUB_UPDATE_START, false, post)
+                        )
+                    }
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (e: Exception) {
