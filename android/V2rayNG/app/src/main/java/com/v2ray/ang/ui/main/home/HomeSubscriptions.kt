@@ -61,7 +61,7 @@ internal fun HomeSubscriptions(
     BackHandler(onBack = onClose)
     val subs = groups.filter { it.subscription != null }
     val enabled = remember { mutableStateMapOf<String, Boolean>() }
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().screenBase()) {
         MainBackground()
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(

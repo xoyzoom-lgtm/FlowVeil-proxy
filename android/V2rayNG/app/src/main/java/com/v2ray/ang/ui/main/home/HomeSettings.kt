@@ -107,7 +107,7 @@ internal fun HomeSettings(
     }
     fun save(key: String, value: Boolean) = MmkvManager.encodeSettings(key, value)
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().screenBase()) {
         MainBackground()
         Column(
             Modifier
