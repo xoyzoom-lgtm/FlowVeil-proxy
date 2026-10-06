@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -85,7 +88,7 @@ import kotlinx.coroutines.launch
 /** How long "connecting" may last before the panel says it failed (counted only while the app is on screen). */
 private const val CONNECT_TIMEOUT_MS = 20_000L
 
-private enum class Sheet { NONE, SUB, ADD, MANUAL, NOTE, SHARE }
+private enum class Sheet { NONE, SUB, ADD, MANUAL, NOTE, SHARE, LOOK }
 
 /**
  * New home screen (mockup v4): subscription cards on top, servers below, one fixed bottom panel with the main
@@ -101,6 +104,7 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var showSubs by rememberSaveable { mutableStateOf(false) }
     val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
     val isRunning = uiState.isRunning
@@ -244,17 +248,18 @@ fun HomeScreen(
                         SubSheetAction.Check -> { closeSheet(); onAction(MainAction.CheckServers) }
                         SubSheetAction.Share -> sheet = Sheet.SHARE
                         SubSheetAction.Edit -> { closeSheet(); onAction(MainAction.EditSubscription(g.id)) }
+                        SubSheetAction.Look -> sheet = Sheet.LOOK
                         SubSheetAction.Message -> sheet = Sheet.NOTE
                         SubSheetAction.Support -> g.subscription?.supportUrl?.let { Utils.openUri(context, it) }
                         SubSheetAction.CopyLink -> { Utils.setClipboard(context, url); context.toastSuccess(R.string.toast_success) }
-                        SubSheetAction.AllSubscriptions -> { closeSheet(); onNavigate(MainDestination.Subscriptions) }
+                        SubSheetAction.AllSubscriptions -> { closeSheet(); showSubs = true }
                         SubSheetAction.SortByPing -> { closeSheet(); onAction(MainAction.SortByTestResults) }
                         SubSheetAction.TestTcping -> { closeSheet(); onAction(MainAction.TestAllServers) }
                         SubSheetAction.ExportAll -> { closeSheet(); onAction(MainAction.ExportAll) }
                         SubSheetAction.RemoveDuplicate -> { closeSheet(); showDelDuplicate = true }
                         SubSheetAction.RemoveInvalid -> { closeSheet(); showDelInvalid = true }
                         // The sheet already asked twice ("tap again"), so delete straight away.
-                        SubSheetAction.Delete -> { closeSheet(); onAction(MainAction.RemoveSubscription(g.id)) }
+                        SubSheetAction.Delete -> { closeSheet(); com.v2ray.ang.handler.SubLookStore.reset(context, g.id); onAction(MainAction.RemoveSubscription(g.id)) }
                     }
                 },
             )
@@ -274,6 +279,7 @@ fun HomeScreen(
         Sheet.SHARE -> sheetGroup?.subscription?.let { s ->
             ShareSheet(s.url, onCopy = { Utils.setClipboard(context, s.url); context.toastSuccess(R.string.toast_success) }, onDismiss = closeSheet)
         }
+        Sheet.LOOK -> sheetGroup?.let { g -> AppearanceSheet(g, now, onDismiss = { sheet = Sheet.SUB }) }
         Sheet.NONE -> Unit
     }
 
@@ -473,8 +479,16 @@ fun HomeScreen(
 
     Box(Modifier.fillMaxSize()) {
         MainBackground()
-        BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding()) {
+        // The list shrinks above the keyboard (the window is edge-to-edge, so this is not automatic).
+        BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
             val twoPane = maxWidth >= 700.dp
+            // Opening the search brings its field to the top, so the field and the results stay above the keyboard.
+            LaunchedEffect(showSearch, twoPane) {
+                if (showSearch) {
+                    delay(120)
+                    runCatching { listState.animateScrollToItem(if (twoPane) 1 else 3) }
+                }
+            }
             Column(Modifier.fillMaxSize()) {
                 HomeTopBar(
                     onAdd = { sheet = Sheet.ADD },
@@ -513,7 +527,9 @@ fun HomeScreen(
                 }
             }
         }
-        ConnectDock(
+        // The bottom panel steps aside while the keyboard is open.
+        val keyboardOpen = WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0
+        if (!keyboardOpen) ConnectDock(
             state = dockState,
             title = dockTitle,
             subtitle = dockSubtitle,
@@ -532,9 +548,32 @@ fun HomeScreen(
         ) {
             HomeSettings(
                 onClose = { showSettings = false },
-                onNavigate = onNavigate,
+                // "Subscriptions" opens the new list instead of the old "Groups" screen.
+                onNavigate = { dest -> if (dest == MainDestination.Subscriptions) showSubs = true else onNavigate(dest) },
                 onWizard = { showSettings = false; onWizard() },
                 onRulesChanged = { if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context) },
+            )
+        }
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showSubs,
+            enter = androidx.compose.animation.slideInHorizontally { it },
+            exit = androidx.compose.animation.slideOutHorizontally { it },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            HomeSubscriptions(
+                groups = groups,
+                now = now,
+                onClose = { showSubs = false },
+                onOpen = { g -> sheetGroup = g; sheet = Sheet.SUB },
+                onAdd = { sheet = Sheet.ADD },
+                onRefreshAll = { context.toastSuccess(R.string.home_toast_updating); onAction(MainAction.UpdateSubscriptions) },
+                onToggle = { g, on ->
+                    com.v2ray.ang.handler.MmkvManager.decodeSubscription(g.id)?.let { item ->
+                        item.enabled = on
+                        com.v2ray.ang.handler.MmkvManager.encodeSubscription(g.id, item)
+                    }
+                    onAction(MainAction.RefreshGroups)
+                },
             )
         }
     }

@@ -57,7 +57,7 @@ import com.v2ray.ang.util.QRCodeDecoder
 
 /** Every subscription action the sheet can ask the screen to run. */
 internal enum class SubSheetAction {
-    Update, Check, Share, Edit, Message, Support, CopyLink, AllSubscriptions,
+    Update, Check, Share, Edit, Look, Message, Support, CopyLink, AllSubscriptions,
     SortByPing, TestTcping, ExportAll, RemoveDuplicate, RemoveInvalid, Delete,
 }
 
@@ -68,9 +68,10 @@ internal fun HomeSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = state,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = if (HomeStyle.glass) 0.9f else 1f),
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
+        BlurBehindDialog()
         Column(
             Modifier
                 .fillMaxWidth()
@@ -180,11 +181,8 @@ internal fun SubscriptionSheet(
     val act: (SubSheetAction) -> Unit = { onAction(it) }
     HomeSheet(onDismiss) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-            Box(
-                Modifier.size(60.dp).clip(RoundedCornerShape(20.dp)).background(cardBrush(group, now)).background(HomeTokens.cardShade),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(ShortName.initial(fullName), color = HomeTokens.onCard, fontWeight = FontWeight.Bold, fontSize = 26.sp)
+            Box(Modifier.clip(RoundedCornerShape(20.dp)).background(cardBrush(group, now)).background(HomeTokens.cardShade)) {
+                SubAvatar(group, 60.dp, 20.dp, 26)
             }
             Spacer(Modifier.width(14.dp))
             Column {
@@ -241,6 +239,7 @@ internal fun SubscriptionSheet(
         if (!sub?.announce.isNullOrBlank()) {
             SheetRow(R.drawable.ic_promotion_24dp, stringResource(R.string.home_provider_message), sub!!.announce) { act(SubSheetAction.Message) }
         }
+        SheetRow(R.drawable.ic_image_24dp, stringResource(R.string.look_title), stringResource(R.string.look_sub)) { act(SubSheetAction.Look) }
         if (sub != null) {
             SheetRow(R.drawable.ic_copy, stringResource(R.string.sub_menu_copy)) { act(SubSheetAction.CopyLink) }
         }

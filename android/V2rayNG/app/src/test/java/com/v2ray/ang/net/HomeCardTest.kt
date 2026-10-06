@@ -91,6 +91,12 @@ class HomeCardTest {
     }
 
     @Test
+    fun automaticPaletteStaysThree() {
+        listOf("a", "b", "xyz", "4dd0918faa9a2cca").forEach { assertTrue(HomeCard.paletteIndex(it) in 0..2) }
+        assertEquals(8, HomeCard.GRADIENTS.size)
+    }
+
+    @Test
     fun whiteTextReadableOnEveryCard() {
         // Large bold text on cards needs 3:1 (WCAG AA large text); every gradient stop is checked.
         (HomeCard.GRADIENTS.flatten() + HomeCard.EXPIRED).forEach {

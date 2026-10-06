@@ -40,6 +40,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -65,7 +66,13 @@ import com.v2ray.ang.ui.main.splitFlag
 internal fun homeAccent(): Color = mainAccentColor()
 
 @Composable
-internal fun homeSurface(selected: Boolean = false): Color = serverCardColor(selected)
+internal fun homeSurface(selected: Boolean = false): Color {
+    val base = serverCardColor(selected)
+    val glass = HomeStyle.glass
+    // Glass: let the themed background shine through; solid: the same colour laid on the background so it is fully opaque.
+    return if (glass) base.copy(alpha = base.alpha * HomeStyle.surfaceAlpha)
+    else base.compositeOver(MaterialTheme.colorScheme.background)
+}
 
 /** 46dp round button of the server section. */
 @Composable

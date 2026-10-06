@@ -551,6 +551,26 @@ object AngConfigManager {
                 responseHeaders = secure.second
                 useSecureDns = configText.isNotEmpty()
             }
+            val redirectMark = lastNetworkError.orEmpty()
+            if (configText.isEmpty() && userAgent.isNullOrBlank() && redirectMark.startsWith(HttpUtil.REDIRECT_APP_LINK)) {
+                // The panel sent this client to an app link: other well-known clients are served the list itself.
+                for (agent in listOf("v2rayN/7.25.2", "clash-verge/v2.2.3")) {
+                    val retry = fetch(agent, viaProxy = false, secureDns = false)
+                    if (retry.first.isNotEmpty()) {
+                        configText = retry.first
+                        responseHeaders = retry.second
+                        break
+                    }
+                }
+            }
+            if (configText.isEmpty() && lastNetworkError == HttpUtil.REDIRECT_HAPP_CRYPT) {
+                SubscriptionErrors.record(it.guid, str(R.string.sub_error_happ_crypt), SubIssue.HAPP_CRYPT)
+                return SubscriptionUpdateResult(failureCount = 1)
+            }
+            if (configText.isEmpty() && lastNetworkError.orEmpty().startsWith(HttpUtil.REDIRECT_APP_LINK)) {
+                SubscriptionErrors.record(it.guid, str(R.string.sub_error_app_link, lastNetworkError.orEmpty().removePrefix(HttpUtil.REDIRECT_APP_LINK)), SubIssue.WEB_PAGE)
+                return SubscriptionUpdateResult(failureCount = 1)
+            }
             if (configText.isEmpty()) {
                 // The provider answered with an error code: say what it usually means.
                 val code = Regex("status code (\\d{3})").find(lastNetworkError.orEmpty())?.groupValues?.get(1)?.toIntOrNull()
