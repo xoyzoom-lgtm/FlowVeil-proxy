@@ -170,8 +170,10 @@ internal fun SubscriptionSheet(
     now: Long,
     onAction: (SubSheetAction) -> Unit,
     onDismiss: () -> Unit,
+    onEnabled: (Boolean) -> Unit = {},
 ) {
     val sub = group.subscription
+    var enabled by remember(group.id) { mutableStateOf(sub?.enabled ?: true) }
     val fullName = groupFullName(group)
     var confirmDelete by remember { mutableStateOf(false) }
     var showMore by remember { mutableStateOf(false) }
@@ -218,6 +220,24 @@ internal fun SubscriptionSheet(
             }
         }
         Spacer(Modifier.height(12.dp))
+        if (sub != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 3.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(homeSurface())
+                    .clickable { enabled = !enabled; onEnabled(enabled) }
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.home_sub_use), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Text(stringResource(R.string.home_sub_use_hint), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                }
+                androidx.compose.material3.Switch(checked = enabled, onCheckedChange = { enabled = it; onEnabled(it) })
+            }
+        }
         if (!sub?.announce.isNullOrBlank()) {
             SheetRow(R.drawable.ic_promotion_24dp, stringResource(R.string.home_provider_message), sub!!.announce) { act(SubSheetAction.Message) }
         }

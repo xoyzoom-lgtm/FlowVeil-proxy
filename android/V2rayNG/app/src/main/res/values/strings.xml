@@ -1100,4 +1100,6 @@
     <string name="import_empty">The clipboard is empty</string>
     <string name="home_banner_expiring">«%1$s» ends in %2$d d.</string>
     <string name="home_banner_renew">Renew</string>
+    <string name="home_sub_use">Use this subscription</string>
+    <string name="home_sub_use_hint">When off it is not updated and takes no part in automatic switching</string>
 </resources>

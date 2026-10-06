@@ -1098,4 +1098,6 @@
     <string name="import_empty">Буфер обмена пуст</string>
     <string name="home_banner_expiring">«%1$s» закончится через %2$d дн.</string>
     <string name="home_banner_renew">Продлить</string>
+    <string name="home_sub_use">Использовать подписку</string>
+    <string name="home_sub_use_hint">Выключенная не обновляется и не участвует в автопереключении</string>
 </resources>

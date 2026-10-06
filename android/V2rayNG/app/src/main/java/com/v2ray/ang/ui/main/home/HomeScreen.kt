@@ -229,6 +229,13 @@ fun HomeScreen(
                 serverCount = count.size,
                 now = now,
                 onDismiss = closeSheet,
+                onEnabled = { on ->
+                    com.v2ray.ang.handler.MmkvManager.decodeSubscription(g.id)?.let { item ->
+                        item.enabled = on
+                        com.v2ray.ang.handler.MmkvManager.encodeSubscription(g.id, item)
+                    }
+                    onAction(MainAction.RefreshGroups)
+                },
                 onAction = { a ->
                     if (g.id != uiState.selectedGroupId) onAction(MainAction.SelectGroup(g.id))
                     val url = g.subscription?.url.orEmpty()
