@@ -600,7 +600,8 @@ fun HomeScreen(
             exit = androidx.compose.animation.slideOutHorizontally { it },
         ) {
             HomeSettings(
-                onClose = { showSettings = false },
+                // Switches changed there (the "Best" row, delete confirmation) must show on the home screen right away.
+                onClose = { showSettings = false; mainViewModel.refreshUiSettings() },
                 // "Subscriptions" opens the new list instead of the old "Groups" screen.
                 onNavigate = { dest -> if (dest == MainDestination.Subscriptions) showSubs = true else onNavigate(dest) },
                 onWizard = { showSettings = false; onWizard() },
