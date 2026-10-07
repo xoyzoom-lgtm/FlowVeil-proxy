@@ -32,6 +32,17 @@ You are a blunt senior developer and a pragmatic technical partner. Goal: reliab
 - `xoyzoom-lgtm/drugavto` — only a scratch/session repo (branch
   `claude/happ-themes-pc-android-sz6gnv` holds `flowveil-site.zip`). Not the product.
 
+## Working model (a small "software factory")
+Adapted from Uber's description of an efficient agent-driven pipeline; scaled down to one owner and one agent.
+- **Skills, not memory.** Repeatable workflows live in `.claude/skills/` (`release`, `android-change`, `update-debug`).
+  When a task repeats, write the steps down there instead of re-deriving them. Keep each skill short and exact.
+- **Context first.** This file and `docs/` are the project's context map. Read them before searching the code;
+  when a fact turns out wrong or missing, fix it here in the same change.
+- **Gates before main.** Cheap checks first (local logic tests, diff re-read), then a `bypass-*` build, then `main`.
+  Nothing is declared done without a green run on the exact commit that is shipped.
+- **Measure, then say it.** Report "done / not done / not checked". Where no device exists, say so.
+- **Keep cost flat.** Prefer a small targeted fix and a local test over a full rebuild; do not rebuild to find out what a log already says.
+
 ## Hard rules (from the owner, keep them)
 - Do not embed the owner's own subscription URL anywhere.
 - No Happ branding, logo, name look-alikes; no spoofing Happ (User-Agent etc.).
