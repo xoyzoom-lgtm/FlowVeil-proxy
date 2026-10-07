@@ -199,7 +199,7 @@ public class DownloadService
         else
         {
             Error?.Invoke(this, new ErrorEventArgs(new Exception("StatusCode error: " + response.StatusCode)));
-            Logging.SaveLog("StatusCode error: " + url);
+            Logging.SaveLog("StatusCode error: " + (Uri.TryCreate(url, UriKind.Absolute, out var failed) ? failed.Host : "?"));
             return null;
         }
     }

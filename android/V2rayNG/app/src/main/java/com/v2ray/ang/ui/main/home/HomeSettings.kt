@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -142,9 +143,15 @@ internal fun HomeSettings(
 
     Box(Modifier.fillMaxSize().screenBase()) {
         MainBackground()
+        // Blur style: the settings under an open sheet are blurred like the home screen, not left readable through it.
+        val sheetOpen = picker != null || infoRes != null || showDirectSites
+        val settingsBlur by androidx.compose.animation.core.animateDpAsState(
+            if (HomeStyle.mode == HomeStyle.Mode.BLUR && sheetOpen) HomeStyle.blurDp.dp else 0.dp, label = "settingsBlur"
+        )
         Column(
             Modifier
                 .fillMaxSize()
+                .blur(settingsBlur)
                 .statusBarsPadding()
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,

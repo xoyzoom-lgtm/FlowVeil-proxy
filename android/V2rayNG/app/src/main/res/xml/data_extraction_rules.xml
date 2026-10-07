@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Subscriptions, keys and the device id never leave the phone through system backup or device transfer. FlowVeil's own backup screen stays. -->
+<!-- Subscriptions, keys and the device id never leave the phone through system backup or device transfer. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" path="." />

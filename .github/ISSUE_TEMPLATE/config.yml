@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Безопасность
+    url: https://github.com/xoyzoom-lgtm/FlowVeil-proxy/security/advisories/new
+    about: О найденной уязвимости сообщайте приватно, не в публичной задаче.
+  - name: Telegram-канал
+    url: https://t.me/FlowVeil
+    about: Новости и обсуждение.

@@ -274,7 +274,8 @@ public static class SubscriptionHandler
                 _ => "в ответе провайдера нет серверов (возможно, превышен лимит устройств)",
             };
             Logging.SaveLog("FailedImportSubscription");
-            Logging.SaveLog(result);
+            // Not the answer itself: it can hold servers and keys, and the log gets shared.
+            Logging.SaveLog($"Answer length: {result?.Length ?? 0}, issue: {LastIssue}");
         }
 
         // Update completion message

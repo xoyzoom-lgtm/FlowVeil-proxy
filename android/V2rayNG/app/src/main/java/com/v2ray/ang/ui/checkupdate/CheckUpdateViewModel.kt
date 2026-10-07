@@ -107,6 +107,8 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
                 _showUpdateDialog.value = false
                 val signed = check is UpdateManifest.Result.Verified && check.signed
                 if (signed) installDownloaded() else _askUnsigned.value = true
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 LogUtil.e(AppConfig.TAG, "Update download failed", e)
                 _downloadProgress.value = null

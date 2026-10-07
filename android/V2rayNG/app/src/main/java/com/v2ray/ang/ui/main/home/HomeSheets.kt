@@ -162,7 +162,13 @@ private fun ActionTile(iconRes: Int, label: String, onClick: () -> Unit, modifie
             Icon(painterResource(iconRes), null, tint = homeAccent(), modifier = Modifier.size(24.dp))
         }
         Spacer(Modifier.height(6.dp))
-        Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Five tiles share the width: the label shrinks a little instead of being cut ("Провери…").
+        androidx.compose.foundation.text.BasicText(
+            label,
+            style = androidx.compose.ui.text.TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp),
+            maxLines = 1,
+            autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 12.sp, stepSize = 0.5.sp),
+        )
     }
 }
 

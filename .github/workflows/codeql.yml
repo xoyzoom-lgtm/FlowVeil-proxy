@@ -1,0 +1,39 @@
+name: CodeQL
+
+# Static analysis of the C# code (the Windows app) and of the workflows themselves; weekly and by hand, not on every push.
+# Kotlin (the Android app) needs a full Android build to analyse and is not covered yet (MAINTAINER_TODO.md).
+on:
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [csharp, actions]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        if: matrix.language == 'csharp'
+        with:
+          global-json-file: windows/v2rayN/global.json
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.language == 'csharp' && 'manual' || 'none' }}
+      - name: Build
+        if: matrix.language == 'csharp'
+        working-directory: windows/v2rayN
+        run: dotnet build ServiceLib/ServiceLib.csproj -c Release -p:EnableWindowsTargeting=true
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}

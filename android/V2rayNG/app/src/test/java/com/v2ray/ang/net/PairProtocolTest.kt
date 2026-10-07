@@ -46,7 +46,8 @@ class PairProtocolTest {
 
     @Test
     fun looksLikePairCatchesBrokenCodes() {
-        assertTrue(PairProtocol.looksLikePair("http://192.168.1.10:5123/p/abc"))
+        assertTrue(PairProtocol.looksLikePair("http://192.168.1.10:5123/p/abc#t=1&k=AAAA&v=1"))
+        assertFalse(PairProtocol.looksLikePair("http://192.168.1.10/p/my-subscription"))
         assertTrue(PairProtocol.looksLikePair("flowveil://pair?x=1"))
         assertFalse(PairProtocol.looksLikePair("http://example.com/p/abc"))
         assertFalse(PairProtocol.looksLikePair("https://sub.example/s/abc"))

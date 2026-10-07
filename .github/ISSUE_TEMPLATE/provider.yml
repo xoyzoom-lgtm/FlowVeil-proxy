@@ -1,0 +1,30 @@
+name: Ссылка провайдера не открывается
+description: Подписка не добавляется или показывает ошибку
+labels: [provider-compatibility]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Не вставляйте ссылку целиком**: в ней ключ доступа. Оставьте только домен (например, `panel.example.com`) и начало пути.
+  - type: input
+    id: version
+    attributes:
+      label: Версия FlowVeil и платформа
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Домен провайдера
+  - type: textarea
+    id: error
+    attributes:
+      label: Текст ошибки в приложении
+      description: Что написано при добавлении или обновлении подписки (лучше скриншот).
+    validations:
+      required: true
+  - type: textarea
+    id: works
+    attributes:
+      label: Открывается ли эта ссылка в другом приложении
+      description: В каком именно, и какой вид у ссылки (https://…, happ://…, другое).

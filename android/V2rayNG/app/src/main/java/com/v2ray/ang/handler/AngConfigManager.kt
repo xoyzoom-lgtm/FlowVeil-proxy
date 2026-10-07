@@ -507,9 +507,10 @@ object AngConfigManager {
             // Plain http:// subscriptions (common for panels on an IP:port) are accepted like on the
             // desktop client; they used to be dropped silently, leaving an empty group.
             if (!it.subscription.allowInsecureUrl && !Utils.isValidSubUrl(url)) {
-                LogUtil.w(AppConfig.TAG, "Subscription uses plain http: $url")
+                LogUtil.w(AppConfig.TAG, "Subscription uses plain http: ${runCatching { java.net.URI(url).host }.getOrNull()}")
             }
-            LogUtil.i(AppConfig.TAG, url)
+            // Only the host: the address holds the subscription's secret key, and logs get shared.
+            LogUtil.i(AppConfig.TAG, "Update subscription: ${runCatching { java.net.URI(url).host }.getOrNull()}")
             val userAgent = it.subscription.userAgent
             val requestHeaders = it.subscription.requestHeaders
             val proxyUsername = SettingsManager.getSocksUsername()

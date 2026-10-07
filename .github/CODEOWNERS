@@ -1,0 +1,5 @@
+# Автор проекта проверяет все изменения; отдельно — сборку и подпись.
+*                       @xoyzoom-lgtm
+/.github/workflows/     @xoyzoom-lgtm
+/SIGNING.md             @xoyzoom-lgtm
+/android/V2rayNG/app/src/main/java/com/v2ray/ang/handler/UpdateKeys.kt  @xoyzoom-lgtm

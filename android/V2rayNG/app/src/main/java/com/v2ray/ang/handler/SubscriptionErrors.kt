@@ -26,5 +26,15 @@ object SubscriptionErrors {
 
     fun get(subId: String): String? = errors[subId]
 
+    /**
+     * The last update of this subscription failed. The text lives in this process only, the machine-readable cause is shared
+     * through MMKV, so an update made by the background service is seen as well. "Expired" and "traffic over" are shown elsewhere.
+     */
+    fun failed(subId: String): Boolean {
+        if (errors.containsKey(subId)) return true
+        val issue = issue(subId)
+        return issue != SubIssue.NONE && issue != SubIssue.EXPIRED && issue != SubIssue.TRAFFIC_OVER
+    }
+
     fun latest(subIds: Collection<String>): String? = subIds.firstNotNullOfOrNull { errors[it] }
 }
