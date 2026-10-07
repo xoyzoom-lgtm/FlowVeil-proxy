@@ -41,6 +41,8 @@ Adapted from Uber's description of an efficient agent-driven pipeline; scaled do
 - **Gates before main.** Cheap checks first (local logic tests, diff re-read), then a `bypass-*` build, then `main`.
   Nothing is declared done without a green run on the exact commit that is shipped.
 - **Measure, then say it.** Report "done / not done / not checked". Where no device exists, say so.
+- **Web and UI work follows `.claude/skills/web-ui-check`** (owner's standing rule): context first, current docs for libraries,
+  proven components, accessibility/mobile/state rules, and a real-browser check with Playwright before calling it done.
 - **Keep cost flat.** Prefer a small targeted fix and a local test over a full rebuild; do not rebuild to find out what a log already says.
 
 ## Hard rules (from the owner, keep them)
