@@ -156,7 +156,8 @@ h1 .w{display:inline-block;opacity:0;transform:translateY(22px);animation:wordIn
 .chip{position:absolute;padding:13px 20px;border-radius:14px;background:rgba(10,26,56,.9);border:1px solid rgba(255,255,255,.14);font:600 13px var(--font);animation:bob 5s ease-in-out infinite}
 .chip:nth-of-type(2){animation-delay:-1.2s}.chip:nth-of-type(3){animation-delay:-2.4s}.chip:nth-of-type(4){animation-delay:-3.6s}
 @keyframes bob{50%{transform:translateY(-7px)}}
-.phone{position:absolute;left:27%;top:3%;width:40%;aspect-ratio:9/18.4;border-radius:11% / 5.4%;padding:2.2%;background:linear-gradient(160deg,#1b2a4a,#0a1226);border:1px solid rgba(255,255,255,.18);box-shadow:0 40px 90px -30px rgba(0,0,0,.8),0 0 0 1px rgba(0,0,0,.6),0 0 80px -20px rgba(59,224,176,.35)}
+.phone{position:absolute;left:17%;top:-3%;width:66%}
+.phone img{display:block;width:100%;height:auto;filter:drop-shadow(0 30px 50px rgba(0,0,0,.55)) drop-shadow(0 0 50px rgba(59,224,176,.16))}
 .phone .notch{position:absolute;top:2.6%;left:50%;width:26%;height:2.2%;transform:translateX(-50%);border-radius:99px;background:#02060f;z-index:2}
 .screen{text-align:left;height:100%;border-radius:9.5% / 4.7%;overflow:hidden;padding:11% 9% 6%;background:radial-gradient(120% 60% at 50% 0%,#12507a 0%,#0b1f45 45%,#070f26 100%);display:flex;flex-direction:column;align-items:center;color:var(--text);font-size:clamp(9px,1.5vw,12px)}
 .app-top{display:flex;align-items:center;gap:6px;align-self:stretch;font-weight:800;font-size:1.15em}
@@ -375,7 +376,7 @@ p a,li a,.foot div a{text-decoration:underline;text-underline-offset:3px}
 }
 @media(max-width:860px){.sticky{display:block}body{padding-bottom:0}}
 @media(max-width:680px){
-  .router{aspect-ratio:1/1.3}.phone{left:27%;width:46%}.chip{padding:8px 9px;font-size:11px}.app{padding:6px;gap:0}.app span,.app em{display:none}.app .ap{width:28px;height:28px}
+  .router{aspect-ratio:1/1.3}.phone{left:12%;top:-2%;width:76%}.chip{padding:8px 9px;font-size:11px}.app{padding:6px;gap:0}.app span,.app em{display:none}.app .ap{width:28px;height:28px}
   section{padding:60px 0}
   .bento,.plat,.steps{grid-template-columns:1fr}.card.wide{grid-column:auto}
   .steps .line{display:none}
@@ -515,22 +516,7 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
       <div class="chip" style="left:0;top:55%"><span>Банк</span><small class="dir">напрямую</small></div>
       <div class="chip" style="left:0;top:72%"><span>Трекер</span><small class="dir">напрямую</small></div>
 
-      <div class="phone">
-        <span class="notch"></span>
-        <div class="screen">
-          <div class="app-top"><img src="assets/logo-144.webp" width="22" height="22" alt=""><b>FlowVeil</b><i></i></div>
-          <div class="power"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9M6.3 6.6a8 8 0 1011.4 0"/></svg></div>
-          <div class="state">ПОДКЛЮЧЕНО</div>
-          <div class="timer" id="phTimer">00:12:41</div>
-          <div class="cur"><span class="fl de"></span><span class="nm">Германия</span><span class="pill" id="phPing">42 мс</span></div>
-          <div class="rule"><b>Правила</b><span>РФ — напрямую, остальное — через сервер</span></div>
-          <ul class="srvs">
-            <li><span class="fl nl"></span><span class="nm">Нидерланды</span><span class="pill">31 мс</span></li>
-            <li><span class="fl fi"></span><span class="nm">Финляндия</span><span class="pill">47 мс</span></li>
-            <li><span class="fl se"></span><span class="nm">Швеция</span><span class="pill">58 мс</span></li>
-          </ul>
-        </div>
-      </div>
+      <div class="phone"><img src="assets/phone-hero.webp" width="900" height="1465" alt="Главный экран FlowVeil: подписка, список серверов и кнопка «Отключить»" fetchpriority="high" decoding="async"></div>
       <div class="prov" id="prov"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg><span><b>Подписка вашего провайдера</b><i>https://provider.example/sub/…</i></span></div>
       <div class="app" style="right:0;top:6.5%"><i class="ap yt"><svg viewBox="0 0 24 24"><path d="M9 7l8 5-8 5z"/></svg></i><span>YouTube</span><em>24 мс</em></div>
       <div class="app" style="right:0;top:23.5%"><i class="ap tg"><svg viewBox="0 0 24 24"><path d="M3 11.5l17-7-3 15-5-4-3 3v-5l8-7-10 6z"/></svg></i><span>Telegram</span><em>18 мс</em></div>
@@ -1110,6 +1096,7 @@ if (typeof module !== 'undefined') module.exports = QR;
   let secs = 12 * 60 + 41, phoneTimer = 0;
   const pad = (n) => String(n).padStart(2, '0');
   const tickPhone = () => {
+    if (!phTimer || !phPing) return;
     secs++;
     phTimer.textContent = `${pad(Math.floor(secs / 3600))}:${pad(Math.floor(secs / 60) % 60)}:${pad(secs % 60)}`;
     if (secs % 3 === 0) phPing.textContent = `${38 + Math.floor(Math.random() * 12)} мс`;
