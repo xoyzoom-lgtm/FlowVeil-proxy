@@ -1,6 +1,6 @@
 ---
 name: update-debug
-description: Diagnose "the update does not install / Приложение не установлено / package invalid". Use when a user reports in-app update loops or installer errors.
+description: Diagnoses in-app update problems: update loops, "Приложение не установлено", "пакет недействителен", download reaches 100% and the update prompt returns. Use when a user reports that the update does not install.
 ---
 
 # Update does not install

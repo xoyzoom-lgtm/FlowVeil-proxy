@@ -1,6 +1,6 @@
 ---
 name: release
-description: Ship a verified change to main as a release. Use when the owner says "в релизы", "выгружай" or asks to publish a build.
+description: Publishes a verified change to main as a FlowVeil release (test branch, green build on the exact commit, then fast-forward main). Use when the owner says "в релизы", "выгружай", "делай релиз" or asks to publish or ship a build.
 ---
 
 # Release a change

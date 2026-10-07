@@ -1,6 +1,6 @@
 ---
 name: android-change
-description: Checklist for changing the Android app (Kotlin/Compose) when no Android SDK is available locally. Use before pushing any Android change.
+description: Checklist for changing the FlowVeil Android app (Kotlin/Compose) when no Android SDK is available locally. Use before pushing any Android code or string change, and when a CI Android build fails.
 ---
 
 # Android change checklist
