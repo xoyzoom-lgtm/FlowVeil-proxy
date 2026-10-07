@@ -1,0 +1,16 @@
+name: Предложение
+description: Идея, чего не хватает
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Что добавить
+      description: Какую задачу это решает и как вы это себе представляете.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Для какой платформы
+      options: [Android, Windows, Обе]

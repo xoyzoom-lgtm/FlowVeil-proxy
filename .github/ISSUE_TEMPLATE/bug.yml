@@ -1,0 +1,34 @@
+name: Ошибка
+description: Что-то работает не так
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Не публикуйте ссылку на подписку, ключи и IP серверов. Если в тексте они есть, замените их на `***`.
+  - type: input
+    id: version
+    attributes:
+      label: Версия FlowVeil
+      description: «Настройки → Проверить обновления» (например, build 190)
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Платформа
+      options: [Android, Windows]
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Устройство и версия системы
+      placeholder: Xiaomi 13, Android 14 / Windows 11
+  - type: textarea
+    id: steps
+    attributes:
+      label: Что вы делали и что произошло
+      description: Шаги, ожидаемый и фактический результат. Скриншот очень помогает.
+    validations:
+      required: true

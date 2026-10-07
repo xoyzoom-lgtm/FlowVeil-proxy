@@ -279,6 +279,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Build provenance (who built which file from which commit); only used by the attestation step.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -316,6 +319,23 @@ jobs:
           print(open("out/FlowVeil-manifest.json").read())
           PY
 
+      - name: Checksums and signing certificate fingerprint
+        # Extras for people who verify downloads. They must never stop a release, so a failure here is only a warning.
+        continue-on-error: true
+        run: |
+          (cd out && sha256sum $(ls | grep -v '^SHA256SUMS.txt$') > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          APKSIGNER=$(ls -d "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -n "$APKSIGNER" ]; then
+            FP=$("$APKSIGNER" verify --print-certs out/FlowVeil-android.apk | sed -n 's/.*certificate SHA-256 digest: *//p' | head -1)
+            [ -n "$FP" ] && echo "CERT_SHA256=$FP" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build provenance attestation
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'out/*'
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -339,6 +359,9 @@ jobs:
           Вопросы: Telegram [@GxoyzoomG](https://t.me/GxoyzoomG) · канал [FlowVeil](https://t.me/FlowVeil) · [Политика конфиденциальности](https://github.com/${{ github.repository }}/blob/main/PRIVACY.md)
           EOF
           sed -i 's/^          //' notes.md
+          if [ -n "${CERT_SHA256:-}" ]; then
+            printf '\nОтпечаток сертификата подписи Android (SHA-256): `%s`. Проверка: `apksigner verify --print-certs FlowVeil-android.apk`. Контрольные суммы: `SHA256SUMS.txt`.\n' "$CERT_SHA256" >> notes.md
+          fi
           # What changed in this build goes first (kept up to date in CHANGES.md).
           if [ -s CHANGES.md ]; then
             { cat CHANGES.md; printf '\n---\n\n'; cat notes.md; } > notes-full.md && mv notes-full.md notes.md
