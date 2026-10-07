@@ -1110,6 +1110,9 @@
     <string name="hs_group_stats">Статистика</string>
     <string name="hs_group_privacy">Приватность</string>
     <string name="hs_group_system">Система</string>
+    <string name="hs_group_settings">Настройки</string>
+    <string name="hs_cat_system">Система и приватность</string>
+    <string name="hs_configure">Настроить</string>
     <string name="hs_group_about">О приложении</string>
     <string name="hs_channel">Канал FlowVeil</string>
     <string name="hs_check_update">Проверить обновление</string>
