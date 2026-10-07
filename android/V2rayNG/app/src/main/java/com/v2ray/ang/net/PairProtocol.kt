@@ -59,6 +59,8 @@ object PairProtocol {
         val t = text?.trim() ?: return false
         if (t.startsWith("flowveil://pair", ignoreCase = true)) return true
         if (!t.startsWith("http://")) return false
+        // A home panel may also use a path like /p/…: only an address with the code's secrets in the fragment is a pair code.
+        if (!t.contains("#t=") && !t.contains("&k=")) return false
         val rest = t.removePrefix("http://")
         val host = rest.substringBefore(':').substringBefore('/')
         return isPrivateHost(host) && rest.substringAfter('/', "").startsWith("p/")

@@ -75,9 +75,9 @@ internal fun HomeSubscriptions(
     val subs = groups.filter { it.subscription != null }
     val enabled = remember { mutableStateMapOf<String, Boolean>() }
     // Order on screen: follows the stored order, and while a row is dragged it swaps places live.
-    val order = remember { mutableStateListOf<String>() }
     val ids = subs.map { it.id }
-    LaunchedEffect(ids) { order.clear(); order.addAll(ids) }
+    val order = remember { mutableStateListOf<String>().apply { addAll(ids) } }
+    LaunchedEffect(ids) { if (order.toList() != ids) { order.clear(); order.addAll(ids) } }
     var draggingId by remember { mutableStateOf<String?>(null) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var rowHeight by remember { mutableFloatStateOf(0f) }

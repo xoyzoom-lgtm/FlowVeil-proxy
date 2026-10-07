@@ -74,7 +74,10 @@ object ApkUpdateInstaller {
             secureDns = route.secureDns,
         )
         val request = okhttp3.Request.Builder().url(url).header("User-Agent", "FlowVeil-updater").build()
+        require(request.url.isHttps) { "The update address must be https" }
         client.newCall(request).execute().use { response ->
+            // A redirect from https to plain http is followed by the client: refuse the answer if the final address is not https.
+            if (!response.request.url.isHttps) throw IllegalStateException("The update was redirected to plain http")
             if (!response.isSuccessful) throw IllegalStateException("HTTP ${response.code}")
             val body = response.body ?: throw IllegalStateException("empty answer")
             val total = body.contentLength()
@@ -106,7 +109,7 @@ object ApkUpdateInstaller {
      * null = no sums or the file is not listed (do not block). A failed download of the sums file does not block either.
      */
     suspend fun verify(apk: File, assetName: String?, sumsUrl: String?): Boolean? = withContext(Dispatchers.IO) {
-        if (assetName == null || sumsUrl == null) return@withContext null
+        if (assetName == null || sumsUrl == null || !sumsUrl.startsWith("https://", ignoreCase = true)) return@withContext null
         val text = runCatching { HttpUtil.getUrlContent(UrlContentRequest(url = sumsUrl, timeout = 15000)) }.getOrNull()
             ?: return@withContext null
         val digest = java.security.MessageDigest.getInstance("SHA-256")
@@ -123,7 +126,7 @@ object ApkUpdateInstaller {
 
     /** Small release file (manifest or signature) as bytes; null when it is absent or cannot be fetched. */
     private fun fetchSmall(url: String?, limit: Int): ByteArray? {
-        if (url == null) return null
+        if (url == null || !url.startsWith("https://", ignoreCase = true)) return null
         return runCatching {
             var current = URL(url)
             var redirects = 0
@@ -138,6 +141,7 @@ object ApkUpdateInstaller {
                     val code = conn.responseCode
                     if (code in 300..399 && redirects++ < 5) {
                         current = URL(current, conn.getHeaderField("Location"))
+                        if (!current.protocol.equals("https", ignoreCase = true)) return null
                         continue
                     }
                     if (code !in 200..299) return null
