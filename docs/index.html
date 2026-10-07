@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FlowVeil — прокси-клиент и маршрутизатор трафика для Android и Windows</title>
 <meta name="description" content="FlowVeil — бесплатный прокси-клиент и маршрутизатор трафика для Android и Windows. Импорт подписки в один тап, правила по доменам и приложениям, 17 тем. Открытый код, без аналитики.">
-<meta name="theme-color" content="#F2EFE6">
-<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#040C23">
+<meta name="color-scheme" content="dark">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <!-- TODO(domain): when a custom domain is attached (docs/CNAME), replace SITE_URL below (canonical, og:url, og:image, twitter:image, JSON-LD) and in robots.txt / sitemap.xml -->
 <link rel="canonical" href="https://xoyzoom-lgtm.github.io/FlowVeil-proxy/">
@@ -429,133 +429,6 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
   #sheet .sheet-link{font:12px/1.5 monospace;word-break:break-all;color:#333}
 }
 
-/* =====================================================================
-   v2 — "paper & ink": warm paper, one ink colour, one signal orange.
-   Dark panels (phone stage, terminal, final call) keep the old dark tokens.
-   ===================================================================== */
-:root{
-  color-scheme:light;
-  --paper:#F2EFE6;--bg:#F2EFE6;--bg2:#E8E3D6;--ink:#0C1A1F;--signal:#FF5A1F;--signal-d:#E8470C;
-  --teal:#0F6B7E;--mint:#0B6475;--sky:#0F6B7E;
-  --text:#0C1A1F;--muted:#3D5056;--dim:#5C6E74;
-  --line:rgba(12,26,31,.16);--card:#FFFFFF;--card2:#F6F3EA;
-  --r:20px;--r-sm:14px;
-}
-.router,.term,.final,.on-dark{
-  --text:#F2F7FA;--muted:#B4C8D3;--dim:#8DA4B2;--line:rgba(255,255,255,.14);
-  --card:rgba(255,255,255,.07);--card2:rgba(255,255,255,.12);--mint:#3BE0B0;--sky:#38BDF8;color:var(--text)
-}
-body{background:var(--paper);letter-spacing:-.005em}
-::selection{background:var(--signal);color:var(--ink)}
-.bg,#particles,.grid{display:none!important}
-.progress{background:var(--signal);height:3px}
-:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
-code{background:rgba(12,26,31,.08);color:var(--ink)}
-
-/* header */
-header.scrolled,header.menu-open{background:rgba(242,239,230,.94);backdrop-filter:none;-webkit-backdrop-filter:none;border-color:var(--ink)}
-.brand{letter-spacing:-.03em}
-.links a::after{background:var(--signal);height:3px}
-.panel{background:var(--paper)!important}
-.burger{background:#fff;border:1.5px solid var(--ink)}
-
-/* buttons: solid, hard edge */
-.btn{border:1.5px solid var(--ink);background:#fff;border-radius:14px;box-shadow:0 3px 0 var(--ink);color:var(--ink);transition:transform .15s var(--ease),box-shadow .15s}
-.btn:hover{background:#fff;transform:translateY(-2px);box-shadow:0 5px 0 var(--ink)}
-.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
-.btn.primary{background:var(--signal);color:var(--ink);border:1.5px solid var(--ink);box-shadow:0 3px 0 var(--ink)}
-.btn.primary:hover{background:#FF6B35;box-shadow:0 5px 0 var(--ink)}
-.ripple{background:rgba(12,26,31,.18)}
-.final .btn:not(.primary){background:transparent;color:#F2F7FA;border-color:#F2F7FA;box-shadow:0 3px 0 #F2F7FA}
-
-/* hero */
-.hero{padding-top:128px}
-@media(min-width:1001px){.hero{grid-template-columns:1.12fr .88fr}}
-.badge{background:#fff;border:1.5px solid var(--ink);color:var(--ink);font:600 12.5px var(--mono);letter-spacing:.02em}
-.badge b{background:var(--ink);color:var(--paper)}
-h1{font-size:clamp(44px,6.3vw,92px);line-height:.94;letter-spacing:-.055em;font-weight:800;margin-bottom:26px}
-.grad{background:linear-gradient(transparent 60%,var(--signal) 60%,var(--signal) 90%,transparent 90%);-webkit-background-clip:border-box;background-clip:border-box;color:var(--ink);padding:0 .06em}
-.lead{color:var(--muted);font-size:clamp(18px,1.55vw,21px);line-height:1.5}
-.lead b{color:var(--ink)}
-.platform-note{background:#fff;border:1.5px dashed var(--ink);border-radius:12px}
-.note{font:500 13px var(--mono);color:var(--dim)}
-
-/* phone stage: the one dark object on the page */
-.router{isolation:isolate}
-.router::before{content:"";position:absolute;inset:-30px -26px;border-radius:40px;z-index:-1;background:radial-gradient(75% 60% at 55% 38%,#14505E 0%,#0C1A1F 72%);box-shadow:0 30px 60px -30px rgba(12,26,31,.55)}
-.chip,.app{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16)}
-.prov{background:rgba(12,26,31,.9)}
-
-/* marquee as an ink band */
-.marquee{background:var(--ink);border:0;margin-top:34px}
-.track li{color:#F2EFE6;font-weight:800;letter-spacing:-.02em}
-.track li::after{background:var(--signal);border-radius:0}
-.marquee .mask{-webkit-mask-image:none;mask-image:none}
-.marquee .pause{background:var(--paper);color:var(--ink);border:1.5px solid var(--ink)}
-
-/* sections: numbered mono labels, big tight headings, left aligned */
-body{counter-reset:sec}
-section{padding:104px 0}
-.eyebrow{font:700 13px var(--mono);letter-spacing:.08em;color:var(--teal);margin-bottom:18px}
-.eyebrow::before{counter-increment:sec;content:counter(sec,decimal-leading-zero) " /  ";color:var(--signal);font-weight:800;white-space:pre}
-h2{font-size:clamp(36px,5.2vw,68px);line-height:.98;letter-spacing:-.05em;margin-bottom:20px;max-width:20ch}
-.subtitle{font-size:19px;color:var(--muted);max-width:36em}
-.head.center,.center{text-align:left}
-.center .subtitle{margin:0}
-#modes,#faq{background:var(--bg2)}
-
-/* cards: white paper, hairline, no glass */
-.stat,.card,.mode,.ri,.pcard,.release,.changelog,.gen,.q{background:#fff;border:1px solid var(--line);box-shadow:none}
-.card::before{display:none}
-.card,.mode,.pcard{transition:transform .2s var(--ease),border-color .2s,box-shadow .2s}
-.card:hover,.mode:hover{transform:translateY(-4px);border-color:var(--ink);box-shadow:0 6px 0 var(--ink)}
-.card .ic{background:var(--ink);border:0;color:var(--paper);border-radius:12px}
-.card h3,.mode h3{letter-spacing:-.02em}
-.card a,.warn a,.fine a,.q .a a{color:var(--teal)}
-.chips i{background:rgba(12,26,31,.06);border-color:var(--line);color:var(--ink)}
-.stats{gap:0;border-top:2px solid var(--ink)}
-.stat{background:transparent;border:0;border-right:1px solid var(--line);border-radius:0;text-align:left;padding:22px 24px}
-.stat:last-child{border-right:0}
-.stat b{font-size:clamp(44px,5vw,72px);letter-spacing:-.05em;line-height:1}
-.stat span{font:500 13px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-
-/* rules */
-.term{background:var(--ink);border:0;border-radius:18px;box-shadow:0 8px 0 rgba(12,26,31,.18)}
-.tag.proxy{background:rgba(15,107,126,.12);color:#0B5A69}.tag.direct{background:rgba(27,127,79,.14);color:#17663F}.tag.block{background:rgba(200,48,26,.12);color:#B02A14}
-.mode .num{color:#C2410C;font-weight:800}
-
-/* steps */
-.steps .line{background:var(--ink);height:2px}
-.steps .line i{background:var(--signal)}
-.step .n{background:var(--paper);border:2px solid var(--ink);color:var(--ink)}
-.steps.in .step .n{border-color:var(--ink);background:var(--signal);box-shadow:0 4px 0 var(--ink);color:var(--ink)}
-
-/* install + downloads */
-.install li::before{background:var(--ink);border:0;color:var(--paper)}
-.pcard{border-radius:24px}
-.pcard.recommended{border:2px solid var(--ink);box-shadow:0 6px 0 var(--ink)}
-.pcard .rec{background:var(--signal);color:var(--ink);border:1.5px solid var(--ink)}
-.pcard.and .logo{background:rgba(61,220,132,.2);color:#0B7A43}.pcard.win .logo{background:rgba(15,107,126,.14);color:var(--teal)}
-.pcard li::before{color:var(--signal)}
-
-/* generator, faq */
-.gen input{background:var(--card2);border:1.5px solid var(--ink);color:var(--ink)}
-.gen .link{background:var(--ink);color:#E5EDF0}
-.gen .err{color:#B02A14}
-.q{border-radius:16px}
-.q.open{border-color:var(--ink)}
-.q .plus{background:var(--bg2)}
-.q.open .plus{background:var(--signal)}
-
-/* final call: the second dark block */
-.final{background:var(--ink);border:0;border-radius:32px;box-shadow:0 10px 0 rgba(12,26,31,.2)}
-.final h2{margin-inline:auto;max-width:18ch}
-
-footer{border-top:2px solid var(--ink)}
-.sticky{background:rgba(242,239,230,.97);border-top:2px solid var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none}
-
-@media(max-width:1000px){h2{max-width:none}.stat{border-right:0;border-bottom:1px solid var(--line)}.router::before{inset:-22px -14px}}
-@media(max-width:680px){section{padding:68px 0}h1{font-size:clamp(42px,13vw,64px)}.hero{padding-top:104px}.router::before{inset:-18px -10px;border-radius:28px}}
 </style>
 </head>
 <body>
