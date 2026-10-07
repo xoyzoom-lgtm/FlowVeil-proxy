@@ -1210,4 +1210,5 @@
     <string name="update_popup_title">Доступно обновление</string>
     <string name="update_popup_body">Готова сборка FlowVeil %1$d</string>
     <string name="update_open_browser">Скачать в браузере</string>
+    <string name="info_hwid">ID устройства нужен провайдеру, чтобы ограничить число устройств. Отправляется только на адрес вашей подписки.</string>
 </resources>

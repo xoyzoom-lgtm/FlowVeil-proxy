@@ -144,13 +144,9 @@ class SettingsActivity : BaseComponentActivity() {
 
 /** Sub-screens reachable from the settings menu, in display order. */
 private val SettingsSections = listOf(
-    MainDestination.Subscriptions,
-    MainDestination.PerAppProxy,
     MainDestination.Routing,
     MainDestination.UserAssets,
     MainDestination.Logcat,
-    MainDestination.CheckUpdate,
-    MainDestination.About,
 )
 
 /** Technical screens shown only in developer mode. */
@@ -356,56 +352,6 @@ fun SettingsScreen(
 
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_connection))
             SettingsGroupCard {
-                SettingsMenuItem(
-                    title = stringResource(R.string.title_kill_switch),
-                    subtitle = stringResource(R.string.summary_kill_switch),
-                    onClick = {
-                        // Android does this itself (Always-on VPN + "Block connections without VPN"): open its screen, nothing to emulate.
-                        runCatching { settingsContext.startActivity(android.content.Intent(android.provider.Settings.ACTION_VPN_SETTINGS)) }
-                            .onFailure { settingsContext.toastError(R.string.kill_switch_unavailable) }
-                    }
-                )
-                SettingsMenuItem(
-                    title = stringResource(R.string.title_direct_sites),
-                    subtitle = stringResource(R.string.summary_direct_sites, directSitesCount),
-                    onClick = { showDirectSites = true }
-                )
-                if (showDirectSites) {
-                    var text by remember { mutableStateOf(DirectSites.text()) }
-                    InputDialog(
-                        title = stringResource(R.string.title_direct_sites),
-                        fields = listOf(InputField(label = stringResource(R.string.hint_direct_sites), value = text, singleLine = false)),
-                        onFieldChange = { _, v -> text = v },
-                        confirmText = stringResource(R.string.action_ok),
-                        dismissText = stringResource(R.string.action_cancel),
-                        onConfirm = {
-                            showDirectSites = false
-                            directSitesCount = DirectSites.save(text)
-                            SettingsChangeManager.makeRestartService()
-                            settingsContext.toastSuccess(settingsContext.getString(R.string.toast_direct_sites_saved, directSitesCount))
-                        },
-                        onDismiss = { showDirectSites = false }
-                    )
-                }
-                SettingsMenuItem(
-                    title = stringResource(R.string.title_direct_apps),
-                    subtitle = stringResource(R.string.summary_direct_apps),
-                    onClick = {
-                        // Selected apps should bypass the server: switch the per-app screen to
-                        // "bypass" mode the first time, without touching a setup the user made.
-                        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)) {
-                            MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, true)
-                            MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, true)
-                        }
-                        onOpenSection(MainDestination.PerAppProxy)
-                    }
-                )
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_show_best_button),
-                    summary = stringResource(R.string.summary_pref_show_best_button),
-                    checked = showBestButton,
-                    onCheckedChange = { showBestButton = it }
-                )
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_noise),
                     summary = stringResource(R.string.summary_pref_noise),
@@ -562,55 +508,6 @@ fun SettingsScreen(
                             showBypassPicker = false
                         }
                     )
-                }
-                SettingsListItem(
-                    title = stringResource(R.string.title_pref_sub_update_interval),
-                    entries = subUpdateEntries,
-                    values = subUpdateValues,
-                    selectedValue = subUpdateInterval,
-                    onSelected = {
-                        subUpdateInterval = it
-                        SubscriptionUpdater.applyIntervalToAll(settingsContext, it.toLongOrNull() ?: 0L)
-                    }
-                )
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_sub_reminders),
-                    summary = stringResource(R.string.summary_pref_sub_reminders),
-                    checked = subReminders,
-                    onCheckedChange = { subReminders = it }
-                )
-            }
-
-            PreferenceGroupHeader(title = stringResource(R.string.settings_section_main))
-            SettingsGroupCard {
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_is_booted),
-                    summary = stringResource(R.string.summary_pref_is_booted),
-                    checked = isBooted,
-                    onCheckedChange = { isBooted = it }
-                )
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_confirm_remove),
-                    summary = stringResource(R.string.summary_pref_confirm_remove),
-                    checked = confirmRemove,
-                    onCheckedChange = { confirmRemove = it }
-                )
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_speed_enabled),
-                    summary = stringResource(R.string.summary_pref_speed_enabled),
-                    checked = speedEnabled,
-                    onCheckedChange = { speedEnabled = it }
-                )
-                SettingsSwitchItem(
-                    title = stringResource(R.string.title_pref_send_hwid),
-                    // The id is shown masked; one tap on the row text reveals it (it is sent only to the host of a subscription the user added).
-                    summary = stringResource(R.string.summary_pref_send_hwid, if (showHwid) deviceHwid else deviceHwid.take(4) + "••••••") +
-                        if (showHwid) "" else " " + stringResource(R.string.hwid_show),
-                    checked = sendHwid,
-                    onCheckedChange = { sendHwid = it }
-                )
-                if (!showHwid) {
-                    SettingsMenuItem(title = stringResource(R.string.hwid_show_title), onClick = { showHwid = true; Utils.setClipboard(settingsContext, deviceHwid) })
                 }
             }
 

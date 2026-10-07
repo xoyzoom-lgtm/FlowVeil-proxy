@@ -50,6 +50,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.ui.res.stringArrayResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.v2ray.ang.handler.AppLocaleManager
+import com.v2ray.ang.handler.BatteryOptimization
+import com.v2ray.ang.handler.DirectSites
+import com.v2ray.ang.handler.SubscriptionUpdater
+import com.v2ray.ang.extension.toastError
+import com.v2ray.ang.extension.toastSuccess
+import com.v2ray.ang.ui.compose.InputDialog
+import com.v2ray.ang.ui.compose.InputField
 import com.v2ray.ang.handler.UpdateNotifier
 import com.v2ray.ang.ui.compose.HappThemeManager
 import com.v2ray.ang.ui.compose.HappThemePicker
@@ -87,6 +94,19 @@ internal fun HomeSettings(
     var ads by remember { mutableStateOf(ExtraRules.adBlock()) }
     var tg by remember { mutableStateOf(ExtraRules.telegramProxy()) }
     var fast by remember { mutableStateOf(flag(AppConfig.PREF_FAST_MODE, false)) }
+    var bootStart by remember { mutableStateOf(flag(AppConfig.PREF_IS_BOOTED, false)) }
+    var speedOn by remember { mutableStateOf(flag(AppConfig.PREF_SPEED_ENABLED, false)) }
+    var confirmRemove by remember { mutableStateOf(flag(AppConfig.PREF_CONFIRM_REMOVE, false)) }
+    var sendHwid by remember { mutableStateOf(flag(AppConfig.PREF_SEND_HWID, true)) }
+    var subReminders by remember { mutableStateOf(flag(AppConfig.PREF_SUB_REMINDERS, true)) }
+    var bestButton by remember { mutableStateOf(flag(AppConfig.PREF_SHOW_BEST_BUTTON, true)) }
+    var directSites by remember { mutableStateOf(DirectSites.count()) }
+    var showDirectSites by remember { mutableStateOf(false) }
+    var batteryOk by remember { mutableStateOf(BatteryOptimization.isIgnored(context)) }
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { batteryOk = BatteryOptimization.isIgnored(context) }
+    var subInterval by remember { mutableStateOf(MmkvManager.decodeSettingsString(AppConfig.PREF_SUB_UPDATE_INTERVAL) ?: AppConfig.SUB_DEFAULT_UPDATE_MINUTES.toString()) }
+    val intervalNames = stringArrayResource(R.array.sub_update_interval_entries).toList()
+    val intervalValues = stringArrayResource(R.array.sub_update_interval_values).toList()
     var groupCountry by remember { mutableStateOf(flag(AppConfig.PREF_GROUP_COUNTRY, false)) }
     var smartNames by remember { mutableStateOf(flag(AppConfig.PREF_SMART_NAMES, false)) }
     var failover by remember { mutableStateOf(flag(AppConfig.PREF_AUTO_FAILOVER, true)) }
@@ -164,6 +184,13 @@ internal fun HomeSettings(
                     NavRow(R.drawable.ic_per_apps_24dp, stringResource(R.string.hs_apps), stringResource(R.string.hs_apps_sub)) {
                         onNavigate(MainDestination.PerAppProxy)
                     }
+                    NavRow(R.drawable.ic_refresh_24dp, stringResource(R.string.title_pref_sub_update_interval), intervalNames.getOrNull(intervalValues.indexOf(subInterval))) { picker = "interval" }
+                    SwitchRow2(R.drawable.ic_check_update_24dp, stringResource(R.string.title_pref_sub_reminders), null, subReminders) {
+                        subReminders = it; save(AppConfig.PREF_SUB_REMINDERS, it)
+                    }
+                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_pref_show_best_button), null, bestButton) {
+                        bestButton = it; save(AppConfig.PREF_SHOW_BEST_BUTTON, it)
+                    }
                     SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_whitelist_bypass), stringResource(R.string.onb3_auto_sub), bypass, info = { infoRes = R.string.title_whitelist_bypass to R.string.info_bypass }) {
                         bypass = it; save(WhitelistBypass.PREF_ENABLED, it)
                     }
@@ -195,6 +222,20 @@ internal fun HomeSettings(
                     SwitchRow2(R.drawable.ic_telegram_24dp, stringResource(R.string.title_pref_telegram_proxy), stringResource(R.string.onb3_tg_sub), tg) {
                         tg = it; save(ExtraRules.PREF_TELEGRAM_PROXY, it); changed()
                     }
+                    NavRow(R.drawable.ic_routing_24dp, stringResource(R.string.title_direct_sites), stringResource(R.string.summary_direct_sites, directSites)) { showDirectSites = true }
+                    NavRow(R.drawable.ic_per_apps_24dp, stringResource(R.string.title_direct_apps), null) {
+                        // Selected apps go without the server: switch the per-app screen to "bypass" the first time, keeping a setup the user made.
+                        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)) {
+                            MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, true)
+                            MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, true)
+                        }
+                        onNavigate(MainDestination.PerAppProxy)
+                    }
+                    NavRow(R.drawable.ic_lock_24dp, stringResource(R.string.title_kill_switch), null) {
+                        // Android does this itself (Always-on VPN + "Block connections without VPN"): open its screen.
+                        runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_VPN_SETTINGS)) }
+                            .onFailure { context.toastError(R.string.kill_switch_unavailable) }
+                    }
                     SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_fast_mode), stringResource(R.string.summary_fast_mode), fast, info = { infoRes = R.string.title_fast_mode to R.string.info_fast }) {
                         fast = it; save(AppConfig.PREF_FAST_MODE, it); onRulesChanged()
                     }
@@ -206,6 +247,25 @@ internal fun HomeSettings(
                     }
                 }
                 Group(stringResource(R.string.hs_group_safety)) {
+                    SwitchRow2(R.drawable.ic_power_24dp, stringResource(R.string.title_pref_is_booted), null, bootStart) {
+                        bootStart = it; save(AppConfig.PREF_IS_BOOTED, it)
+                    }
+                    SwitchRow2(R.drawable.ic_speed_24dp, stringResource(R.string.title_pref_speed_enabled), null, speedOn) {
+                        speedOn = it; save(AppConfig.PREF_SPEED_ENABLED, it); onRulesChanged()
+                    }
+                    SwitchRow2(R.drawable.ic_delete_24dp, stringResource(R.string.title_pref_confirm_remove), null, confirmRemove) {
+                        confirmRemove = it; save(AppConfig.PREF_CONFIRM_REMOVE, it)
+                    }
+                    SwitchRow2(R.drawable.ic_privacy_24dp, stringResource(R.string.title_pref_send_hwid), null, sendHwid, info = { infoRes = R.string.title_pref_send_hwid to R.string.info_hwid }) {
+                        sendHwid = it; save(AppConfig.PREF_SEND_HWID, it)
+                    }
+                    NavRow(R.drawable.ic_copy, stringResource(R.string.hwid_show_title), null) {
+                        Utils.setClipboard(context, com.v2ray.ang.handler.DeviceIdentity.hwid())
+                        context.toastSuccess(R.string.toast_success)
+                    }
+                    NavRow(R.drawable.ic_flash_off_24dp, stringResource(R.string.title_bypass_battery), stringResource(if (batteryOk) R.string.summary_bypass_battery_on else R.string.summary_bypass_battery_off)) {
+                        BatteryOptimization.request(context)
+                    }
                     SwitchRow2(R.drawable.ic_copy, stringResource(R.string.title_pref_clipboard_offer), null, clipboard) {
                         clipboard = it; save(AppConfig.PREF_CLIPBOARD_OFFER, it)
                     }
@@ -228,6 +288,23 @@ internal fun HomeSettings(
         }
     }
 
+    if (showDirectSites) {
+        var text by remember { mutableStateOf(DirectSites.text()) }
+        InputDialog(
+            title = stringResource(R.string.title_direct_sites),
+            fields = listOf(InputField(label = stringResource(R.string.hint_direct_sites), value = text, singleLine = false)),
+            onFieldChange = { _, v -> text = v },
+            confirmText = stringResource(R.string.action_ok),
+            dismissText = stringResource(R.string.action_cancel),
+            onConfirm = {
+                showDirectSites = false
+                directSites = DirectSites.save(text)
+                onRulesChanged()
+                context.toastSuccess(context.getString(R.string.toast_direct_sites_saved, directSites))
+            },
+            onDismiss = { showDirectSites = false }
+        )
+    }
     infoRes?.let { (t, b) ->
         HomeSheet(onDismiss = { infoRes = null }) {
             SheetHeading(stringResource(t), stringResource(b))
@@ -263,6 +340,17 @@ internal fun HomeSettings(
             SheetRow(if (country == CountryProfiles.NONE) R.drawable.ic_action_done else null, stringResource(R.string.country_none)) { pick(CountryProfiles.NONE) }
             CountryProfiles.ALL.forEach { c ->
                 SheetRow(if (country == c.id) R.drawable.ic_action_done else null, "${c.flag} ${if (russian) c.nameRu else c.nameEn}") { pick(c.id) }
+            }
+        }
+        "interval" -> HomeSheet(onDismiss = { picker = null }) {
+            SheetHeading(stringResource(R.string.title_pref_sub_update_interval))
+            intervalNames.zip(intervalValues).forEach { (name, value) ->
+                SheetRow(if (value == subInterval) R.drawable.ic_action_done else null, name) {
+                    subInterval = value
+                    MmkvManager.encodeSettings(AppConfig.PREF_SUB_UPDATE_INTERVAL, value)
+                    SubscriptionUpdater.applyIntervalToAll(context, value.toLongOrNull() ?: 0L)
+                    picker = null
+                }
             }
         }
         "language" -> HomeSheet(onDismiss = { picker = null }) {
