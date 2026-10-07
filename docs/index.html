@@ -354,6 +354,10 @@ footer{padding:50px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid 
 .foot nav{display:flex;flex-wrap:wrap;gap:18px}
 .foot a{color:var(--muted)}
 .foot a:hover{color:var(--text)}
+/* tap targets: at least 44px tall */
+.brand{min-height:44px}
+.foot a{display:inline-block;padding:12px 0}
+.marquee .pause{width:44px;height:44px}
 .foot .priv{flex:1 1 100%;font-size:13px;color:var(--dim)}
 p a,li a,.foot div a{text-decoration:underline;text-underline-offset:3px}
 
@@ -417,7 +421,7 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
   html,body{background:#fff!important}
   body>*:not(#sheet){display:none!important}
   #sheet{display:block;padding:24mm 20mm;background:#fff;color:#000;font:16px/1.6 system-ui,sans-serif}
-  #sheet h1{font-size:30px;margin:0 0 4px}
+  #sheet h2{font-size:30px;margin:0 0 4px}
   #sheet .lead{font-size:18px;margin:0 0 18px;color:#444}
   #sheet canvas{width:90mm;height:90mm;image-rendering:pixelated;display:block;margin:0 0 18px}
   #sheet ol{padding-left:20px;margin:0 0 16px}
@@ -803,7 +807,7 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
 </section>
 </main>
 <div class="sheet" id="sheet" aria-hidden="true">
-  <h1 id="sheetTitle"></h1>
+  <h2 id="sheetTitle"></h2>
   <p class="lead">Подключение за минуту</p>
   <canvas id="sheetQr" width="320" height="320"></canvas>
   <ol>
@@ -829,7 +833,7 @@ html.reduce *,html.reduce *::before,html.reduce *::after{animation:none!importan
   </div>
 </footer>
 
-<div class="sticky" id="sticky"><a class="btn primary" id="stickyBtn" href="#download"><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Скачать</span></a></div>
+<div class="sticky" id="sticky" role="complementary" aria-label="Скачать"><a class="btn primary" id="stickyBtn" href="#download"><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Скачать</span></a></div>
 
 <script>
 /* Minimal QR Code encoder: byte mode, error correction L/M, versions 1-40. */
