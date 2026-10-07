@@ -1212,4 +1212,5 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="update_popup_title">Update available</string>
     <string name="update_popup_body">FlowVeil build %1$d is ready</string>
     <string name="update_open_browser">Download in the browser</string>
+    <string name="info_hwid">The device ID lets a provider limit the number of devices. It is sent only to the address of your subscription.</string>
 </resources>
