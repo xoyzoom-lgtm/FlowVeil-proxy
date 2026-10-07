@@ -136,6 +136,7 @@ fun CheckUpdateScreen(
     }
 
     val updateError by viewModel.updateError.collectAsStateWithLifecycle()
+    val errorDetail by viewModel.errorDetail.collectAsStateWithLifecycle()
     val askUnsigned by viewModel.askUnsigned.collectAsStateWithLifecycle()
     if (askUnsigned) {
         AlertDialog(
@@ -182,6 +183,14 @@ fun CheckUpdateScreen(
                                 color = MaterialTheme.colorScheme.error,
                                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                                 modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                        errorDetail?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
                             )
                         }
                         if ((downloadFailed || updateError != null) && !result.downloadUrl.isNullOrBlank()) {

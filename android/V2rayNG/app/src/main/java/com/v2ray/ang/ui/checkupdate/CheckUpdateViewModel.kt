@@ -68,6 +68,10 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
     /** Why the downloaded file was not installed. Stays on the dialog: a toast is gone before it can be read. */
     val updateError: StateFlow<Int?> = _updateError.asStateFlow()
 
+    private val _errorDetail = MutableStateFlow<String?>(null)
+    /** The technical reason of the last failure (exception and message), shown on the dialog so it can be reported. */
+    val errorDetail: StateFlow<String?> = _errorDetail.asStateFlow()
+
     private var downloadJob: Job? = null
     private var downloadedApk: File? = null
     private var awaitingInstallPermission = false
@@ -89,11 +93,12 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
             _downloadProgress.value = 0
             _downloadFailed.value = false
             _updateError.value = null
+            _errorDetail.value = null
             try {
                 val apk = ApkUpdateInstaller.download(app, url) { _downloadProgress.value = it }
                 val result = _updateResult.value
                 // An old-style SHA256SUMS that disagrees: never install.
-                if (ApkUpdateInstaller.verify(apk, result?.assetName, result?.sumsUrl) == false) {
+                if (runCatching { ApkUpdateInstaller.verify(apk, result?.assetName, result?.sumsUrl) }.onFailure { LogUtil.e(AppConfig.TAG, "Update checksum step failed", it) }.getOrNull() == false) {
                     reject(apk, R.string.update_checksum_failed)
                     return@launch
                 }
@@ -101,7 +106,11 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
                     reject(apk, R.string.update_other_signer)
                     return@launch
                 }
-                val check = if (result != null) ApkUpdateInstaller.checkManifest(apk, result) else UpdateManifest.Result.Missing
+                val check = if (result != null) {
+                    runCatching { ApkUpdateInstaller.checkManifest(apk, result) }
+                        .onFailure { LogUtil.e(AppConfig.TAG, "Update manifest step failed", it) }
+                        .getOrDefault(UpdateManifest.Result.Missing)
+                } else UpdateManifest.Result.Missing
                 if (check is UpdateManifest.Result.Rejected) {
                     LogUtil.w(AppConfig.TAG, "Update refused: ${check.reason}")
                     reject(apk, rejectText(check.reason))
@@ -119,6 +128,8 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
                 _downloadProgress.value = null
                 _downloadFailed.value = true
                 val why = (e as? ApkUpdateInstaller.DownloadFailed)?.reason?.take(80)
+                _errorDetail.value = "${e.javaClass.simpleName}: ${e.message.orEmpty()}".take(160)
+                _updateError.value = R.string.update_download_failed
                 if (why != null) toastError(app.getString(R.string.update_download_failed_why, why)) else toastError(R.string.update_download_failed)
             }
         }
@@ -154,13 +165,24 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
         if (ApkUpdateInstaller.needsInstallPermission(app)) {
             toastError(R.string.update_allow_install)
             awaitingInstallPermission = true
-            ApkUpdateInstaller.openInstallPermissionSettings(app)
+            try {
+                ApkUpdateInstaller.openInstallPermissionSettings(app)
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Cannot open the install permission screen", e)
+                awaitingInstallPermission = false
+                _errorDetail.value = "${e.javaClass.simpleName}: ${e.message.orEmpty()}".take(160)
+                _updateError.value = R.string.update_install_failed
+                _showUpdateDialog.value = true
+                return false
+            }
             return true
         }
         try {
             ApkUpdateInstaller.install(app, apk)
         } catch (e: Exception) {
             // The system installer did not open: say so on the dialog, with the way around it.
+            LogUtil.e(AppConfig.TAG, "Cannot start the installer", e)
+            _errorDetail.value = "${e.javaClass.simpleName}: ${e.message.orEmpty()}".take(160)
             _updateError.value = R.string.update_install_failed
             _showUpdateDialog.value = true
             return false
