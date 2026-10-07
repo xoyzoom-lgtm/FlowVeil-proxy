@@ -135,14 +135,15 @@ fun CheckUpdateScreen(
         }
     }
 
+    val updateError by viewModel.updateError.collectAsStateWithLifecycle()
     val askUnsigned by viewModel.askUnsigned.collectAsStateWithLifecycle()
     if (askUnsigned) {
         AlertDialog(
             onDismissRequest = { viewModel.answerUnsigned(false) },
             title = { Text(stringResource(R.string.update_unsigned_title)) },
             text = { Text(stringResource(R.string.update_unsigned_text)) },
-            confirmButton = { TextButton(onClick = { viewModel.answerUnsigned(false) }) { Text(stringResource(R.string.update_unsigned_no)) } },
-            dismissButton = { TextButton(onClick = { viewModel.answerUnsigned(true) }) { Text(stringResource(R.string.update_unsigned_yes)) } },
+            confirmButton = { TextButton(onClick = { viewModel.answerUnsigned(true) }) { Text(stringResource(R.string.update_unsigned_yes)) } },
+            dismissButton = { TextButton(onClick = { viewModel.answerUnsigned(false) }) { Text(stringResource(R.string.update_unsigned_no)) } },
             containerColor = MaterialTheme.colorScheme.surface
         )
     }
@@ -175,7 +176,15 @@ fun CheckUpdateScreen(
                                 .verticalScroll(scrollState)
                                 .verticalScrollbar(scrollState)
                         )
-                        if (downloadFailed && !result.downloadUrl.isNullOrBlank()) {
+                        updateError?.let {
+                            Text(
+                                text = stringResource(it),
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                        if ((downloadFailed || updateError != null) && !result.downloadUrl.isNullOrBlank()) {
                             TextButton(onClick = { result.downloadUrl?.let { Utils.openUri(context, it) } }) {
                                 Text(stringResource(R.string.update_open_browser))
                             }

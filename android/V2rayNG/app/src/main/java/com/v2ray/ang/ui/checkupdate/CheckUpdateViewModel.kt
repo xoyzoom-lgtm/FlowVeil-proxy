@@ -64,6 +64,10 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
     /** The in-app download did not work: the dialog then offers the browser. */
     val downloadFailed: StateFlow<Boolean> = _downloadFailed.asStateFlow()
 
+    private val _updateError = MutableStateFlow<Int?>(null)
+    /** Why the downloaded file was not installed. Stays on the dialog: a toast is gone before it can be read. */
+    val updateError: StateFlow<Int?> = _updateError.asStateFlow()
+
     private var downloadJob: Job? = null
     private var downloadedApk: File? = null
     private var awaitingInstallPermission = false
@@ -84,6 +88,7 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
         downloadJob = viewModelScope.launch {
             _downloadProgress.value = 0
             _downloadFailed.value = false
+            _updateError.value = null
             try {
                 val apk = ApkUpdateInstaller.download(app, url) { _downloadProgress.value = it }
                 val result = _updateResult.value
@@ -131,6 +136,7 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
     private fun reject(apk: File, message: Int) {
         apk.delete()
         _downloadProgress.value = null
+        _updateError.value = message
         toastError(message)
     }
 
@@ -151,7 +157,14 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
             ApkUpdateInstaller.openInstallPermissionSettings(app)
             return true
         }
-        ApkUpdateInstaller.install(app, apk)
+        try {
+            ApkUpdateInstaller.install(app, apk)
+        } catch (e: Exception) {
+            // The system installer did not open: say so on the dialog, with the way around it.
+            _updateError.value = R.string.update_install_failed
+            _showUpdateDialog.value = true
+            return false
+        }
         return true
     }
 
