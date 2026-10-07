@@ -212,7 +212,7 @@ private fun SubscriptionCardV4(
     val onCard = HomeTokens.onCard
     val statusText = when {
         expired -> stringResource(R.string.home_status_expired)
-        !active && com.v2ray.ang.handler.SubscriptionErrors.get(group.id) != null -> stringResource(R.string.home_status_error)
+        !active && sub != null && com.v2ray.ang.handler.SubscriptionErrors.failed(group.id) -> stringResource(R.string.home_status_error)
         active -> stringResource(R.string.home_status_connected)
         sub != null && !sub.enabled -> stringResource(R.string.home_status_off)
         sub != null && sub.lastUpdated > 0 && now - sub.lastUpdated in 0..60_000L -> stringResource(R.string.home_status_updated_now)
