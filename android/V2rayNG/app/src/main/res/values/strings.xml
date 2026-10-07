@@ -1045,6 +1045,18 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
         <item quantity="one">%1$d server</item>
         <item quantity="other">%1$d servers</item>
     </plurals>
+    <string name="onb_start">Get started</string>
+    <string name="onb0_tagline">A simple, fast client. Everything stays on your device.</string>
+    <string name="onb0_f1">Paste a link and you are set</string>
+    <string name="onb0_f1_sub">Any subscription, the best server is picked for you</string>
+    <string name="onb0_f2">Your own rules in one tap</string>
+    <string name="onb0_f2_sub">Banks go directly, ads are dropped</string>
+    <string name="onb0_f3">No accounts, no trackers</string>
+    <string name="onb0_f3_sub">Nothing is sent anywhere</string>
+    <string name="onb_notify_title">Do not miss the important</string>
+    <string name="onb_notify_text">We will tell you when a new version is out and when a subscription is about to end. Nothing else.</string>
+    <string name="onb_notify_allow">Allow</string>
+    <string name="onb_notify_later">Not now</string>
     <string name="onb_skip">Skip</string>
     <string name="onb_back">Back</string>
     <string name="onb_next">Next</string>

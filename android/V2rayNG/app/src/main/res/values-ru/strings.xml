@@ -1043,6 +1043,18 @@
         <item quantity="many">%1$d серверов</item>
         <item quantity="other">%1$d сервера</item>
     </plurals>
+    <string name="onb_start">Начать</string>
+    <string name="onb0_tagline">Простой и быстрый клиент. Всё хранится на вашем устройстве.</string>
+    <string name="onb0_f1">Вставил ссылку — и готово</string>
+    <string name="onb0_f1_sub">Любые подписки, лучший сервер выбирается сам</string>
+    <string name="onb0_f2">Свои правила в одно касание</string>
+    <string name="onb0_f2_sub">Банки напрямую, реклама мимо</string>
+    <string name="onb0_f3">Без аккаунтов и трекеров</string>
+    <string name="onb0_f3_sub">Ничего не отправляется никуда</string>
+    <string name="onb_notify_title">Не пропустите важное</string>
+    <string name="onb_notify_text">Сообщим, когда выйдет новая версия и когда подписка скоро закончится. Больше ничего.</string>
+    <string name="onb_notify_allow">Разрешить</string>
+    <string name="onb_notify_later">Не сейчас</string>
     <string name="onb_skip">Пропустить</string>
     <string name="onb_back">Назад</string>
     <string name="onb_next">Дальше</string>

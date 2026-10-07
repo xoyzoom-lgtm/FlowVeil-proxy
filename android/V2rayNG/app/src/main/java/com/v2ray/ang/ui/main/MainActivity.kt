@@ -142,7 +142,8 @@ class MainActivity : HelperBaseComponentActivity() {
             }
         }
 
-        checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {}
+        // On a first run the wizard asks for this itself, in its own popup, after the user has seen the app.
+        if (!showOnboarding) checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {}
     }
 
     override val newLook: Boolean = false
@@ -220,6 +221,7 @@ class MainActivity : HelperBaseComponentActivity() {
         if (showOnboarding) {
             com.v2ray.ang.ui.onboarding.OnboardingScreen(
                 onAction = homeAction,
+                onRequestNotifications = { checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {} },
                 onFinish = {
                     MmkvManager.encodeSettings(AppConfig.PREF_ONBOARDING_DONE, true)
                     showOnboarding = false
