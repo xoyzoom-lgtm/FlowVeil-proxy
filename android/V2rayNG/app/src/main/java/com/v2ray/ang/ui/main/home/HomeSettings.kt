@@ -1,6 +1,7 @@
 package com.v2ray.ang.ui.main.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,7 +90,8 @@ internal fun HomeSettings(
     /** Called after a routing switch changed: the screen restarts a running connection so it takes effect now. */
     onRulesChanged: () -> Unit,
 ) {
-    BackHandler(onBack = onClose)
+    var page by rememberSaveable { mutableStateOf<String?>(null) }
+    BackHandler { if (page != null) page = null else onClose() }
     val context = LocalContext.current
     val russian = LocalConfiguration.current.locales[0].language == "ru"
     fun flag(key: String, default: Boolean) = MmkvManager.decodeSettingsBool(key, default)
@@ -160,17 +163,40 @@ internal fun HomeSettings(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth().padding(start = 8.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
             ) {
-                RoundAction(R.drawable.ic_arrow_back_24dp, stringResource(R.string.onb_back), onClose, size = 42.dp)
+                RoundAction(R.drawable.ic_arrow_back_24dp, stringResource(R.string.onb_back), { if (page != null) page = null else onClose() }, size = 42.dp)
                 Spacer(Modifier.width(12.dp))
-                Text(stringResource(R.string.home_settings), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground)
+                Text(
+                    stringResource(
+                        when (page) {
+                            "subs" -> R.string.hs_group_subs
+                            "connection" -> R.string.hs_group_connection
+                            "routing" -> R.string.hs_group_routing
+                            "system" -> R.string.hs_cat_system
+                            else -> R.string.home_settings
+                        }
+                    ),
+                    fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground
+                )
             }
+            androidx.compose.animation.AnimatedContent(
+                targetState = page,
+                transitionSpec = {
+                    val dir = if (targetState != null) 1 else -1
+                    (androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(240)) +
+                        androidx.compose.animation.slideInHorizontally(androidx.compose.animation.core.tween(280)) { dir * it / 6 }) togetherWith
+                        (androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(140)) +
+                            androidx.compose.animation.slideOutHorizontally(androidx.compose.animation.core.tween(280)) { -dir * it / 6 })
+                },
+                label = "settingsPage",
+                modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth().weight(1f)
+            ) { target ->
             Column(
                 Modifier
-                    .widthIn(max = 720.dp)
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
+                if (target == null) {
                 Group(stringResource(R.string.hs_group_look)) {
                     ValueRow(
                         R.drawable.ic_image_24dp, stringResource(R.string.hs_appearance),
@@ -188,16 +214,24 @@ internal fun HomeSettings(
                     NavRow(R.drawable.ic_per_apps_24dp, stringResource(R.string.hs_apps), stringResource(R.string.hs_apps_sub)) {
                         onNavigate(MainDestination.PerAppProxy)
                     }
-                    NavRow(R.drawable.ic_per_apps_24dp, stringResource(R.string.title_direct_apps), null) {
-                        // Selected apps go without the server: switch the per-app screen to "bypass" the first time, keeping a setup the user made.
-                        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)) {
-                            MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, true)
-                            MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, true)
-                        }
-                        onNavigate(MainDestination.PerAppProxy)
-                    }
                 }
-                Group(stringResource(R.string.hs_group_subs)) {
+                Group(stringResource(R.string.hs_group_settings)) {
+                    ValueRow(R.drawable.ic_subscriptions_24dp, stringResource(R.string.hs_group_subs), subs.toString()) { page = "subs" }
+                    ValueRow(R.drawable.ic_flash_on_24dp, stringResource(R.string.hs_group_connection), stringResource(R.string.hs_configure)) { page = "connection" }
+                    ValueRow(R.drawable.ic_routing_24dp, stringResource(R.string.hs_group_routing), stringResource(R.string.hs_configure)) { page = "routing" }
+                    ValueRow(R.drawable.ic_settings_24dp, stringResource(R.string.hs_cat_system), stringResource(R.string.hs_configure)) { page = "system" }
+                    NavRow(R.drawable.ic_speed_24dp, stringResource(R.string.stats_title), stringResource(R.string.stats_sub)) { onStats() }
+                }
+                Group(stringResource(R.string.hs_group_about)) {
+                    ValueRow(R.drawable.ic_telegram_24dp, stringResource(R.string.hs_channel), "t.me/FlowVeil") { Utils.openUri(context, "https://t.me/FlowVeil") }
+                    ValueRow(R.drawable.ic_check_update_24dp, stringResource(R.string.hs_check_update), "build ${BuildConfig.HUPP_BUILD}") { onNavigate(MainDestination.CheckUpdate) }
+                    NavRow(R.drawable.ic_play_24dp, stringResource(R.string.title_onboarding_again), stringResource(R.string.summary_onboarding_again)) { onWizard() }
+                    NavRow(R.drawable.ic_settings_24dp, stringResource(R.string.hs_expert), stringResource(R.string.hs_expert_sub)) { onNavigate(MainDestination.Settings) }
+                    NavRow(R.drawable.ic_about_24dp, stringResource(R.string.title_about), null) { onNavigate(MainDestination.About) }
+                }
+                } else {
+                    if (target == "subs") {
+                    Group(stringResource(R.string.hs_group_subs)) {
                     NavRow(R.drawable.ic_subscriptions_24dp, stringResource(R.string.hs_subscriptions), stringResource(R.string.hs_subscriptions_sub, subs, servers)) {
                         onNavigate(MainDestination.Subscriptions)
                     }
@@ -208,8 +242,10 @@ internal fun HomeSettings(
                     SwitchRow2(R.drawable.ic_copy, stringResource(R.string.title_pref_clipboard_offer), null, clipboard) {
                         clipboard = it; save(AppConfig.PREF_CLIPBOARD_OFFER, it)
                     }
-                }
-                Group(stringResource(R.string.hs_group_connection)) {
+                    }
+                    }
+                    else if (target == "connection") {
+                    Group(stringResource(R.string.hs_group_connection)) {
                     SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_pref_show_best_button), null, bestButton) {
                         bestButton = it; save(AppConfig.PREF_SHOW_BEST_BUTTON, it)
                     }
@@ -222,16 +258,21 @@ internal fun HomeSettings(
                     SwitchRow2(R.drawable.ic_subscriptions_24dp, stringResource(R.string.title_pref_failover_across_subs), stringResource(R.string.summary_pref_failover_across_subs), failoverSubs, info = { infoRes = R.string.title_pref_failover_across_subs to R.string.info_failover_subs }) {
                         failoverSubs = it; save(AppConfig.PREF_FAILOVER_ACROSS_SUBS, it)
                     }
-                }
-                Group(stringResource(R.string.hs_group_mobile)) {
+                    SwitchRow2(R.drawable.ic_speed_24dp, stringResource(R.string.title_pref_speed_enabled), null, speedOn) {
+                        speedOn = it; save(AppConfig.PREF_SPEED_ENABLED, it); onRulesChanged()
+                    }
+                    }
+                    Group(stringResource(R.string.hs_group_mobile)) {
                     SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_whitelist_bypass), stringResource(R.string.onb3_auto_sub), bypass, info = { infoRes = R.string.title_whitelist_bypass to R.string.info_bypass }) {
                         bypass = it; save(WhitelistBypass.PREF_ENABLED, it)
                     }
                     NavRow(R.drawable.ic_routing_24dp, stringResource(R.string.hs_bypass), if (bypassCount > 0) stringResource(R.string.hs_bypass_sub, bypassCount)
                         else if (autoBypass > 0) stringResource(R.string.hs_bypass_auto, autoBypass)
                         else stringResource(R.string.hs_bypass_none), info = { infoRes = R.string.hs_bypass to R.string.info_bypass_servers }) { picker = "bypass" }
-                }
-                Group(stringResource(R.string.hs_group_routing)) {
+                    }
+                    }
+                    else if (target == "routing") {
+                    Group(stringResource(R.string.hs_group_routing)) {
                     ValueRow(
                         R.drawable.ic_routing_24dp,
                         stringResource(R.string.title_rule_profile),
@@ -249,27 +290,31 @@ internal fun HomeSettings(
                         picker = "country"
                     }
                     NavRow(R.drawable.ic_routing_24dp, stringResource(R.string.title_direct_sites), stringResource(R.string.summary_direct_sites, directSites)) { showDirectSites = true }
+                    NavRow(R.drawable.ic_per_apps_24dp, stringResource(R.string.title_direct_apps), null) {
+                        // Selected apps go without the server: switch the per-app screen to "bypass" the first time, keeping a setup the user made.
+                        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)) {
+                            MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, true)
+                            MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, true)
+                        }
+                        onNavigate(MainDestination.PerAppProxy)
+                    }
                     NavRow(R.drawable.ic_lock_24dp, stringResource(R.string.title_kill_switch), null) {
                         // Android does this itself (Always-on VPN + "Block connections without VPN"): open its screen.
                         runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_VPN_SETTINGS)) }
                             .onFailure { context.toastError(R.string.kill_switch_unavailable) }
                     }
-                }
-                Group(stringResource(R.string.hs_group_filters)) {
+                    }
+                    Group(stringResource(R.string.hs_group_filters)) {
                     SwitchRow2(R.drawable.ic_status_cross, stringResource(R.string.title_pref_adblock), stringResource(R.string.onb3_ads_sub), ads) {
                         ads = it; save(ExtraRules.PREF_ADBLOCK, it); changed()
                     }
                     SwitchRow2(R.drawable.ic_telegram_24dp, stringResource(R.string.title_pref_telegram_proxy), stringResource(R.string.onb3_tg_sub), tg) {
                         tg = it; save(ExtraRules.PREF_TELEGRAM_PROXY, it); changed()
                     }
-                }
-                Group(stringResource(R.string.hs_group_stats)) {
-                    NavRow(R.drawable.ic_speed_24dp, stringResource(R.string.stats_title), stringResource(R.string.stats_sub)) { onStats() }
-                    SwitchRow2(R.drawable.ic_speed_24dp, stringResource(R.string.title_pref_speed_enabled), null, speedOn) {
-                        speedOn = it; save(AppConfig.PREF_SPEED_ENABLED, it); onRulesChanged()
                     }
-                }
-                Group(stringResource(R.string.hs_group_privacy)) {
+                    }
+                    else if (target == "system") {
+                    Group(stringResource(R.string.hs_group_privacy)) {
                     SwitchRow2(R.drawable.ic_privacy_24dp, stringResource(R.string.title_pref_send_hwid), null, sendHwid, info = { infoRes = R.string.title_pref_send_hwid to R.string.info_hwid }) {
                         sendHwid = it; save(AppConfig.PREF_SEND_HWID, it)
                     }
@@ -277,8 +322,8 @@ internal fun HomeSettings(
                         Utils.setClipboard(context, com.v2ray.ang.handler.DeviceIdentity.hwid())
                         context.toastSuccess(R.string.toast_success)
                     }
-                }
-                Group(stringResource(R.string.hs_group_system)) {
+                    }
+                    Group(stringResource(R.string.hs_group_system)) {
                     SwitchRow2(R.drawable.ic_power_24dp, stringResource(R.string.title_pref_is_booted), null, bootStart) {
                         bootStart = it; save(AppConfig.PREF_IS_BOOTED, it)
                     }
@@ -294,15 +339,11 @@ internal fun HomeSettings(
                     SwitchRow2(R.drawable.ic_delete_24dp, stringResource(R.string.title_pref_confirm_remove), null, confirmRemove) {
                         confirmRemove = it; save(AppConfig.PREF_CONFIRM_REMOVE, it)
                     }
-                }
-                Group(stringResource(R.string.hs_group_about)) {
-                    ValueRow(R.drawable.ic_telegram_24dp, stringResource(R.string.hs_channel), "t.me/FlowVeil") { Utils.openUri(context, "https://t.me/FlowVeil") }
-                    ValueRow(R.drawable.ic_check_update_24dp, stringResource(R.string.hs_check_update), "build ${BuildConfig.HUPP_BUILD}") { onNavigate(MainDestination.CheckUpdate) }
-                    NavRow(R.drawable.ic_play_24dp, stringResource(R.string.title_onboarding_again), stringResource(R.string.summary_onboarding_again)) { onWizard() }
-                    NavRow(R.drawable.ic_settings_24dp, stringResource(R.string.hs_expert), stringResource(R.string.hs_expert_sub)) { onNavigate(MainDestination.Settings) }
-                    NavRow(R.drawable.ic_about_24dp, stringResource(R.string.title_about), null) { onNavigate(MainDestination.About) }
+                    }
+                    }
                 }
                 Spacer(Modifier.height(24.dp))
+            }
             }
         }
     }
