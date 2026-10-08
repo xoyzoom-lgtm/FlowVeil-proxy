@@ -45,6 +45,22 @@ Adapted from Uber's description of an efficient agent-driven pipeline; scaled do
   proven components, accessibility/mobile/state rules, and a real-browser check with Playwright before calling it done.
 - **Keep cost flat.** Prefer a small targeted fix and a local test over a full rebuild; do not rebuild to find out what a log already says.
 
+## Third-party skills (owner's standing choice: use them always)
+Run `scripts/install-skills.sh` at the start of every new container (they live in `~/.claude/skills`, pinned commits, nothing copied into this repo).
+- **session-handoff** (sergeyramas): on "продолжим в новом чате" / "хэндофф" or when the context is running out. Adapted here: no `pbcopy`
+  (cloud container; print the first message in chat instead), and **do not commit** the note unless the owner says so; save it as `HANDOFF.md`
+  outside `docs/` or in the scratchpad. A new chat starts by reading `CLAUDE.md` and the handoff note.
+- **gha** (ykdojo): first step for any red CI run ("why did the build fail").
+- **review-claudemd** (ykdojo): after a long session, to propose edits to this file.
+- **version-check** (ykdojo): only when asked about the Claude Code version.
+- **autopilot** (nick-vels): only on explicit `/autopilot` (it is manual-start by design). It must still obey the hard rules below.
+- **threads-\*** (sergebulaev): for drafting/auditing Threads posts when promoting FlowVeil. Draft only; never ask for or store
+  Publora/Apify/Pixfaro keys, never publish. Public texts still follow the wording rules (no "VPN", no competitor branding).
+- Other tips from `claude-code-tips` that the owner wants applied: small tasks, one fix per change, verify before saying "done",
+  keep `CLAUDE.md` short, hand off instead of dragging a huge context.
+- A skill is a way of working, not an authority: it never overrides the hard rules below (no AI trailers in commits, no secrets,
+  no unrequested publishing, ask before outward-facing or irreversible actions).
+
 ## Hard rules (from the owner, keep them)
 - Do not embed the owner's own subscription URL anywhere.
 - No Happ branding, logo, name look-alikes; no spoofing Happ (User-Agent etc.).
