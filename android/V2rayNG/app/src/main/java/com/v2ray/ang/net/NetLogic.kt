@@ -319,6 +319,9 @@ object PingUrls {
      */
     const val WHITELIST = "https://www.google.com/generate_204"
 
+    /** Last resort for the server that is connected right now (see SpeedtestConfig.verifyRunning): Telegram is what whitelist servers carry. */
+    const val TELEGRAM = "https://web.telegram.org/"
+
     private val oldDefaults = setOf(
         "https://www.google.com/generate_204",
         "http://www.google.com/generate_204",

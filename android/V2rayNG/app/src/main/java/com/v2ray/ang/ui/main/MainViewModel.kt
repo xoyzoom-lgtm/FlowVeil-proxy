@@ -1144,7 +1144,12 @@ class MainViewModel(
             _uiState.update { it.copy(availabilityOnly = false) }
             toast(R.string.check_servers_step2)
         }
+        val connectedGuid = if (_uiState.value.isRunning) dataSource.getSelectServer() else null
         viewModelScope.launch(ioDispatcher) {
+            // The connected server works by definition when traffic flows: do not show it as dead because the test core failed.
+            if (connectedGuid != null && (dataSource.decodeAffiliationInfo(connectedGuid)?.testDelayMillis ?: 0L) <= 0L) {
+                runCatching { com.v2ray.ang.service.SpeedtestConfig.verifyRunning(connectedGuid) }
+            }
             cacheMutex.withLock { groupDataCache.clear() }
             reloadAllGroups(_uiState.value.groups.map { it.id })
         }

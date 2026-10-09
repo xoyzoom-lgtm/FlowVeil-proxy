@@ -57,6 +57,22 @@ object SpeedtestConfig {
         return -1L
     }
 
+    /**
+     * A server that is connected right now carries real traffic, so a failed isolated test must not mark it "not working"
+     * (the test core can differ from the real connection, e.g. custom JSON profiles or servers that pass only a few hosts).
+     * Asks the running core instead, through the same outbound the traffic uses, and stores the delay when any address answers.
+     */
+    fun verifyRunning(guid: String): Long {
+        for (url in listOf(PingUrls.WHITELIST, PingUrls.PRIMARY, PingUrls.FALLBACK, PingUrls.TELEGRAM)) {
+            val time = com.v2ray.ang.core.CoreServiceManager.measureLive(url)
+            if (time > 0) {
+                MmkvManager.encodeServerTestDelayMillis(guid, time)
+                return time
+            }
+        }
+        return -1L
+    }
+
     private fun isWhitelistServer(guid: String): Boolean = runCatching {
         WhitelistBypass.servers().contains(guid) ||
             BypassRating.rate(guid, null)?.rating?.level.let { it == BypassLevel.STRONG || it == BypassLevel.LIKELY }
