@@ -1237,4 +1237,16 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="update_popup_body">FlowVeil build %1$d is ready</string>
     <string name="update_open_browser">Download in the browser</string>
     <string name="info_hwid">The device ID lets a provider limit the number of devices. It is sent only to the address of your subscription.</string>
+    <string name="migrate_from">Moving from which app?</string>
+    <string name="migrate_app_names_note">Button names may differ in your version of the app. If you cannot get the link out, your provider always has the plain subscription link (in the account page or the bot).</string>
+    <string name="migrate_steps_happ">1. Open Happ and the subscription.\n2. Tap "Share" or "Copy link".\n3. Come back here and tap "Paste link from clipboard".\n\nA link that starts with happ://crypt is encrypted for Happ only: it is not opened here. Ask the provider for a plain link (https://…).</string>
+    <string name="migrate_steps_incy">1. Open INCY and the subscription you are moving.\n2. Find "Share" or "Copy subscription link" (usually in the subscription menu).\n3. Come back here and paste the link from the clipboard.\n\nIf there is no such button, take the link from the provider.</string>
+    <string name="migrate_steps_v2rayng">1. In v2rayNG open the menu ☰ → "Subscription groups".\n2. Open the subscription and copy the URL field.\n3. Paste it here.\n\nOr move everything from a backup: use "From a v2rayNG backup file" below.</string>
+    <string name="migrate_steps_v2rayn">1. In v2rayN open "Subscriptions" → "Subscription group settings".\n2. Select the subscription and copy its address (URL).\n3. Send it to your phone (for example to Telegram "Saved messages"), copy it and paste it here.</string>
+    <string name="migrate_steps_hiddify">1. In Hiddify open the profile.\n2. Tap "Share" and copy the link.\n3. Paste it here. Links like hiddify://import/… are recognised automatically.</string>
+    <string name="migrate_steps_streisand">1. In Streisand open the subscription.\n2. Copy the subscription link.\n3. Paste it here. Links like streisand://import/… are recognised automatically.</string>
+    <string name="migrate_steps_karing">1. In Karing open the profile.\n2. Copy the subscription link.\n3. Paste it here. Links like karing://install-config?url=… are recognised automatically.</string>
+    <string name="migrate_steps_nekobox">1. In NekoBox open "Groups" and the group menu → "Edit".\n2. Copy the subscription address (URL).\n3. Paste it here.</string>
+    <string name="migrate_steps_shadowrocket">1. In Shadowrocket open the subscription list.\n2. Copy the address of the subscription.\n3. Move it to this phone and paste it here. Links like sub://… are recognised automatically.</string>
+    <string name="migrate_steps_clash">1. In Clash (Verge, Meta, Mihomo) open "Profiles".\n2. Copy the link (URL) of the profile.\n3. Paste it here. Links like clash://install-config?url=… are recognised automatically.</string>
 </resources>
