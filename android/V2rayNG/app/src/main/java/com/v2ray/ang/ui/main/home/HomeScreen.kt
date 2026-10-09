@@ -172,34 +172,28 @@ fun HomeScreen(
     var showDelInvalid by remember { mutableStateOf(false) }
     var deleteSubId by remember { mutableStateOf<String?>(null) }
     var updateBanner by remember { mutableStateOf(UpdateNotifier.bannerCandidate()) }
-    var updatePopup by remember { mutableStateOf<com.v2ray.ang.net.UpdateCandidate?>(null) }
+    // A new version: the update sheet opens by itself and (off mobile data) the download starts right away.
+    val activity = remember(context) { generateSequence(context) { (it as? android.content.ContextWrapper)?.baseContext }.filterIsInstance<androidx.activity.ComponentActivity>().firstOrNull() }
+    val updateVm = remember(activity) { activity?.let { androidx.lifecycle.ViewModelProvider(it)[com.v2ray.ang.ui.checkupdate.CheckUpdateViewModel::class.java] } }
+    val openUpdateSheet = {
+        val metered = runCatching {
+            (context.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager).isActiveNetworkMetered
+        }.getOrDefault(true)
+        updateVm?.checkForUpdates(autoInstall = !metered)
+    }
     LaunchedEffect(Unit) {
         UpdateNotifier.schedule(context)
-        // The pop-up may come from a check made earlier, so show it without waiting for the network.
-        if (!UpdateNotifier.popupShown) UpdateNotifier.popupCandidate()?.let { UpdateNotifier.popupShown = true; updatePopup = it }
+        // The notice may come from a check made earlier, so show it without waiting for the network.
+        if (!UpdateNotifier.popupShown) UpdateNotifier.popupCandidate()?.let { UpdateNotifier.popupShown = true; openUpdateSheet() }
         UpdateNotifier.checkIfDue(context)
         updateBanner = UpdateNotifier.bannerCandidate()
-        if (!UpdateNotifier.popupShown) UpdateNotifier.popupCandidate()?.let { UpdateNotifier.popupShown = true; updatePopup = it }
+        if (!UpdateNotifier.popupShown) UpdateNotifier.popupCandidate()?.let { UpdateNotifier.popupShown = true; openUpdateSheet() }
     }
-    updatePopup?.let { update ->
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { updatePopup = null },
-            title = { Text(stringResource(R.string.update_popup_title)) },
-            text = { Text(stringResource(R.string.update_popup_body, update.build)) },
-            confirmButton = {
-                androidx.compose.material3.TextButton(onClick = {
-                    updatePopup = null
-                    context.startActivity(
-                        Intent(context, com.v2ray.ang.ui.checkupdate.CheckUpdateActivity::class.java)
-                            .putExtra(com.v2ray.ang.ui.checkupdate.CheckUpdateActivity.EXTRA_AUTO_UPDATE, true)
-                    )
-                }) { Text(stringResource(R.string.update_now)) }
-            },
-            dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { updatePopup = null }) { Text(stringResource(R.string.update_later)) }
-            },
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+    updateVm?.let { vm ->
+        com.v2ray.ang.ui.checkupdate.UpdateSheet(vm)
+        // Back from "allow installs from FlowVeil": go on with the downloaded file.
+        val lifecycleNow by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+        LaunchedEffect(lifecycleNow) { if (lifecycleNow.isAtLeast(Lifecycle.State.RESUMED)) vm.resumeInstallIfPending() }
     }
 
     // Connecting / failed, kept here because the service only reports "running" or not.

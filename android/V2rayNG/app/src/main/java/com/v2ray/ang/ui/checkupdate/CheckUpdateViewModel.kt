@@ -19,7 +19,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
+/** One line of "what was checked about the downloaded file": [ok] = passed, otherwise a note the user should read. */
+data class UpdateCheck(val ok: Boolean, val textRes: Int)
+
+/** The downloaded file as the sheet shows it: its SHA-256 and what was checked. Installing waits for the user's tap. */
+data class DownloadedUpdate(val sha256: String, val checks: List<UpdateCheck>)
+
 class CheckUpdateViewModel(application: Application) : BaseViewModel(application) {
+
+    private val _downloaded = MutableStateFlow<DownloadedUpdate?>(null)
+    val downloaded: StateFlow<DownloadedUpdate?> = _downloaded.asStateFlow()
 
     private val _checkPreRelease = MutableStateFlow(
         MmkvManager.decodeSettingsBool(AppConfig.PREF_CHECK_UPDATE_PRE_RELEASE, false)
@@ -98,11 +107,14 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
                 val apk = ApkUpdateInstaller.download(app, url) { _downloadProgress.value = it }
                 val result = _updateResult.value
                 // An old-style SHA256SUMS that disagrees: never install.
-                if (runCatching { ApkUpdateInstaller.verify(apk, result?.assetName, result?.sumsUrl) }.onFailure { LogUtil.e(AppConfig.TAG, "Update checksum step failed", it) }.getOrNull() == false) {
+                val sums = runCatching { ApkUpdateInstaller.verify(apk, result?.assetName, result?.sumsUrl) }
+                    .onFailure { LogUtil.e(AppConfig.TAG, "Update checksum step failed", it) }.getOrNull()
+                if (sums == false) {
                     reject(apk, R.string.update_checksum_failed)
                     return@launch
                 }
-                if (ApkUpdateInstaller.sameSigner(app, apk) == false) {
+                val signer = ApkUpdateInstaller.sameSigner(app, apk)
+                if (signer == false) {
                     reject(apk, R.string.update_other_signer)
                     return@launch
                 }
@@ -118,9 +130,20 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
                 }
                 downloadedApk = apk
                 _downloadProgress.value = null
-                _showUpdateDialog.value = false
-                val signed = check is UpdateManifest.Result.Verified && check.signed
-                if (signed) installDownloaded() else _askUnsigned.value = true
+                // Shown on the sheet as it is: what matched, what could not be checked. The user installs with one tap.
+                val checks = buildList {
+                    add(if (sums == true) UpdateCheck(true, R.string.update_check_sha_ok) else UpdateCheck(false, R.string.update_check_sha_none))
+                    add(if (signer == true) UpdateCheck(true, R.string.update_check_signer_ok) else UpdateCheck(false, R.string.update_check_signer_none))
+                    when {
+                        check is UpdateManifest.Result.Verified && check.signed -> add(UpdateCheck(true, R.string.update_check_manifest_signed))
+                        check is UpdateManifest.Result.Verified -> {
+                            add(UpdateCheck(true, R.string.update_check_manifest_listed))
+                            add(UpdateCheck(false, R.string.update_check_manifest_unsigned))
+                        }
+                        else -> add(UpdateCheck(false, R.string.update_check_manifest_none))
+                    }
+                }
+                _downloaded.value = DownloadedUpdate(ApkUpdateInstaller.sha256(apk), checks)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -133,15 +156,6 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
                 if (why != null) toastError(app.getString(R.string.update_download_failed_why, why)) else toastError(R.string.update_download_failed)
             }
         }
-    }
-
-    private val _askUnsigned = MutableStateFlow(false)
-    /** The update has no valid signature yet (transition period): the user decides, "No" is the default. */
-    val askUnsigned: StateFlow<Boolean> = _askUnsigned.asStateFlow()
-
-    fun answerUnsigned(install: Boolean) {
-        _askUnsigned.value = false
-        if (install) installDownloaded() else downloadedApk?.delete().also { downloadedApk = null }
     }
 
     private fun reject(apk: File, message: Int) {
@@ -204,6 +218,8 @@ class CheckUpdateViewModel(application: Application) : BaseViewModel(application
 
     fun dismissUpdateDialog() {
         downloadJob?.cancel()
+        if (_downloaded.value != null) downloadedApk?.delete().also { downloadedApk = null }
+        _downloaded.value = null
         _downloadProgress.value = null
         _showUpdateDialog.value = false
     }

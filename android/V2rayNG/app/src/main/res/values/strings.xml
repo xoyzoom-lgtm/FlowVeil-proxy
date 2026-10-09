@@ -1249,4 +1249,16 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="migrate_steps_nekobox">1. In NekoBox open "Groups" and the group menu → "Edit".\n2. Copy the subscription address (URL).\n3. Paste it here.</string>
     <string name="migrate_steps_shadowrocket">1. In Shadowrocket open the subscription list.\n2. Copy the address of the subscription.\n3. Move it to this phone and paste it here. Links like sub://… are recognised automatically.</string>
     <string name="migrate_steps_clash">1. In Clash (Verge, Meta, Mihomo) open "Profiles".\n2. Copy the link (URL) of the profile.\n3. Paste it here. Links like clash://install-config?url=… are recognised automatically.</string>
+    <string name="update_sheet_title">A new version is available</string>
+    <string name="update_sheet_sub">FlowVeil update</string>
+    <string name="update_file_ready">File downloaded</string>
+    <string name="update_install_btn">Install</string>
+    <string name="update_check_sha_ok">SHA-256 matches</string>
+    <string name="update_check_sha_none">The release checksum is not available, checked against the manifest only</string>
+    <string name="update_check_signer_ok">Signed with the same key as the installed app</string>
+    <string name="update_check_signer_none">Android itself checks the app signature on install</string>
+    <string name="update_check_manifest_signed">Release signature verified</string>
+    <string name="update_check_manifest_listed">File is in the release manifest: size and SHA-256 match</string>
+    <string name="update_check_manifest_unsigned">There is no separate release signature yet</string>
+    <string name="update_check_manifest_none">Release manifest not found</string>
 </resources>

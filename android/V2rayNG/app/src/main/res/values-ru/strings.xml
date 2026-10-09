@@ -1247,4 +1247,16 @@
     <string name="migrate_steps_nekobox">1. В NekoBox откройте «Группы» и меню нужной группы → «Редактировать».\n2. Скопируйте адрес подписки (URL).\n3. Вставьте его здесь.</string>
     <string name="migrate_steps_shadowrocket">1. В Shadowrocket откройте список подписок.\n2. Скопируйте адрес нужной подписки.\n3. Передайте его на телефон и вставьте здесь. Ссылки вида sub://… распознаются сами.</string>
     <string name="migrate_steps_clash">1. В Clash (Verge, Meta, Mihomo) откройте «Профили».\n2. У нужного профиля скопируйте ссылку (URL).\n3. Вставьте её здесь. Ссылки вида clash://install-config?url=… распознаются сами.</string>
+    <string name="update_sheet_title">Доступна новая версия</string>
+    <string name="update_sheet_sub">обновление FlowVeil</string>
+    <string name="update_file_ready">Файл скачан</string>
+    <string name="update_install_btn">Установить</string>
+    <string name="update_check_sha_ok">SHA-256 совпадает</string>
+    <string name="update_check_sha_none">Контрольная сумма релиза недоступна, сверено только с манифестом</string>
+    <string name="update_check_signer_ok">Подпись приложения та же, что у установленного</string>
+    <string name="update_check_signer_none">Подпись приложения проверит сам Android при установке</string>
+    <string name="update_check_manifest_signed">Подпись релиза проверена</string>
+    <string name="update_check_manifest_listed">Файл есть в манифесте релиза: размер и SHA-256 сошлись</string>
+    <string name="update_check_manifest_unsigned">Отдельной подписи релиза пока нет</string>
+    <string name="update_check_manifest_none">Манифест релиза не найден</string>
 </resources>

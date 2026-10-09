@@ -91,10 +91,6 @@ fun CheckUpdateScreen(
     var notifyOn by remember { mutableStateOf(UpdateNotifier.isEnabled()) }
 
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val showUpdateDialog by viewModel.showUpdateDialog.collectAsStateWithLifecycle()
-    val updateResult by viewModel.updateResult.collectAsStateWithLifecycle()
-    val downloadProgress by viewModel.downloadProgress.collectAsStateWithLifecycle()
-    val downloadFailed by viewModel.downloadFailed.collectAsStateWithLifecycle()
 
     val libVersion = CoreNativeManager.getLibVersion()
     val versionText = "FlowVeil build ${BuildConfig.HUPP_BUILD} ($libVersion)"
@@ -135,89 +131,5 @@ fun CheckUpdateScreen(
         }
     }
 
-    val updateError by viewModel.updateError.collectAsStateWithLifecycle()
-    val errorDetail by viewModel.errorDetail.collectAsStateWithLifecycle()
-    val askUnsigned by viewModel.askUnsigned.collectAsStateWithLifecycle()
-    if (askUnsigned) {
-        AlertDialog(
-            onDismissRequest = { viewModel.answerUnsigned(false) },
-            title = { Text(stringResource(R.string.update_unsigned_title)) },
-            text = { Text(stringResource(R.string.update_unsigned_text)) },
-            confirmButton = { TextButton(onClick = { viewModel.answerUnsigned(true) }) { Text(stringResource(R.string.update_unsigned_yes)) } },
-            dismissButton = { TextButton(onClick = { viewModel.answerUnsigned(false) }) { Text(stringResource(R.string.update_unsigned_no)) } },
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    }
-
-    if (showUpdateDialog && updateResult != null) {
-        val result = updateResult!!
-        AlertDialog(
-            onDismissRequest = { viewModel.dismissUpdateDialog() },
-            title = { Text(stringResource(R.string.update_new_version_found, result.latestVersion ?: "")) },
-            text = {
-                val progress = downloadProgress
-                if (progress != null) {
-                    Column {
-                        Text(stringResource(R.string.update_downloading, if (progress >= 0) "$progress%" else ""))
-                        androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
-                        if (progress >= 0) {
-                            LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
-                        } else {
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                        }
-                    }
-                } else {
-                    val scrollState = rememberScrollState()
-                    Column {
-                        Text(
-                            text = result.releaseNotes.orEmpty(),
-                            modifier = Modifier
-                                .weight(1f, fill = false)
-                                .fillMaxWidth()
-                                .verticalScroll(scrollState)
-                                .verticalScrollbar(scrollState)
-                        )
-                        updateError?.let {
-                            Text(
-                                text = stringResource(it),
-                                color = MaterialTheme.colorScheme.error,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
-                        errorDetail?.let {
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                        if ((downloadFailed || updateError != null) && !result.downloadUrl.isNullOrBlank()) {
-                            TextButton(onClick = { result.downloadUrl?.let { Utils.openUri(context, it) } }) {
-                                Text(stringResource(R.string.update_open_browser))
-                            }
-                        }
-                        TextButton(onClick = { viewModel.skipVersion() }) {
-                            Text(stringResource(R.string.update_skip))
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = downloadProgress == null,
-                    onClick = { viewModel.downloadAndInstall() }
-                ) {
-                    Text(stringResource(R.string.update_now))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { viewModel.later() }) {
-                    Text(stringResource(R.string.update_later))
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    }
+    UpdateSheet(viewModel)
 }
