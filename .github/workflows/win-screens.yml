@@ -1,0 +1,70 @@
+name: Windows UI screenshots
+# Builds the Windows app, opens it on a runner and saves screenshots of every page (no release, no secrets).
+on:
+  workflow_dispatch:
+  push:
+    branches: ['bypass-win-ui*']
+permissions:
+  contents: read
+jobs:
+  screens:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.1xx
+      - name: Build
+        run: dotnet publish v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -o FlowVeil
+      - name: Screenshots
+        run: |
+          try { Set-DisplayResolution -Width 1920 -Height 1080 -Force -ErrorAction Stop } catch { Write-Host "resolution unchanged: $_" }
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing, UIAutomationClient, UIAutomationTypes
+          Add-Type @"
+          using System; using System.Runtime.InteropServices;
+          public static class W { [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h,int x,int y,int w,int ht,bool r);
+            [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h); }
+          "@
+          New-Item -ItemType Directory -Force ../shots | Out-Null
+          function Shot($name) {
+            $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+            $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+            $g = [System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+            $bmp.Save("$PWD/../shots/$name.png"); $g.Dispose(); $bmp.Dispose(); Write-Host "shot $name $($b.Width)x$($b.Height)"
+          }
+          $p = Start-Process FlowVeil/v2rayN.exe -PassThru
+          Start-Sleep 25
+          Shot "00-start"
+          $root = [System.Windows.Automation.AutomationElement]::RootElement
+          $cond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $p.Id)
+          $wins = $root.FindAll([System.Windows.Automation.TreeScope]::Children, $cond)
+          Write-Host "windows: $($wins.Count)"; foreach ($w in $wins) { Write-Host " - '$($w.Current.Name)'" }
+          # close first-run wizard / dialogs if any
+          [System.Windows.Forms.SendKeys]::SendWait("{ESC}"); Start-Sleep 2
+          $main = $null; foreach ($w in $root.FindAll([System.Windows.Automation.TreeScope]::Children, $cond)) { if ($w.Current.Name -eq 'FlowVeil') { $main = $w } }
+          if ($main -eq $null -and $wins.Count -gt 0) { $main = $wins[0] }
+          $h = [IntPtr]$main.Current.NativeWindowHandle
+          foreach ($size in @(@(1280,800), @(900,640))) {
+            [W]::MoveWindow($h, 0, 0, $size[0], $size[1], $true) | Out-Null; [W]::SetForegroundWindow($h) | Out-Null; Start-Sleep 3
+            $tag = "$($size[0])x$($size[1])"
+            Shot "01-home-$tag"
+            $radios = $main.FindAll([System.Windows.Automation.TreeScope]::Descendants, (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::RadioButton)))
+            $i = 2
+            foreach ($r in $radios) {
+              $n = $r.Current.Name; if ([string]::IsNullOrWhiteSpace($n)) { $n = "nav$i" }
+              try { $r.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select() } catch { try { $r.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke() } catch {} }
+              Start-Sleep 3
+              $safe = ($n -replace '[^\p{L}\p{Nd}]+','_'); Shot ("{0:D2}-{1}-{2}" -f $i, $safe, $tag); $i++
+              if ($i -gt 14) { break }
+            }
+          }
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: win-screens
+          path: shots/*.png
