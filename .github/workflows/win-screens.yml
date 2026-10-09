@@ -19,7 +19,9 @@ jobs:
         with:
           dotnet-version: 10.0.1xx
       - name: Build
-        run: dotnet publish v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -o FlowVeil
+        run: |
+          dotnet publish v2rayN/v2rayN/v2rayN.csproj -c Release -r win-x64 -p:SelfContained=true -p:InformationalVersion=build-${{ github.run_number }} -o FlowVeil
+          Rename-Item FlowVeil/v2rayN.exe FlowVeil.exe
       - name: Screenshots
         run: |
           try { Set-DisplayResolution -Width 1920 -Height 1080 -Force -ErrorAction Stop } catch { Write-Host "resolution unchanged: $_" }
@@ -36,15 +38,22 @@ jobs:
             $g = [System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
             $bmp.Save("$PWD/../shots/$name.png"); $g.Dispose(); $bmp.Dispose(); Write-Host "shot $name $($b.Width)x$($b.Height)"
           }
-          $p = Start-Process FlowVeil/v2rayN.exe -PassThru
+          $p = Start-Process FlowVeil/FlowVeil.exe -PassThru
           Start-Sleep 25
           Shot "00-start"
           $root = [System.Windows.Automation.AutomationElement]::RootElement
           $cond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $p.Id)
           $wins = $root.FindAll([System.Windows.Automation.TreeScope]::Children, $cond)
           Write-Host "windows: $($wins.Count)"; foreach ($w in $wins) { Write-Host " - '$($w.Current.Name)'" }
-          # close first-run wizard / dialogs if any
-          [System.Windows.Forms.SendKeys]::SendWait("{ESC}"); Start-Sleep 2
+          # close first-run wizard / dialogs if any (buttons "Закрыть", "Пропустить", "Позже")
+          $btnCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
+          for ($k = 0; $k -lt 3; $k++) {
+            foreach ($w in $root.FindAll([System.Windows.Automation.TreeScope]::Children, $cond)) {
+              foreach ($b in $w.FindAll([System.Windows.Automation.TreeScope]::Descendants, $btnCond)) {
+                if (@('Закрыть','Пропустить','Позже','Close') -contains $b.Current.Name) { try { $b.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Write-Host "closed: $($b.Current.Name)"; Start-Sleep 2 } catch {} }
+              }
+            }
+          }
           $main = $null; foreach ($w in $root.FindAll([System.Windows.Automation.TreeScope]::Children, $cond)) { if ($w.Current.Name -eq 'FlowVeil') { $main = $w } }
           if ($main -eq $null -and $wins.Count -gt 0) { $main = $wins[0] }
           $h = [IntPtr]$main.Current.NativeWindowHandle

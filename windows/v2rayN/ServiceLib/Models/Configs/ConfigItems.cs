@@ -100,6 +100,7 @@ public class UIItem
     public EGirdOrientation MainGirdOrientation { get; set; } = EGirdOrientation.Vertical;
     public string? ColorPrimaryName { get; set; }
     public string? CurrentTheme { get; set; }
+    public bool BrandThemeApplied { get; set; }
     public string CurrentLanguage { get; set; }
     public string CurrentFontFamily { get; set; }
     public int CurrentFontSize { get; set; }

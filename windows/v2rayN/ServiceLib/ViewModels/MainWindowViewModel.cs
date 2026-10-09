@@ -749,7 +749,11 @@ public partial class MainWindowViewModel : MyReactiveObject
             var profileItem = await ConfigHandler.GetDefaultServer(_config);
             if (profileItem == null)
             {
-                NoticeManager.Instance.Enqueue(ResUI.CheckServerSettings);
+                // Nothing added yet (first start): the "Add" page explains what to do, an error here only scares people.
+                if ((await AppManager.Instance.ProfileItems(""))?.Count > 0)
+                {
+                    NoticeManager.Instance.Enqueue(ResUI.CheckServerSettings);
+                }
                 return;
             }
             var allResult = await CoreConfigContextBuilder.BuildAll(_config, profileItem);

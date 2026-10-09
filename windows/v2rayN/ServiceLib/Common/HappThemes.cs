@@ -57,8 +57,12 @@ public static class HappThemes
     // Theme names saved by older builds carried this prefix.
     private const string LegacyPrefix = "Happ · ";
 
+    /// <summary>FlowVeil's own look, the same colours as the Android app and the site: deep navy, teal and sky accents.</summary>
+    public const string BrandName = "FlowVeil";
+
     public static readonly IReadOnlyList<HappTheme> All =
     [
+        new(BrandName, "#040C23FF", "#0A1A38FF", "#38BDF8FF", "#00121EFF", "#F2F7FAFF", "#B4C8D3FF", "#3BE0B0FF"),
         new(Prefix + "iOS 27 Glass", "#EEF6FFFF", "#FFFFFFFF", "#007AFFFF", "#FFFFFFFF", "#111827FF", "#64748BFF", "#007AFFFF"),
         new(Prefix + "iOS Fog", "#E5E7EBFF", "#F9FAFBFF", "#111827FF", "#FFFFFFFF", "#111827FF", "#6B7280FF", "#111827FF"),
         new(Prefix + "Liquid Glass", "#F8FAFFFF", "#FFFFFFFF", "#6366F1FF", "#FFFFFFFF", "#111827FF", "#64748BFF", "#06B6D4FF"),
@@ -78,7 +82,10 @@ public static class HappThemes
         new(Prefix + "PlayStation HUD", "#07152EFF", "#0B1833FF", "#0070CCFF", "#FFFFFFFF", "#FFFFFFFF", "#93C5FDFF", "#00A8FFFF"),
     ];
 
-    public const string DefaultName = Prefix + "iOS 27 Glass";
+    public const string DefaultName = BrandName;
+
+    /// <summary>The default of earlier builds: switched once to [DefaultName] (people who picked it on purpose can pick it again).</summary>
+    public const string OldDefaultName = Prefix + "iOS 27 Glass";
 
     public static string Normalize(string name) =>
         name.StartsWith(LegacyPrefix, StringComparison.Ordinal) ? name[LegacyPrefix.Length..] : name;
@@ -87,7 +94,7 @@ public static class HappThemes
         name.IsNullOrEmpty() ? null : All.FirstOrDefault(t => t.Name == Normalize(name!));
 
     /// <summary>The plain dark look, for people who just want "dark": calm blue-black surfaces, one clear blue accent.</summary>
-    public static readonly HappTheme FlowVeilDark = new("FlowVeil Тёмная", "#0E1117FF", "#171B24FF", "#4C8DFFFF", "#FFFFFFFF", "#F3F5F9FF", "#8B93A7FF", "#4C8DFFFF");
+    public static readonly HappTheme FlowVeilDark = new("FlowVeil Тёмная", "#040C23FF", "#0A1A38FF", "#38BDF8FF", "#00121EFF", "#F2F7FAFF", "#B4C8D3FF", "#3BE0B0FF");
 
     /// <summary>The plain light look: soft grey page, white cards, the same blue accent.</summary>
     public static readonly HappTheme FlowVeilLight = new("FlowVeil Светлая", "#F1F4F9FF", "#FFFFFFFF", "#2F6BFFFF", "#FFFFFFFF", "#141821FF", "#6B7385FF", "#2F6BFFFF");

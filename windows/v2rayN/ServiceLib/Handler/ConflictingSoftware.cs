@@ -63,7 +63,9 @@ public static class ConflictingSoftware
         {
             try
             {
-                return Process.GetProcessesByName(name).Length > 0;
+                // FlowVeil itself may run as v2rayN.exe (portable copy): never count our own process.
+                var self = Environment.ProcessId;
+                return Process.GetProcessesByName(name).Any(p => p.Id != self);
             }
             catch
             {
@@ -83,7 +85,7 @@ public static class ConflictingSoftware
             var closedAll = true;
             try
             {
-                foreach (var p in Process.GetProcessesByName(item.Process))
+                foreach (var p in Process.GetProcessesByName(item.Process).Where(p => p.Id != Environment.ProcessId))
                 {
                     try
                     {

@@ -166,7 +166,7 @@ public partial class MainWindow
              .DisposeWith(disposables);
         });
 
-        Title = $"FlowVeil {BuildName()} - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
+        Title = $"FlowVeil · {BuildName()}";
         if (_config.UiItem.AutoHideStartup)
         {
             WindowState = WindowState.Minimized;
@@ -373,7 +373,9 @@ public partial class MainWindow
             .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
             .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
             .FirstOrDefault()?.InformationalVersion;
-        return info.IsNullOrEmpty() ? $"V{Utils.GetVersionInfo()}" : info.Split('+')[0];
+        // CI passes "build-212": shown as "сборка 212". A local build has no number.
+        var v = info.IsNullOrEmpty() ? "" : info.Split('+')[0];
+        return v.StartsWith("build-", StringComparison.Ordinal) ? $"сборка {v["build-".Length..]}" : "локальная сборка";
     }
 
     public ViewModels.HuppHomeViewModel? HomeViewModel => homeView.HomeViewModel;
