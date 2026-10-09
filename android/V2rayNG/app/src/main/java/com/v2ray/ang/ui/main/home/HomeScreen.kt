@@ -155,6 +155,13 @@ fun HomeScreen(
         }
     }
 
+    // Buttons under the cards act on the card on screen. The selected group follows the pager only after it settles,
+    // so tapping right after a swipe (or after something else moved the selection) could test another subscription.
+    val syncToShownCard = {
+        val shown = groups.getOrNull(pagerState.currentPage)?.id
+        if (shown != null && shown != mainViewModel.uiState.value.selectedGroupId) onAction(MainAction.SelectGroup(shown))
+    }
+
     var sheet by remember { mutableStateOf(Sheet.NONE) }
     var sheetGroup by remember { mutableStateOf<GroupMapItem?>(null) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
@@ -367,7 +374,7 @@ fun HomeScreen(
                         }
                     },
                     onRefresh = { context.toastSuccess(R.string.home_toast_updating); onAction(MainAction.UpdateSubscriptions) },
-                    onPing = { if (uiState.isTesting) onAction(MainAction.CancelTesting) else onAction(MainAction.CheckServers) },
+                    onPing = { if (uiState.isTesting) onAction(MainAction.CancelTesting) else { syncToShownCard(); onAction(MainAction.CheckServers) } },
                 )
             }
             if (showSearch) {
