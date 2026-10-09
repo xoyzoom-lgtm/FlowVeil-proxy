@@ -2696,7 +2696,6 @@ public static class ConfigHandler
     /// <returns>0 if successful</returns>
     public static async Task<int> InitBuiltinRouting(Config config, bool blImportAdvancedRules = false)
     {
-        var ver = "V4-";
         var items = await AppManager.Instance.RoutingItems();
 
         //TODO Temporary code to be removed later
@@ -2728,7 +2727,7 @@ public static class ConfigHandler
         //Bypass the mainland
         var item2 = new RoutingItem()
         {
-            Remarks = $"{ver}绕过大陆(Whitelist)",
+            Remarks = RoutingNames.Whitelist,
             Url = string.Empty,
             Sort = maxSort + 1,
         };
@@ -2737,7 +2736,7 @@ public static class ConfigHandler
         //Blacklist
         var item3 = new RoutingItem()
         {
-            Remarks = $"{ver}黑名单(Blacklist)",
+            Remarks = RoutingNames.Blacklist,
             Url = string.Empty,
             Sort = maxSort + 2,
         };
@@ -2746,7 +2745,7 @@ public static class ConfigHandler
         //Global
         var item1 = new RoutingItem()
         {
-            Remarks = $"{ver}全局(Global)",
+            Remarks = RoutingNames.Global,
             Url = string.Empty,
             Sort = maxSort + 3,
         };

@@ -396,7 +396,7 @@ public partial class MainWindow
         else
         {
             var item = await ConfigHandler.GetDefaultRouting(AppManager.Instance.Config);
-            title = item == null ? "Не выбран" : "Свои правила: " + item.Remarks;
+            title = item == null ? "Не выбран" : "Свои правила: " + RoutingNames.Display(item.Remarks);
         }
         if (title != _profileTitle)
         {

@@ -93,7 +93,7 @@ public partial class RoutingSettingViewModel : MyReactiveObject
                 IsActive = item.IsActive,
                 RuleNum = item.RuleNum,
                 Id = item.Id,
-                Remarks = item.Remarks,
+                Remarks = RoutingNames.Display(item.Remarks),
                 Url = item.Url,
                 CustomIcon = item.CustomIcon,
                 CustomRulesetPath4Singbox = item.CustomRulesetPath4Singbox,

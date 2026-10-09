@@ -178,7 +178,7 @@ public partial class StatusBarView
                 foreach (var it in vm.RoutingItems)
                 {
                     var target = it;
-                    routing.Items.Add(Item(it.Remarks, () => vm.SelectedRouting = target, it.Id == vm.SelectedRouting?.Id));
+                    routing.Items.Add(Item(RoutingNames.Display(it.Remarks), () => vm.SelectedRouting = target, it.Id == vm.SelectedRouting?.Id));
                 }
                 trayMenu.Items.Add(routing);
             }
