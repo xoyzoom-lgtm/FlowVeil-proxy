@@ -1261,4 +1261,6 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="update_check_manifest_listed">File is in the release manifest: size and SHA-256 match</string>
     <string name="update_check_manifest_unsigned">There is no separate release signature yet</string>
     <string name="update_check_manifest_none">Release manifest not found</string>
+    <string name="core_err_plain_vless">This server has no encryption (VLESS without TLS or REALITY). The Xray core refuses to start it for your safety: the password and the traffic would go in plain text. Pick another server or ask your provider for servers with TLS or REALITY.</string>
+    <string name="core_err_plain_trojan">This server has no encryption (Trojan without TLS). The Xray core refuses to start it for your safety. Pick another server or ask your provider for servers with TLS.</string>
 </resources>

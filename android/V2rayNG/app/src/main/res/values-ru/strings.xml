@@ -1259,4 +1259,6 @@
     <string name="update_check_manifest_listed">Файл есть в манифесте релиза: размер и SHA-256 сошлись</string>
     <string name="update_check_manifest_unsigned">Отдельной подписи релиза пока нет</string>
     <string name="update_check_manifest_none">Манифест релиза не найден</string>
+    <string name="core_err_plain_vless">Сервер настроен без шифрования (VLESS без TLS и REALITY). Ядро Xray отказывается его запускать ради вашей безопасности: пароль и трафик шли бы открытым текстом. Выберите другой сервер или попросите у провайдера серверы с TLS или REALITY.</string>
+    <string name="core_err_plain_trojan">Сервер настроен без шифрования (Trojan без TLS). Ядро Xray отказывается его запускать ради вашей безопасности. Выберите другой сервер или попросите у провайдера серверы с TLS.</string>
 </resources>

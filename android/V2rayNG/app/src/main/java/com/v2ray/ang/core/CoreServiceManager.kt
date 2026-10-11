@@ -109,8 +109,14 @@ object CoreServiceManager {
             return true
         } catch (e: Exception) {
             SingboxBridge.stopAll()
-            val message = e.message?.takeUnless { it.isBlank() } ?: e.javaClass.simpleName
-            LogUtil.e(AppConfig.TAG, "StartCore-Manager: $message", e)
+            val raw = e.message?.takeUnless { it.isBlank() } ?: e.javaClass.simpleName
+            LogUtil.e(AppConfig.TAG, "StartCore-Manager: $raw", e)
+            // Known core refusals are said in plain words (the log above keeps the original text).
+            val message = when (com.v2ray.ang.net.CoreErrors.classify(raw)) {
+                com.v2ray.ang.net.CoreErrors.Kind.PLAIN_VLESS -> service.getString(com.v2ray.ang.R.string.core_err_plain_vless)
+                com.v2ray.ang.net.CoreErrors.Kind.PLAIN_TROJAN -> service.getString(com.v2ray.ang.R.string.core_err_plain_trojan)
+                com.v2ray.ang.net.CoreErrors.Kind.OTHER -> raw
+            }
             MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, message)
             NotificationManager.cancelNotification()
             return false
