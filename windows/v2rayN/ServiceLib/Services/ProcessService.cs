@@ -123,6 +123,11 @@ public class ProcessService : IDisposable
             if (e.Data.IsNotEmpty())
             {
                 _ = _updateFunc?.Invoke(false, e.Data + Environment.NewLine);
+                var friendly = CoreErrors.Friendly(e.Data);
+                if (friendly != null)
+                {
+                    _ = _updateFunc?.Invoke(true, friendly);
+                }
             }
         }
 
