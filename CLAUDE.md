@@ -46,7 +46,7 @@ Adapted from Uber's description of an efficient agent-driven pipeline; scaled do
 - **Keep cost flat.** Prefer a small targeted fix and a local test over a full rebuild; do not rebuild to find out what a log already says.
 
 ## Third-party skills (owner's standing choice: use them always)
-Run `scripts/install-skills.sh` at the start of every new container (they live in `~/.claude/skills`, pinned commits, nothing copied into this repo).
+The session-start hook in `.claude/settings.json` runs `scripts/install-skills.sh` by itself in every new cloud session (also one started from the phone); if it did not, run it by hand. Run it at the start of every new container (they live in `~/.claude/skills`, pinned commits, nothing copied into this repo).
 - **session-handoff** (sergeyramas): on "продолжим в новом чате" / "хэндофф" or when the context is running out. Adapted here: no `pbcopy`
   (cloud container; print the first message in chat instead), and **do not commit** the note unless the owner says so; save it as `HANDOFF.md`
   outside `docs/` or in the scratchpad. A new chat starts by reading `CLAUDE.md` and the handoff note.

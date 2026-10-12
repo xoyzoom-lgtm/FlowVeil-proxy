@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/install-skills.sh\" >/dev/null 2>&1 || true",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}
