@@ -23,4 +23,10 @@ class CoreErrorsTest {
         assertEquals(Kind.OTHER, CoreErrors.classify(null))
         assertEquals(Kind.OTHER, CoreErrors.classify(""))
     }
+
+    @Test
+    fun describeShowsSettingsButNothingSecret() {
+        assertEquals("security: none, encryption: none, network: xhttp, port: 80", CoreErrors.describe(null, "", "xhttp", "80"))
+        assertEquals("security: tls, encryption: none, network: tcp, port: ?", CoreErrors.describe("tls", "none", null, null))
+    }
 }

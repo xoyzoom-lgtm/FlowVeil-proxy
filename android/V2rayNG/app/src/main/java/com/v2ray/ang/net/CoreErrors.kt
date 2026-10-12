@@ -19,4 +19,12 @@ object CoreErrors {
             else -> Kind.OTHER
         }
     }
+
+    /**
+     * What the server's settings look like, without anything secret (no address, no key, no id): enough to see
+     * why the core refused it, e.g. "security: none, encryption: none, network: xhttp, port: 80".
+     */
+    fun describe(security: String?, encryption: String?, network: String?, port: String?): String =
+        "security: ${security.orEmpty().ifBlank { "none" }}, encryption: ${encryption.orEmpty().ifBlank { "none" }}, " +
+            "network: ${network.orEmpty().ifBlank { "tcp" }}, port: ${port.orEmpty().ifBlank { "?" }}"
 }

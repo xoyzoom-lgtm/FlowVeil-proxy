@@ -408,6 +408,12 @@ class MainActivity : HelperBaseComponentActivity() {
     /** Read once per launch, only while the app is in front: a link the user just copied is offered (never added without a tap). */
     private var clipboardOffered = false
 
+    /** Coming back from another app (where the link was just copied) offers it again: the flag is per visit, not per launch. */
+    override fun onStop() {
+        super.onStop()
+        clipboardOffered = false
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (!hasFocus || clipboardOffered || pendingImport != null || sharedText != null) return

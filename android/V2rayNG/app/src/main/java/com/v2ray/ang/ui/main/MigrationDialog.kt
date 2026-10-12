@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -61,6 +62,18 @@ fun MigrationDialog(
         title = { Text(stringResource(R.string.migrate_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
+                // For someone who knows nothing: four plain steps and one big button, before any choice.
+                Text(stringResource(R.string.migrate_easy_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.migrate_easy_steps), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+                Button(onClick = { onDismiss(); onClipboard() }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+                    Text(stringResource(R.string.migrate_clipboard))
+                }
+                Text(
+                    stringResource(R.string.migrate_easy_nolink),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+                )
                 Text(stringResource(R.string.migrate_from), style = MaterialTheme.typography.titleSmall)
                 MIGRATION_APPS.chunked(3).forEach { rowApps ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
@@ -85,9 +98,6 @@ fun MigrationDialog(
                 Text(stringResource(R.string.migrate_hint), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 16.dp))
                 OutlinedButton(onClick = { qrOpen = true }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                     Text(stringResource(R.string.migrate_qr))
-                }
-                OutlinedButton(onClick = { onDismiss(); onClipboard() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                    Text(stringResource(R.string.migrate_clipboard))
                 }
                 OutlinedButton(onClick = { onDismiss(); onBackup() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     Text(stringResource(R.string.migrate_backup))

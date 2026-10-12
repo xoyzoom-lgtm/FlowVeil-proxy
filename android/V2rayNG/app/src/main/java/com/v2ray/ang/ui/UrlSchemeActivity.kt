@@ -15,6 +15,9 @@ import com.v2ray.ang.util.LogUtil
  * like a paste (downloads the servers and shows the result):
  *  - flowveil://add?url=<encoded link>[&name=<title>]   flowveil://add/<link>   flowveil://install-sub?url=...
  *  - v2rayng://install-sub?url=...  and  v2rayng://install-config?url=...
+ *  - other clients' links (happ://add/…, hiddify://import/…, sing-box://import-remote-profile?url=…, clash://…, karing://…,
+ *    streisand://…, sub://…) and single-server links (vless://…, vmess://…): the text goes on as it is and the main screen
+ *    unwraps it ([com.v2ray.ang.net.ImportSource]) and asks before adding
  */
 class UrlSchemeActivity : BaseComponentActivity() {
 
@@ -49,8 +52,13 @@ class UrlSchemeActivity : BaseComponentActivity() {
         // A code from a FlowVeil computer: the main screen opens the "send a subscription" window.
         if (uri.host.equals("pair", ignoreCase = true)) return uri.toString()
         // The provider's name from &name= rides along as the link's #fragment: the importer names the new subscription with it.
-        val invite = InviteLink.parse(uri.toString()) ?: return null
-        LogUtil.i(AppConfig.TAG, "Import invite link")
-        return invite.link
+        val invite = InviteLink.parse(uri.toString())
+        if (invite != null) {
+            LogUtil.i(AppConfig.TAG, "Import invite link")
+            return invite.link
+        }
+        // Another client's link (happ://add/…, hiddify://import/…, clash://install-config?url=…, a plain vless://…): unwrapped by the main screen.
+        LogUtil.i(AppConfig.TAG, "Import link of another client: ${uri.scheme}")
+        return uri.toString()
     }
 }

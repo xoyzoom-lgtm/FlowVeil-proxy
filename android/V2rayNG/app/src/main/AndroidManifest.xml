@@ -216,6 +216,40 @@
 
                 <data android:scheme="flowveil" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <!-- "Add to <app>" buttons of providers and other clients: the system offers FlowVeil next to them; the text is unwrapped and confirmed before anything is added. -->
+                <data android:scheme="happ" />
+                <data android:scheme="hiddify" />
+                <data android:scheme="sing-box" />
+                <data android:scheme="clash" />
+                <data android:scheme="clashmeta" />
+                <data android:scheme="stash" />
+                <data android:scheme="karing" />
+                <data android:scheme="streisand" />
+                <data android:scheme="v2raytun" />
+                <data android:scheme="v2box" />
+                <data android:scheme="sub" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <!-- Single-server links tapped in a chat or a page. -->
+                <data android:scheme="vless" />
+                <data android:scheme="vmess" />
+                <data android:scheme="trojan" />
+                <data android:scheme="ss" />
+                <data android:scheme="hy2" />
+                <data android:scheme="hysteria2" />
+                <data android:scheme="tuic" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".ui.checkupdate.CheckUpdateActivity"

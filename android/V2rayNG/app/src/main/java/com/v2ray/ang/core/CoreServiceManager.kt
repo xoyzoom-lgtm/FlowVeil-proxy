@@ -112,9 +112,15 @@ object CoreServiceManager {
             val raw = e.message?.takeUnless { it.isBlank() } ?: e.javaClass.simpleName
             LogUtil.e(AppConfig.TAG, "StartCore-Manager: $raw", e)
             // Known core refusals are said in plain words (the log above keeps the original text).
-            val message = when (com.v2ray.ang.net.CoreErrors.classify(raw)) {
-                com.v2ray.ang.net.CoreErrors.Kind.PLAIN_VLESS -> service.getString(com.v2ray.ang.R.string.core_err_plain_vless)
-                com.v2ray.ang.net.CoreErrors.Kind.PLAIN_TROJAN -> service.getString(com.v2ray.ang.R.string.core_err_plain_trojan)
+            val kind = com.v2ray.ang.net.CoreErrors.classify(raw)
+            val details = if (kind == com.v2ray.ang.net.CoreErrors.Kind.OTHER) "" else runCatching {
+                val p = MmkvManager.getSelectServer()?.let { MmkvManager.decodeServerConfig(it) }
+                p?.let { "\n(" + com.v2ray.ang.net.CoreErrors.describe(it.security, it.method, it.network, it.serverPort) + ")" }.orEmpty()
+            }.getOrDefault("")
+            if (details.isNotEmpty()) LogUtil.i(AppConfig.TAG, "StartCore-Manager: server " + details.trim())
+            val message = when (kind) {
+                com.v2ray.ang.net.CoreErrors.Kind.PLAIN_VLESS -> service.getString(com.v2ray.ang.R.string.core_err_plain_vless) + details
+                com.v2ray.ang.net.CoreErrors.Kind.PLAIN_TROJAN -> service.getString(com.v2ray.ang.R.string.core_err_plain_trojan) + details
                 com.v2ray.ang.net.CoreErrors.Kind.OTHER -> raw
             }
             MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, message)

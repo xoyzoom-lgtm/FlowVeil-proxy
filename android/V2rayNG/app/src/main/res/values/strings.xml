@@ -1263,4 +1263,7 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="update_check_manifest_none">Release manifest not found</string>
     <string name="core_err_plain_vless">This server has no encryption (VLESS without TLS or REALITY). The Xray core refuses to start it for your safety: the password and the traffic would go in plain text. Pick another server or ask your provider for servers with TLS or REALITY.</string>
     <string name="core_err_plain_trojan">This server has no encryption (Trojan without TLS). The Xray core refuses to start it for your safety. Pick another server or ask your provider for servers with TLS.</string>
+    <string name="migrate_easy_title">The easiest way (nothing to type)</string>
+    <string name="migrate_easy_steps">1. Open the app where your subscription works now (Happ, INCY, v2rayNG, Hiddify…).\n2. Find "Share" or "Copy link" next to your subscription and tap it.\n3. Open FlowVeil. It shows "Add subscription?" by itself: tap "Add".\n4. Done: the servers appear on the main screen. Tap the big connect button.\n\nNo window? Tap the button below.</string>
+    <string name="migrate_easy_nolink">No such button in the old app? The plain link is with whoever sold you the subscription: in their bot or personal account, it starts with https://. Buttons like "Add to Happ" on a provider page can also offer FlowVeil.</string>
 </resources>
