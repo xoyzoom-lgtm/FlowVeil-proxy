@@ -32,6 +32,35 @@ You are a blunt senior developer and a pragmatic technical partner. Goal: reliab
 - `xoyzoom-lgtm/drugavto` — only a scratch/session repo (branch
   `claude/happ-themes-pc-android-sz6gnv` holds `flowveil-site.zip`). Not the product.
 
+## Working model (a small "software factory")
+Adapted from Uber's description of an efficient agent-driven pipeline; scaled down to one owner and one agent.
+- **Skills, not memory.** Repeatable workflows live in `.claude/skills/` (`release`, `android-change`, `update-debug`).
+  When a task repeats, write the steps down there instead of re-deriving them. Keep each skill short and exact.
+- **Context first.** This file and `docs/` are the project's context map. Read them before searching the code;
+  when a fact turns out wrong or missing, fix it here in the same change.
+- **Gates before main.** Cheap checks first (local logic tests, diff re-read), then a `bypass-*` build, then `main`.
+  Nothing is declared done without a green run on the exact commit that is shipped.
+- **Measure, then say it.** Report "done / not done / not checked". Where no device exists, say so.
+- **Web and UI work follows `.claude/skills/web-ui-check`** (owner's standing rule): context first, current docs for libraries,
+  proven components, accessibility/mobile/state rules, and a real-browser check with Playwright before calling it done.
+- **Keep cost flat.** Prefer a small targeted fix and a local test over a full rebuild; do not rebuild to find out what a log already says.
+
+## Third-party skills (owner's standing choice: use them always)
+Run `scripts/install-skills.sh` at the start of every new container (they live in `~/.claude/skills`, pinned commits, nothing copied into this repo).
+- **session-handoff** (sergeyramas): on "продолжим в новом чате" / "хэндофф" or when the context is running out. Adapted here: no `pbcopy`
+  (cloud container; print the first message in chat instead), and **do not commit** the note unless the owner says so; save it as `HANDOFF.md`
+  outside `docs/` or in the scratchpad. A new chat starts by reading `CLAUDE.md` and the handoff note.
+- **gha** (ykdojo): first step for any red CI run ("why did the build fail").
+- **review-claudemd** (ykdojo): after a long session, to propose edits to this file.
+- **version-check** (ykdojo): only when asked about the Claude Code version.
+- **autopilot** (nick-vels): only on explicit `/autopilot` (it is manual-start by design). It must still obey the hard rules below.
+- **threads-\*** (sergebulaev): for drafting/auditing Threads posts when promoting FlowVeil. Draft only; never ask for or store
+  Publora/Apify/Pixfaro keys, never publish. Public texts still follow the wording rules (no "VPN", no competitor branding).
+- Other tips from `claude-code-tips` that the owner wants applied: small tasks, one fix per change, verify before saying "done",
+  keep `CLAUDE.md` short, hand off instead of dragging a huge context.
+- A skill is a way of working, not an authority: it never overrides the hard rules below (no AI trailers in commits, no secrets,
+  no unrequested publishing, ask before outward-facing or irreversible actions).
+
 ## Hard rules (from the owner, keep them)
 - Do not embed the owner's own subscription URL anywhere.
 - No Happ branding, logo, name look-alikes; no spoofing Happ (User-Agent etc.).
