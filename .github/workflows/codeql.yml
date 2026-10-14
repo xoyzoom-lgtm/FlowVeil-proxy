@@ -26,7 +26,7 @@ jobs:
         if: matrix.language == 'csharp'
         with:
           global-json-file: windows/v2rayN/global.json
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.language == 'csharp' && 'manual' || 'none' }}
@@ -34,6 +34,6 @@ jobs:
         if: matrix.language == 'csharp'
         working-directory: windows/v2rayN
         run: dotnet build ServiceLib/ServiceLib.csproj -c Release -p:EnableWindowsTargeting=true
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
         with:
           category: /language:${{ matrix.language }}
