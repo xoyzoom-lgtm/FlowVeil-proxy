@@ -1264,4 +1264,21 @@
     <string name="migrate_easy_title">Самый простой способ (ничего вводить не нужно)</string>
     <string name="migrate_easy_steps">1. Откройте приложение, где у вас сейчас работает подписка (Happ, INCY, v2rayNG, Hiddify…).\n2. Найдите рядом с подпиской «Поделиться» или «Скопировать ссылку» и нажмите.\n3. Откройте FlowVeil. Он сам покажет окно «Добавить подписку?»: нажмите «Добавить».\n4. Готово: серверы появятся на главном экране. Нажмите большую кнопку подключения.\n\nОкна нет? Нажмите кнопку ниже.</string>
     <string name="migrate_easy_nolink">Нет такой кнопки в старом приложении? Обычная ссылка есть у того, у кого вы купили подписку: в его боте или личном кабинете, она начинается с https://. Кнопки вроде «Добавить в Happ» на странице провайдера тоже могут предложить FlowVeil.</string>
+    <string name="ping_title">Пинг</string>
+    <string name="ping_how">Как проверять</string>
+    <string name="ping_method_proxy">Через сервер (точно)</string>
+    <string name="ping_method_proxy_short">через сервер</string>
+    <string name="ping_method_proxy_hint">Настоящий запрос через сервер. Самый точный способ: видно, что сервер действительно работает.</string>
+    <string name="ping_method_tcp_hint">Только подключение к адресу сервера. Быстро, но не проверяет, что через сервер есть интернет.</string>
+    <string name="ping_method_icmp_hint">Обычный ping. Многие серверы на него не отвечают, и это не значит, что они не работают.</string>
+    <string name="ping_url">Адрес проверки</string>
+    <string name="ping_url_custom">Свой</string>
+    <string name="ping_url_bad">Нужен адрес вида https://…</string>
+    <string name="ping_timeout">Считать нерабочим, если дольше</string>
+    <string name="ping_seconds">%1$d с</string>
+    <string name="ping_show">Показывать в списке</string>
+    <string name="ping_show_ms">Миллисекунды</string>
+    <string name="ping_show_icon">Значок</string>
+    <string name="ping_check_now">Проверить сейчас</string>
+    <string name="ping_summary">Пинг: %1$s · %2$d с</string>
 </resources>

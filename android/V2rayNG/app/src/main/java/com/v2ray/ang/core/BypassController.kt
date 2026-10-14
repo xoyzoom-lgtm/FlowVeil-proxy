@@ -22,6 +22,7 @@ import com.v2ray.ang.helper.MessageHelper
 import com.v2ray.ang.net.BypassData
 import com.v2ray.ang.net.BypassHistoryLogic
 import com.v2ray.ang.net.BypassLevel
+import com.v2ray.ang.net.BypassRules
 import com.v2ray.ang.net.BypassSearch
 import com.v2ray.ang.net.BypassSnapshot
 import com.v2ray.ang.net.AbandonableCalls
@@ -306,6 +307,8 @@ object BypassController {
 
     /** Checks right after the phone moved to the mobile network (called from the network event). */
     private suspend fun quickCheckOnCellular() {
+        // A server the user picked a moment ago is his choice: seen before anything is searched.
+        detectUserChoice()
         if (!CoreServiceManager.isRunning() || !applies()) return
         if (CoreServiceManager.measureCurrentDelay(whitelist = true) >= 0L) return
         // No second look after a pause: the diagnosis in handleFailure is the confirmation, and every second counts here.
@@ -1121,8 +1124,13 @@ object BypassController {
             finishReturn(service, origin, replaced = false)
             return true
         }
-        // The old server did not hold: back to the bypass server that worked.
-        WhitelistBypass.active?.let { if (it != current) ourSwitch(it) }
+        // The old server did not hold: held back for a while (no new try every few minutes that breaks the traffic),
+        // and back to the bypass server that worked, never left on the one that does not.
+        if (verdict.outcome == Outcome.FAIL) WhitelistBypass.markBad(origin)
+        BypassRules.backAfterFailedReturn(WhitelistBypass.active, current, CoreServiceManager.currentServerGuid())?.let {
+            BypassLog.add("the old server did not hold: back to ${serverName(it)}")
+            ourSwitch(it)
+        }
         return false
     }
 
@@ -1159,10 +1167,9 @@ object BypassController {
 
     /** The user picked another server while we were on a bypass one: stop managing until the network changes. */
     fun detectUserChoice() {
-        if (switching) return
         val active = WhitelistBypass.active ?: return
         val current = CoreServiceManager.currentServerGuid()
-        if (current != null && current != active) {
+        if (BypassRules.isUserChoice(current, active, lastOurs, switching)) {
             BypassLog.add("the user picked another server, the episode is over")
             WhitelistBypass.clearState()
             userOverride = true

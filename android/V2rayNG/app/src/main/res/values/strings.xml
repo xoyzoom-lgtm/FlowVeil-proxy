@@ -1266,4 +1266,21 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="migrate_easy_title">The easiest way (nothing to type)</string>
     <string name="migrate_easy_steps">1. Open the app where your subscription works now (Happ, INCY, v2rayNG, Hiddify…).\n2. Find "Share" or "Copy link" next to your subscription and tap it.\n3. Open FlowVeil. It shows "Add subscription?" by itself: tap "Add".\n4. Done: the servers appear on the main screen. Tap the big connect button.\n\nNo window? Tap the button below.</string>
     <string name="migrate_easy_nolink">No such button in the old app? The plain link is with whoever sold you the subscription: in their bot or personal account, it starts with https://. Buttons like "Add to Happ" on a provider page can also offer FlowVeil.</string>
+    <string name="ping_title">Ping</string>
+    <string name="ping_how">How to check</string>
+    <string name="ping_method_proxy">Through the server (exact)</string>
+    <string name="ping_method_proxy_short">through the server</string>
+    <string name="ping_method_proxy_hint">A real request through the server. The most exact: it shows the server really works.</string>
+    <string name="ping_method_tcp_hint">Only a connection to the server address. Quick, but it does not check that the internet works through the server.</string>
+    <string name="ping_method_icmp_hint">The ordinary ping. Many servers do not answer it, which does not mean they do not work.</string>
+    <string name="ping_url">Test address</string>
+    <string name="ping_url_custom">Custom</string>
+    <string name="ping_url_bad">An address like https://… is needed</string>
+    <string name="ping_timeout">Count as not working if slower than</string>
+    <string name="ping_seconds">%1$d s</string>
+    <string name="ping_show">Show in the list</string>
+    <string name="ping_show_ms">Milliseconds</string>
+    <string name="ping_show_icon">Icon</string>
+    <string name="ping_check_now">Check now</string>
+    <string name="ping_summary">Ping: %1$s · %2$d s</string>
 </resources>

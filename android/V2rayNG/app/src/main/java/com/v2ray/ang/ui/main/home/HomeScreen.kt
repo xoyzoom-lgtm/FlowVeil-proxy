@@ -167,6 +167,7 @@ fun HomeScreen(
     var showSearch by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var shareTarget by remember { mutableStateOf<Pair<String, com.v2ray.ang.dto.entities.ProfileItem>?>(null) }
+    var pingSheet by remember { mutableStateOf(false) }
     var showRemoveConfirm by rememberSaveable(stateSaver = ServerDeleteTarget.Saver) { mutableStateOf<ServerDeleteTarget?>(null) }
     var showDelDuplicate by remember { mutableStateOf(false) }
     var showDelInvalid by remember { mutableStateOf(false) }
@@ -237,6 +238,12 @@ fun HomeScreen(
             message = stringResource(R.string.confirm_delete_subscription),
             onConfirm = { deleteSubId = null; onAction(MainAction.RemoveSubscription(subId)) },
             onDismiss = { deleteSubId = null },
+        )
+    }
+    if (pingSheet) {
+        PingSheet(
+            onCheckNow = { syncToShownCard(); onAction(MainAction.CheckServers) },
+            onDismiss = { pingSheet = false },
         )
     }
     shareTarget?.let { (guid, profile) ->
@@ -369,6 +376,8 @@ fun HomeScreen(
                     },
                     onRefresh = { context.toastSuccess(R.string.home_toast_updating); onAction(MainAction.UpdateSubscriptions) },
                     onPing = { if (uiState.isTesting) onAction(MainAction.CancelTesting) else { syncToShownCard(); onAction(MainAction.CheckServers) } },
+                    pingLabel = pingSummary(),
+                    onPingSettings = { pingSheet = true },
                 )
             }
             if (showSearch) {

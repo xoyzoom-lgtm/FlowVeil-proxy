@@ -41,7 +41,11 @@ class NetDiagnosisTest {
     }
 
     @Test
-    fun aMinorityThatAnswersIsContradictory() = assertEquals(LinkDiagnosis.UNSURE, d(domesticUp, hosts(up, up, down, down, down)))
+    fun aMinorityThatAnswersIsAPartialWhitelistOnlyWithTheSwitchOn() {
+        // Two captive-portal checks of five let through by the operator: a partial whitelist, not a contradiction.
+        assertEquals(LinkDiagnosis.WHITELIST, d(domesticUp, hosts(up, up, down, down, down), partial = true))
+        assertEquals(LinkDiagnosis.UNSURE, d(domesticUp, hosts(up, up, down, down, down), partial = false))
+    }
 
     @Test
     fun foreignAnswersButDomesticDoesNotIsUnsureNotAWhitelist() {

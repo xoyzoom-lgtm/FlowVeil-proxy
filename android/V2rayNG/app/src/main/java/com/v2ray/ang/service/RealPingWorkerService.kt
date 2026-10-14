@@ -8,6 +8,8 @@ import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isComplexType
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.PingPrefs
+import com.v2ray.ang.net.PingChoice
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SpeedtestManager
 import kotlinx.coroutines.CancellationException
@@ -56,10 +58,15 @@ class RealPingWorkerService(
     private val onlyTcp: Boolean = false,
     private val onEvent: (RealPingEvent) -> Unit = {}
 ) {
+    /** The way the user chose in the "Ping" sheet (an explicit TCP request from the caller wins). */
+    private val method = if (onlyTcp) PingChoice.Method.TCP else PingPrefs.method()
+    private val timeoutSeconds = PingPrefs.timeoutSeconds()
+    private val quick = method != PingChoice.Method.PROXY
+
     private val job = SupervisorJob()
     // Too many parallel handshakes choke mobile networks and make healthy servers time out.
-    private val concurrency = if (onlyTcp) SettingsManager.getRealPingConcurrency() else SettingsManager.getRealPingConcurrency().coerceAtMost(8)
-    private val dispatcher = Executors.newFixedThreadPool(if (onlyTcp) concurrency * 2 else concurrency).asCoroutineDispatcher()
+    private val concurrency = if (quick) SettingsManager.getRealPingConcurrency() else SettingsManager.getRealPingConcurrency().coerceAtMost(8)
+    private val dispatcher = Executors.newFixedThreadPool(if (quick) concurrency * 2 else concurrency).asCoroutineDispatcher()
     private val scope = CoroutineScope(job + dispatcher + CoroutineName("RealPingBatchWorker"))
 
     private val runningCount = AtomicInteger(0)
@@ -67,14 +74,19 @@ class RealPingWorkerService(
 
     fun start() {
         // Ordinary servers first: the slow one-by-one JSON checks must not hold up the quick ones.
-        val ordered = if (onlyTcp) guids else guids.sortedBy { SpeedtestConfig.limiterType(it) == EConfigType.CUSTOM }
+        val ordered = if (quick) guids else guids.sortedBy { SpeedtestConfig.limiterType(it) == EConfigType.CUSTOM }
         val jobs = ordered.map { guid ->
             totalCount.incrementAndGet()
             scope.launch {
                 runningCount.incrementAndGet()
                 try {
                     val result = try {
-                        if (onlyTcp) startTcping(guid) else startRealPing(guid)
+                        val raw = when (method) {
+                            PingChoice.Method.PROXY -> startRealPing(guid)
+                            PingChoice.Method.TCP -> startTcping(guid)
+                            PingChoice.Method.ICMP -> startIcmp(guid)
+                        }
+                        PingChoice.applyTimeout(raw, timeoutSeconds)
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Throwable) {
@@ -139,11 +151,24 @@ class RealPingWorkerService(
         ) {
             val url = config.server.orEmpty()
             val port = config.serverPort.orEmpty().toInt()
-            val tcpTime = SpeedtestManager.socketConnectTime(url, port, 3000)
+            val tcpTime = SpeedtestManager.socketConnectTime(url, port, (timeoutSeconds * 1000).coerceIn(1000, 15_000))
 
             return tcpTime
         }
 
         return retFailure
+    }
+
+    /** The system ping, one packet; -1 when the server does not answer it (many do not) or the address is unknown. */
+    private fun startIcmp(guid: String): Long {
+        val host = MmkvManager.decodeServerConfig(guid)?.server?.trim()?.removePrefix("[")?.removeSuffix("]")
+        if (host.isNullOrEmpty() || host.any { it.isWhitespace() || it == ';' || it == '&' || it == '|' }) return -1L
+        return runCatching {
+            val wait = timeoutSeconds.coerceIn(1, 15)
+            val p = ProcessBuilder("ping", "-c", "1", "-W", wait.toString(), host).redirectErrorStream(true).start()
+            val out = p.inputStream.bufferedReader().use { r -> r.readText() }
+            if (!p.waitFor(wait + 2L, java.util.concurrent.TimeUnit.SECONDS)) p.destroy()
+            PingChoice.icmpTime(out)
+        }.getOrDefault(-1L)
     }
 }

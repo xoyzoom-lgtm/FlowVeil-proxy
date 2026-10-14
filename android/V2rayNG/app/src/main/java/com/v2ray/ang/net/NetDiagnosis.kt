@@ -25,7 +25,7 @@ data class DiagnosisResult(val diagnosis: LinkDiagnosis, val why: String)
  *  - nothing answers at all: no network;
  *  - most foreign hosts answer over HTTP: the open internet works, the server is the problem;
  *  - no foreign host answers but a domestic one does: a whitelist (also when TCP connects and only the HTTP/TLS part is dropped);
- *  - exactly one foreign host answers while the switch is on and a domestic one answers: a partial whitelist;
+ *  - fewer than half of the foreign hosts answer while the switch is on and a domestic one answers: a partial whitelist;
  *  - anything else is contradictory: UNSURE.
  */
 object NetDiagnosis {
@@ -40,7 +40,9 @@ object NetDiagnosis {
             n > 0 && http * 2 > n -> DiagnosisResult(LinkDiagnosis.SERVER_DOWN, tag)
             !domesticOk -> DiagnosisResult(LinkDiagnosis.UNSURE, "$tag (foreign partly up, domestic down)")
             http == 0 -> DiagnosisResult(LinkDiagnosis.WHITELIST, if (tcp * 2 > n) "$tag (TCP connects, HTTP dropped)" else tag)
-            http == 1 && partialWhitelistRule -> DiagnosisResult(LinkDiagnosis.WHITELIST, "$tag (partial whitelist)")
+            // A minority of the foreign references answers (operators often let a few captive-portal checks through):
+            // with the switch on and the phone on the mobile network that is a partial whitelist, not a contradiction.
+            http * 2 < n && partialWhitelistRule -> DiagnosisResult(LinkDiagnosis.WHITELIST, "$tag (partial whitelist)")
             else -> DiagnosisResult(LinkDiagnosis.UNSURE, "$tag (contradictory)")
         }
     }

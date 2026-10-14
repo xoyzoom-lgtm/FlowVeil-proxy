@@ -130,20 +130,38 @@ internal fun ServersHeader(
     onSearch: () -> Unit,
     onRefresh: () -> Unit,
     onPing: () -> Unit,
+    pingLabel: String? = null,
+    onPingSettings: (() -> Unit)? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 16.dp, top = 18.dp, bottom = 10.dp)
     ) {
-        Text(
-            title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            // How the servers are pinged, one tap away (the "Ping" sheet).
+            if (pingLabel != null && onPingSettings != null) {
+                Text(
+                    "$pingLabel ▾",
+                    color = homeAccent(),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(onClick = onPingSettings)
+                        .padding(vertical = 2.dp)
+                )
+            }
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             RoundAction(R.drawable.ic_search_24dp, stringResource(R.string.home_search), onSearch, active = searchOn)
             RoundAction(R.drawable.ic_refresh_24dp, stringResource(R.string.home_refresh), onRefresh, spinning = refreshing)
@@ -213,6 +231,8 @@ internal fun PingTag(delayMillis: Long, alive: Boolean?, availabilityOnly: Boole
     val text = when {
         dead -> "—"
         aliveOnly -> "✓"
+        // "Show as an icon" in the Ping sheet: a coloured dot instead of the number.
+        delayMillis > 0L && com.v2ray.ang.handler.PingPrefs.showIconState.value -> "●"
         delayMillis > 0L -> stringResource(R.string.server_test_delay_value, delayMillis)
         else -> return
     }

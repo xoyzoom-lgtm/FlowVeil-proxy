@@ -231,6 +231,7 @@ fun SettingsScreen(
     var showBypassPicker by remember { mutableStateOf(false) }
     var showBatteryDialog by remember { mutableStateOf(false) }
     var showBypassLog by remember { mutableStateOf(false) }
+    var showPingSheet by remember { mutableStateOf(false) }
     var noiseEnabled by rememberMmkvBool(AppConfig.PREF_NOISE_ENABLED, false)
     var noiseRand by rememberMmkvString(AppConfig.PREF_NOISE_RAND, "10-20")
     var noiseDelay by rememberMmkvString(AppConfig.PREF_NOISE_DELAY, "10-16")
@@ -336,6 +337,7 @@ fun SettingsScreen(
                 .verticalScrollbar(scrollState)
                 .verticalScroll(scrollState)
         ) {
+            if (showPingSheet) com.v2ray.ang.ui.main.home.PingSheet(onCheckNow = null, onDismiss = { showPingSheet = false })
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_sections))
             SettingsGroupCard {
                 SettingsSections.filter { devMode || it !in DevOnlySections }.forEach { section ->
@@ -352,6 +354,11 @@ fun SettingsScreen(
 
             PreferenceGroupHeader(title = stringResource(R.string.settings_section_connection))
             SettingsGroupCard {
+                SettingsMenuItem(
+                    title = stringResource(R.string.ping_title),
+                    subtitle = com.v2ray.ang.ui.main.home.pingSummary(),
+                    onClick = { showPingSheet = true }
+                )
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_noise),
                     summary = stringResource(R.string.summary_pref_noise),

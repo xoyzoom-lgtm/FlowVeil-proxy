@@ -280,7 +280,8 @@ object CoreServiceManager {
     /** Delay through the running core, or -1 when the check fails. Used by [ConnectionWatchdog]. */
     internal fun measureCurrentDelay(whitelist: Boolean = false): Long {
         if (!isRunning() || isReloading) return 0L
-        val urls = if (whitelist) listOf(PingUrls.WHITELIST) else listOf(SettingsManager.getDelayTestUrl(), SettingsManager.getDelayTestUrl(true))
+        // On a restricted network one unanswered address must not make a working server look dead (see BypassRules.LIVE_CHECK_URLS).
+        val urls = if (whitelist) com.v2ray.ang.net.BypassRules.LIVE_CHECK_URLS else listOf(SettingsManager.getDelayTestUrl(), SettingsManager.getDelayTestUrl(true))
         for (url in urls) {
             val time = runCatching { coreController.measureDelay(url) }.getOrDefault(-1L)
             if (time > 0) return time
