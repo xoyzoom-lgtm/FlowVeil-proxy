@@ -1,6 +1,8 @@
 package com.v2ray.ang.net
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -45,5 +47,39 @@ class PingChoiceTest {
         assertEquals(1L, PingChoice.icmpTime("64 bytes from x: icmp_seq=1 ttl=64 time<1 ms"))
         assertEquals(-1L, PingChoice.icmpTime("1 packets transmitted, 0 received, 100% packet loss"))
         assertEquals(-1L, PingChoice.icmpTime(null))
+    }
+
+    @Test
+    fun newWaysAreRecognised() {
+        assertEquals(PingChoice.Method.TLS, PingChoice.method("tls"))
+        assertEquals(PingChoice.Method.SMART, PingChoice.method("smart"))
+        assertTrue(PingChoice.isQuick(PingChoice.Method.TCP))
+        assertTrue(PingChoice.isQuick(PingChoice.Method.TLS))
+        assertTrue(PingChoice.isQuick(PingChoice.Method.ICMP))
+        assertFalse(PingChoice.isQuick(PingChoice.Method.PROXY))
+        assertFalse(PingChoice.isQuick(PingChoice.Method.SMART))
+    }
+
+    @Test
+    fun udpServersAreNeverJudgedByTcp() {
+        assertFalse(PingChoice.tcpApplicable(udpBased = true, hasAddress = true))
+        assertFalse(PingChoice.tcpApplicable(udpBased = false, hasAddress = false))
+        assertTrue(PingChoice.tcpApplicable(udpBased = false, hasAddress = true))
+    }
+
+    @Test
+    fun aQuickWayThatFailsEverywhereIsRetriedThroughTheServers() {
+        assertTrue(PingChoice.allFailed(listOf(-1L, -1L, 0L)))
+        assertFalse(PingChoice.allFailed(listOf(-1L, 35L, -1L)))
+        // Two servers say too little to blame the way.
+        assertFalse(PingChoice.allFailed(listOf(-1L, -1L)))
+        assertFalse(PingChoice.allFailed(emptyList()))
+    }
+
+    @Test
+    fun bestOfTwoTakesTheFasterWorkingAnswer() {
+        assertEquals(80L, PingChoice.bestOfTwo(120L, 80L))
+        assertEquals(120L, PingChoice.bestOfTwo(120L, -1L))
+        assertEquals(-1L, PingChoice.bestOfTwo(-1L, 0L))
     }
 }

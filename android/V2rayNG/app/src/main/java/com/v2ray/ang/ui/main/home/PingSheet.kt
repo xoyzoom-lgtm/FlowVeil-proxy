@@ -46,7 +46,9 @@ import com.v2ray.ang.net.PingChoice
 fun pingSummary(): String {
     val m = when (PingPrefs.method()) {
         PingChoice.Method.PROXY -> stringResource(R.string.ping_method_proxy_short)
+        PingChoice.Method.SMART -> stringResource(R.string.ping_method_smart_short)
         PingChoice.Method.TCP -> "TCP"
+        PingChoice.Method.TLS -> "TLS"
         PingChoice.Method.ICMP -> "ICMP"
     }
     return stringResource(R.string.ping_summary, m, PingPrefs.timeoutSeconds())
@@ -61,6 +63,7 @@ fun pingSummary(): String {
 fun PingSheet(onCheckNow: (() -> Unit)?, onDismiss: () -> Unit) {
     var method by remember { mutableStateOf(PingPrefs.method()) }
     var timeout by remember { mutableStateOf(PingPrefs.timeoutSeconds()) }
+    var two by remember { mutableStateOf(PingPrefs.bestOfTwo()) }
     var url by remember { mutableStateOf(PingPrefs.url()) }
     var custom by remember { mutableStateOf(PingChoice.URL_PRESETS.none { it.url == PingPrefs.url() }) }
     var customText by remember { mutableStateOf(if (custom) PingPrefs.url() else "") }
@@ -86,14 +89,33 @@ fun PingSheet(onCheckNow: (() -> Unit)?, onDismiss: () -> Unit) {
             MethodCard(stringResource(R.string.ping_method_proxy), stringResource(R.string.ping_method_proxy_hint), method == PingChoice.Method.PROXY) {
                 method = PingChoice.Method.PROXY; PingPrefs.setMethod(method)
             }
+            MethodCard(stringResource(R.string.ping_method_smart), stringResource(R.string.ping_method_smart_hint), method == PingChoice.Method.SMART) {
+                method = PingChoice.Method.SMART; PingPrefs.setMethod(method)
+            }
             MethodCard("TCP", stringResource(R.string.ping_method_tcp_hint), method == PingChoice.Method.TCP) {
                 method = PingChoice.Method.TCP; PingPrefs.setMethod(method)
+            }
+            MethodCard("TLS", stringResource(R.string.ping_method_tls_hint), method == PingChoice.Method.TLS) {
+                method = PingChoice.Method.TLS; PingPrefs.setMethod(method)
             }
             MethodCard("ICMP", stringResource(R.string.ping_method_icmp_hint), method == PingChoice.Method.ICMP) {
                 method = PingChoice.Method.ICMP; PingPrefs.setMethod(method)
             }
 
-            if (method == PingChoice.Method.PROXY) {
+            if (method == PingChoice.Method.PROXY || method == PingChoice.Method.SMART) {
+                Section(stringResource(R.string.ping_mode))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = !two, onClick = { two = false; PingPrefs.setBestOfTwo(false) }, label = { Text(stringResource(R.string.ping_mode_default)) })
+                    FilterChip(selected = two, onClick = { two = true; PingPrefs.setBestOfTwo(true) }, label = { Text(stringResource(R.string.ping_mode_double)) })
+                }
+                Text(
+                    stringResource(if (two) R.string.ping_mode_double_hint else R.string.ping_mode_default_hint),
+                    fontSize = 12.sp, lineHeight = 17.sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
+            }
+
+            if (method == PingChoice.Method.PROXY || method == PingChoice.Method.SMART) {
                 Section(stringResource(R.string.ping_url))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PingChoice.URL_PRESETS.forEach { p ->

@@ -1269,7 +1269,7 @@
     <string name="ping_method_proxy">Через сервер (точно)</string>
     <string name="ping_method_proxy_short">через сервер</string>
     <string name="ping_method_proxy_hint">Настоящий запрос через сервер. Самый точный способ: видно, что сервер действительно работает.</string>
-    <string name="ping_method_tcp_hint">Только подключение к адресу сервера. Быстро, но не проверяет, что через сервер есть интернет.</string>
+    <string name="ping_method_tcp_hint">Только подключение к адресу сервера (пробует все адреса и при нужде ещё раз). Быстро, но не проверяет, что через сервер есть интернет. Серверы на UDP (Hysteria2, TUIC) всегда проверяются через сервер.</string>
     <string name="ping_method_icmp_hint">Обычный ping. Многие серверы на него не отвечают, и это не значит, что они не работают.</string>
     <string name="ping_url">Адрес проверки</string>
     <string name="ping_url_custom">Свой</string>
@@ -1281,4 +1281,13 @@
     <string name="ping_show_icon">Значок</string>
     <string name="ping_check_now">Проверить сейчас</string>
     <string name="ping_summary">Пинг: %1$s · %2$d с</string>
+    <string name="ping_method_smart">Умный (TCP, затем через сервер)</string>
+    <string name="ping_method_smart_short">умный</string>
+    <string name="ping_method_smart_hint">Сначала быстрая проверка TCP; точная проверка через сервер только у тех, кто на неё ответил. Быстро на длинных списках и всё равно точно.</string>
+    <string name="ping_method_tls_hint">Подключение и TLS-рукопожатие. Показывает, что порт отвечает как настоящий веб-сервер, а не просто открыт.</string>
+    <string name="ping_mode">Режим (через сервер)</string>
+    <string name="ping_mode_default">Обычный</string>
+    <string name="ping_mode_double">Лучший из двух</string>
+    <string name="ping_mode_default_hint">Один запрос через сервер.</string>
+    <string name="ping_mode_double_hint">Два запроса, считается более быстрый: второй не тратит время на поиск адреса, поэтому число ближе к реальной скорости.</string>
 </resources>

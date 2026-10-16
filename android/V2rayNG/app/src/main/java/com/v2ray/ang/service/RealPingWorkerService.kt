@@ -9,6 +9,7 @@ import com.v2ray.ang.extension.isComplexType
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.PingPrefs
+import com.v2ray.ang.handler.PingProbes
 import com.v2ray.ang.net.PingChoice
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SpeedtestManager
@@ -24,6 +25,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -61,7 +63,9 @@ class RealPingWorkerService(
     /** The way the user chose in the "Ping" sheet (an explicit TCP request from the caller wins). */
     private val method = if (onlyTcp) PingChoice.Method.TCP else PingPrefs.method()
     private val timeoutSeconds = PingPrefs.timeoutSeconds()
-    private val quick = method != PingChoice.Method.PROXY
+    private val double = PingPrefs.bestOfTwo()
+    private val quick = PingChoice.isQuick(method)
+    private val results = ConcurrentHashMap<String, Long>()
 
     private val job = SupervisorJob()
     // Too many parallel handshakes choke mobile networks and make healthy servers time out.
@@ -81,17 +85,14 @@ class RealPingWorkerService(
                 runningCount.incrementAndGet()
                 try {
                     val result = try {
-                        val raw = when (method) {
-                            PingChoice.Method.PROXY -> startRealPing(guid)
-                            PingChoice.Method.TCP -> startTcping(guid)
-                            PingChoice.Method.ICMP -> startIcmp(guid)
-                        }
+                        val raw = measure(guid, method)
                         PingChoice.applyTimeout(raw, timeoutSeconds)
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Throwable) {
                         -1L
                     }
+                    results[guid] = result
                     // Always report, so a failed test never leaves the row without a result.
                     if (scope.isActive) {
                         onEvent(RealPingEvent.Result(guid, result))
@@ -111,6 +112,17 @@ class RealPingWorkerService(
         scope.launch {
             try {
                 joinAll(*jobs.toTypedArray())
+                // A quick way that failed for every server says the way does not work on this network, not that all servers
+                // are dead: the list is checked again through the servers (once), so it never ends as one red column.
+                if (isActive && quick && PingChoice.allFailed(results.values)) {
+                    val again = guids.map { guid ->
+                        scope.launch {
+                            val r = runCatching { PingChoice.applyTimeout(startRealPing(guid), timeoutSeconds) }.getOrDefault(-1L)
+                            if (scope.isActive) onEvent(RealPingEvent.Result(guid, r))
+                        }
+                    }
+                    joinAll(*again.toTypedArray())
+                }
                 if (isActive) {
                     onEvent(RealPingEvent.Finish("0"))
                 }
@@ -137,38 +149,32 @@ class RealPingWorkerService(
     private suspend fun startRealPing(guid: String): Long =
         RealPingExecutionLimiter.run(SpeedtestConfig.limiterType(guid)) { SpeedtestConfig.measure(context, guid) }
 
-    private fun startTcping(guid: String): Long {
-        val retFailure = -1L
-
-        val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
-        if (!config.configType.isComplexType()
-            && config.configType != EConfigType.HYSTERIA2
-            && config.configType != EConfigType.TUIC
-            && config.configType != EConfigType.WIREGUARD
-            && config.alpn?.split(',')?.all { it.trim().startsWith("h3") } != true
-            && config.server.isNotNullEmpty()
-            && config.serverPort?.toIntOrNull() != null
-        ) {
-            val url = config.server.orEmpty()
-            val port = config.serverPort.orEmpty().toInt()
-            val tcpTime = SpeedtestManager.socketConnectTime(url, port, (timeoutSeconds * 1000).coerceIn(1000, 15_000))
-
-            return tcpTime
+    /** One server by the chosen way; servers that cannot be reached by TCP (UDP-based, groups) always go through the core. */
+    private suspend fun measure(guid: String, m: PingChoice.Method): Long {
+        val config = MmkvManager.decodeServerConfig(guid) ?: return -1L
+        val port = config.serverPort?.toIntOrNull()
+        val host = config.server?.trim().orEmpty()
+        val udp = config.configType == EConfigType.HYSTERIA2 || config.configType == EConfigType.TUIC ||
+            config.configType == EConfigType.WIREGUARD || config.configType.isComplexType() ||
+            config.alpn?.split(',')?.all { it.trim().startsWith("h3") } == true
+        val tcpOk = PingChoice.tcpApplicable(udp, host.isNotEmpty() && port != null)
+        val timeoutMs = (timeoutSeconds * 1000L).coerceIn(1000L, 15_000L)
+        return when {
+            m == PingChoice.Method.PROXY || !tcpOk -> proxy(guid)
+            m == PingChoice.Method.TCP -> PingProbes.tcp(host, port!!, timeoutMs)
+            m == PingChoice.Method.TLS -> {
+                val tls = config.security == "tls" || config.security == "reality"
+                if (tls) PingProbes.tls(host, port!!, config.sni, timeoutMs) else PingProbes.tcp(host, port!!, timeoutMs)
+            }
+            m == PingChoice.Method.ICMP -> PingProbes.icmp(host, timeoutSeconds)
+            else -> { // SMART: TCP first, only a server that answered it gets the real request
+                if (PingProbes.tcp(host, port!!, timeoutMs) > 0) proxy(guid) else -1L
+            }
         }
-
-        return retFailure
     }
 
-    /** The system ping, one packet; -1 when the server does not answer it (many do not) or the address is unknown. */
-    private fun startIcmp(guid: String): Long {
-        val host = MmkvManager.decodeServerConfig(guid)?.server?.trim()?.removePrefix("[")?.removeSuffix("]")
-        if (host.isNullOrEmpty() || host.any { it.isWhitespace() || it == ';' || it == '&' || it == '|' }) return -1L
-        return runCatching {
-            val wait = timeoutSeconds.coerceIn(1, 15)
-            val p = ProcessBuilder("ping", "-c", "1", "-W", wait.toString(), host).redirectErrorStream(true).start()
-            val out = p.inputStream.bufferedReader().use { r -> r.readText() }
-            if (!p.waitFor(wait + 2L, java.util.concurrent.TimeUnit.SECONDS)) p.destroy()
-            PingChoice.icmpTime(out)
-        }.getOrDefault(-1L)
+    private suspend fun proxy(guid: String): Long {
+        val first = startRealPing(guid)
+        return if (double) PingChoice.bestOfTwo(first, startRealPing(guid)) else first
     }
 }

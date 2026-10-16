@@ -1271,7 +1271,7 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="ping_method_proxy">Through the server (exact)</string>
     <string name="ping_method_proxy_short">through the server</string>
     <string name="ping_method_proxy_hint">A real request through the server. The most exact: it shows the server really works.</string>
-    <string name="ping_method_tcp_hint">Only a connection to the server address. Quick, but it does not check that the internet works through the server.</string>
+    <string name="ping_method_tcp_hint">Only a connection to the server address (tries every address, once more if needed). Quick, but it does not check that the internet works through the server. Servers on UDP (Hysteria2, TUIC) are always checked through the server.</string>
     <string name="ping_method_icmp_hint">The ordinary ping. Many servers do not answer it, which does not mean they do not work.</string>
     <string name="ping_url">Test address</string>
     <string name="ping_url_custom">Custom</string>
@@ -1283,4 +1283,13 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="ping_show_icon">Icon</string>
     <string name="ping_check_now">Check now</string>
     <string name="ping_summary">Ping: %1$s · %2$d s</string>
+    <string name="ping_method_smart">Smart (TCP, then through the server)</string>
+    <string name="ping_method_smart_short">smart</string>
+    <string name="ping_method_smart_hint">First a quick TCP check; only servers that answer it get the exact check through the server. Fast for long lists and still exact.</string>
+    <string name="ping_method_tls_hint">A connection plus the TLS handshake. Shows the port answers like a real web server, not just that it is open.</string>
+    <string name="ping_mode">Mode (through the server)</string>
+    <string name="ping_mode_default">Default</string>
+    <string name="ping_mode_double">Best of two</string>
+    <string name="ping_mode_default_hint">One request through the server.</string>
+    <string name="ping_mode_double_hint">Two requests, the faster one counts: the second skips the address lookup, so the number is closer to real speed.</string>
 </resources>

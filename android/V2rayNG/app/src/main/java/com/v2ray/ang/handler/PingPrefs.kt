@@ -13,10 +13,16 @@ object PingPrefs {
     const val PREF_METHOD = "pref_ping_method"
     const val PREF_TIMEOUT = "pref_ping_timeout_seconds"
     const val PREF_SHOW_ICON = "pref_ping_show_icon"
+    const val PREF_BEST_OF_TWO = "pref_ping_best_of_two"
 
     fun method(): PingChoice.Method = PingChoice.method(MmkvManager.decodeSettingsString(PREF_METHOD))
 
     fun setMethod(m: PingChoice.Method) = MmkvManager.encodeSettings(PREF_METHOD, m.id)
+
+    /** "Through the server" asks twice and the faster answer counts (the second skips the DNS lookup). */
+    fun bestOfTwo(): Boolean = MmkvManager.decodeSettingsBool(PREF_BEST_OF_TWO, false)
+
+    fun setBestOfTwo(on: Boolean) { MmkvManager.encodeSettings(PREF_BEST_OF_TWO, on) }
 
     fun timeoutSeconds(): Int = PingChoice.timeoutSeconds(MmkvManager.decodeSettingsString(PREF_TIMEOUT))
 
