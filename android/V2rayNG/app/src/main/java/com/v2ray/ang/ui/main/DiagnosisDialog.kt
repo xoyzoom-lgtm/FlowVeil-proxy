@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -43,6 +46,7 @@ import com.v2ray.ang.handler.DiagnosticsRunner
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.net.BatteryGuide
 import com.v2ray.ang.net.DiagCause
+import com.v2ray.ang.net.DiagLights
 import com.v2ray.ang.net.DiagResult
 import com.v2ray.ang.net.DiagStep
 import com.v2ray.ang.net.DiagStepId
@@ -165,6 +169,7 @@ fun DiagnosisDialog(running: Boolean, onUpdateSubscription: () -> Unit, onDismis
         text = {
             Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
                 if (result == null) LinearProgressIndicator(Modifier.fillMaxWidth().padding(bottom = 8.dp))
+                LightsRow(DiagLights.of(steps))
                 steps.filter { it.status != StepStatus.SKIPPED }.forEach { StepRow(it) }
                 val r = result
                 if (r != null) {
@@ -219,6 +224,43 @@ fun DiagnosisDialog(running: Boolean, onUpdateSubscription: () -> Unit, onDismis
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
         containerColor = MaterialTheme.colorScheme.surface,
     )
+}
+
+private fun lightTitle(g: DiagLights.Group): Int = when (g) {
+    DiagLights.Group.NETWORK -> R.string.diag_light_network
+    DiagLights.Group.SUBSCRIPTION -> R.string.diag_light_subscription
+    DiagLights.Group.PROVIDER -> R.string.diag_light_provider
+    DiagLights.Group.SERVER -> R.string.diag_light_server
+}
+
+/** Four lights (network, subscription, the provider's restriction, server): green, amber, red, grey while not checked yet. */
+@Composable
+private fun LightsRow(lights: List<DiagLights.Light>) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+        lights.forEach { light ->
+            val color = when (light.status) {
+                StepStatus.OK -> Color(0xFF22C55E)
+                StepStatus.WARN -> Color(0xFFF59E0B)
+                StepStatus.FAIL -> MaterialTheme.colorScheme.error
+                StepStatus.SKIPPED -> MaterialTheme.colorScheme.outlineVariant
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                androidx.compose.foundation.layout.Box(
+                    Modifier
+                        .size(14.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(color)
+                )
+                Text(
+                    stringResource(lightTitle(light.group)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        }
+    }
 }
 
 @Composable

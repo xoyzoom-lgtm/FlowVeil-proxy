@@ -68,6 +68,8 @@ import com.v2ray.ang.core.LauncherManager
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.BypassOffer
+import com.v2ray.ang.handler.LanShareManager
+import com.v2ray.ang.handler.ModePreset
 import com.v2ray.ang.handler.UpdateNotifier
 import com.v2ray.ang.net.HomeCard
 import com.v2ray.ang.net.ShortName
@@ -91,7 +93,7 @@ import kotlinx.coroutines.launch
 /** How long "connecting" may last before the panel says it failed (counted only while the app is on screen). */
 private const val CONNECT_TIMEOUT_MS = 20_000L
 
-private enum class Sheet { NONE, SUB, ADD, MANUAL, NOTE, SHARE, LOOK }
+private enum class Sheet { NONE, SUB, ADD, MANUAL, NOTE, SHARE, LOOK, SHARENET }
 
 /**
  * New home screen (mockup v4): subscription cards on top, servers below, one fixed bottom panel with the main
@@ -163,6 +165,9 @@ fun HomeScreen(
         if (shown != null && shown != mainViewModel.uiState.value.selectedGroupId) onAction(MainAction.SelectGroup(shown))
     }
 
+    var modeNow by remember { mutableStateOf(ModePreset.current()) }
+    val modeScope = rememberCoroutineScope()
+    var lanState by remember { mutableStateOf(LanShareManager.state()) }
     var sheet by remember { mutableStateOf(Sheet.NONE) }
     var sheetGroup by remember { mutableStateOf<GroupMapItem?>(null) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
@@ -318,6 +323,25 @@ fun HomeScreen(
             ShareSheet(s.url, onCopy = { Utils.setClipboard(context, s.url); context.toastSuccess(R.string.toast_success) }, onDismiss = closeSheet)
         }
         Sheet.LOOK -> sheetGroup?.let { g -> AppearanceSheet(g, now, onDismiss = { sheet = Sheet.SUB }) }
+        Sheet.SHARENET -> ShareNetSheet(
+            state = lanState,
+            onEnable = {
+                modeScope.launch {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { LanShareManager.enable() }
+                    lanState = LanShareManager.state()
+                    if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context)
+                }
+            },
+            onDisable = {
+                modeScope.launch {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { LanShareManager.disable() }
+                    lanState = LanShareManager.state()
+                    if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context)
+                }
+            },
+            onCopy = { uri -> Utils.setClipboard(context, uri); context.toastSuccess(R.string.toast_success) },
+            onDismiss = closeSheet,
+        )
         Sheet.NONE -> Unit
     }
 
@@ -340,6 +364,13 @@ fun HomeScreen(
                 )
             } else {
                 SubscriptionCarousel(groups, pagerState, mainViewModel, activeGroupId, now, onMore = openSub)
+                ModeRow(modeNow) { picked ->
+                    modeNow = picked
+                    modeScope.launch {
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModePreset.apply(context, picked) }
+                        if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context)
+                    }
+                }
                 selectedGroup?.subscription?.announce?.takeIf { it.isNotBlank() }?.let { note ->
                     Text(
                         note,
@@ -630,6 +661,7 @@ fun HomeScreen(
                 onWizard = { showSettings = false; onWizard() },
                 onStats = { showStats = true },
                 onRulesChanged = { if (mainViewModel.uiState.value.isRunning) LauncherManager.restartService(context) },
+                onShareNetwork = { lanState = LanShareManager.state(); showSettings = false; sheet = Sheet.SHARENET },
             )
         }
         androidx.compose.animation.AnimatedVisibility(

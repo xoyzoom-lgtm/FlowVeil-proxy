@@ -28,6 +28,8 @@ object RuleProfiles {
     }
 
     fun apply(context: Context, profile: Profile) {
+        // Choosing a profile by hand ends a home-screen mode ([ModePreset] stores its own choice again after this).
+        MmkvManager.encodeSettings(ModePreset.PREF, "")
         when (profile) {
             Profile.RU_DIRECT -> SettingsManager.resetRoutingRulesetsFromPresets(context, RoutingType.WHITE_RUSSIA)
             Profile.ALL_PROXY -> SettingsManager.resetRoutingRulesetsFromPresets(context, RoutingType.GLOBAL)

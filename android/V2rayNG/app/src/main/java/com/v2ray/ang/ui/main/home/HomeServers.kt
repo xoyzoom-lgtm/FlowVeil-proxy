@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -278,6 +279,8 @@ internal fun ServerRowV4(
     val smart = com.v2ray.ang.handler.MmkvManager.decodeSettingsBool(com.v2ray.ang.AppConfig.PREF_SMART_NAMES, false)
     val (flag, name) = remember(row.remarks, smart) { splitFlag(row.remarks).let { (f, n) -> f to if (smart) com.v2ray.ang.net.ServerName.clean(n) else n } }
     val gaming = remember(row.remarks) { HomeCard.isGaming(row.remarks) }
+    // Jitter and loss are measured for gaming servers only (see LinkQualityStore).
+    val quality = if (gaming) com.v2ray.ang.handler.LinkQualityStore.results.collectAsStateWithLifecycle().value[row.guid] else null
     val shape = RoundedCornerShape(HomeStyle.r(20))
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -330,6 +333,20 @@ internal fun ServerRowV4(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            quality?.let { q ->
+                Text(
+                    when (q.grade) {
+                        com.v2ray.ang.net.LinkQuality.Grade.GREAT -> stringResource(R.string.quality_great, q.pingMs.toInt(), q.jitterMs.toInt(), q.lossPercent)
+                        com.v2ray.ang.net.LinkQuality.Grade.VIDEO_ONLY -> stringResource(R.string.quality_video, q.pingMs.toInt(), q.jitterMs.toInt(), q.lossPercent)
+                        com.v2ray.ang.net.LinkQuality.Grade.BAD -> stringResource(R.string.quality_bad, q.pingMs.toInt(), q.jitterMs.toInt(), q.lossPercent)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
         Spacer(Modifier.width(8.dp))
         if (testing && row.testDelayMillis == 0L && alive == null) {

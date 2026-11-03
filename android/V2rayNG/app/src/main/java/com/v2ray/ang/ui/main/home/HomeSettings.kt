@@ -89,6 +89,8 @@ internal fun HomeSettings(
     onStats: () -> Unit,
     /** Called after a routing switch changed: the screen restarts a running connection so it takes effect now. */
     onRulesChanged: () -> Unit,
+    /** Opens the "Share the connection" sheet on the home screen. */
+    onShareNetwork: () -> Unit = {},
 ) {
     var page by rememberSaveable { mutableStateOf<String?>(null) }
     BackHandler { if (page != null) page = null else onClose() }
@@ -298,6 +300,7 @@ internal fun HomeSettings(
                         }
                         onNavigate(MainDestination.PerAppProxy)
                     }
+                    NavRow(R.drawable.ic_flash_on_24dp, stringResource(R.string.share_net_row_title), stringResource(R.string.share_net_row_sub)) { onShareNetwork() }
                     NavRow(R.drawable.ic_lock_24dp, stringResource(R.string.title_kill_switch), null) {
                         // Android does this itself (Always-on VPN + "Block connections without VPN"): open its screen.
                         runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_VPN_SETTINGS)) }

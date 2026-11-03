@@ -1145,6 +1145,12 @@ class MainViewModel(
             _uiState.update { it.copy(availabilityOnly = false) }
             toast(R.string.check_servers_step2)
         }
+        // Jitter and loss of the fastest gaming servers (a dozen at most): a low ping alone says little for games and calls.
+        val gaming = currentServers()
+            .filter { com.v2ray.ang.net.HomeCard.isGaming(it.profile.remarks) }
+            .mapNotNull { s -> dataSource.decodeAffiliationInfo(s.guid)?.testDelayMillis?.takeIf { it > 0 }?.let { s.guid to it } }
+            .sortedBy { it.second }.take(12).map { it.first }
+        if (gaming.isNotEmpty()) viewModelScope.launch { com.v2ray.ang.handler.LinkQualityStore.measure(gaming) }
         val connectedGuid = if (_uiState.value.isRunning) dataSource.getSelectServer() else null
         viewModelScope.launch(ioDispatcher) {
             // The connected server works by definition when traffic flows: do not show it as dead because the test core failed.
