@@ -1026,6 +1026,9 @@
     <string name="home_banner_update">Доступно обновление FlowVeil</string>
     <string name="home_banner_update_btn">Обновить</string>
     <string name="home_banner_later">Позже</string>
+    <string name="home_banner_mobile_offer">В этой подписке есть серверы для мобильной сети с ограничениями. Переключаться на них автоматически на мобильном интернете и возвращаться на Wi-Fi?</string>
+    <string name="home_banner_mobile_offer_on">Включить</string>
+    <string name="home_banner_mobile_offer_no">Не нужно</string>
     <string name="home_empty_title">Подписки пока нет</string>
     <string name="home_empty_text">Добавьте ключ от провайдера: вставьте ссылку или отсканируйте QR-код.</string>
     <string name="home_local_servers">Мои серверы</string>

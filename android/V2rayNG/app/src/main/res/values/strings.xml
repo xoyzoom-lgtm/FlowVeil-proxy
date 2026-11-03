@@ -1030,6 +1030,9 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="home_banner_update">FlowVeil update available</string>
     <string name="home_banner_update_btn">Update</string>
     <string name="home_banner_later">Later</string>
+    <string name="home_banner_mobile_offer">This subscription has servers for restricted mobile networks. Switch to them automatically on mobile data and back on Wi-Fi?</string>
+    <string name="home_banner_mobile_offer_on">Turn on</string>
+    <string name="home_banner_mobile_offer_no">No need</string>
     <string name="home_empty_title">No subscription yet</string>
     <string name="home_empty_text">Add the key from your provider: paste a link or scan a QR code.</string>
     <string name="home_local_servers">My servers</string>

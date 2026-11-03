@@ -67,6 +67,7 @@ import com.v2ray.ang.R
 import com.v2ray.ang.core.LauncherManager
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.extension.toastSuccess
+import com.v2ray.ang.handler.BypassOffer
 import com.v2ray.ang.handler.UpdateNotifier
 import com.v2ray.ang.net.HomeCard
 import com.v2ray.ang.net.ShortName
@@ -449,6 +450,18 @@ fun HomeScreen(
                 onAction = { if (renew != null) Utils.openUri(context, renew) else expiryHidden = g.id },
                 dismiss = stringResource(R.string.home_banner_later),
                 onDismiss = { expiryHidden = g.id },
+            )
+        }
+        // The suggestion for restricted mobile networks comes once, after the update and expiry notices.
+        var offerGone by rememberSaveable { mutableStateOf(false) }
+        val offer = updateBanner == null && !offerGone && g != null && remember(g.id) { BypassOffer.shouldOffer(g.id) }
+        if (offer) {
+            HomeBanner(
+                text = stringResource(R.string.home_banner_mobile_offer),
+                action = stringResource(R.string.home_banner_mobile_offer_on),
+                onAction = { BypassOffer.accept(); offerGone = true },
+                dismiss = stringResource(R.string.home_banner_mobile_offer_no),
+                onDismiss = { BypassOffer.dismiss(); offerGone = true },
             )
         }
         updateBanner?.let { update ->
