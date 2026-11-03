@@ -45,6 +45,7 @@ object BypassRating {
     fun rate(guid: String, bucket: String?, now: Long = System.currentTimeMillis(), order: Int? = null): Rated? {
         val profile = MmkvManager.decodeServerConfig(guid) ?: return null
         if (profile.configType == EConfigType.POLICYGROUP || profile.configType == EConfigType.PROXYCHAIN) return null
+        if (ServerUsable.isPlaceholder(guid)) return null
         val list = MmkvManager.decodeServerList(profile.subscriptionId)
         val position = list.indexOf(guid).coerceAtLeast(0)
         val (facts, fingerprint) = factsOf(guid, profile, position, list.size.coerceAtLeast(1))
@@ -145,6 +146,29 @@ object BypassRating {
             flow = str(o, "flow"), russian = russian, position = position, listSize = size,
         )
     }
+
+    /** Address and port of the first real proxy outbound of a provider's JSON (Xray or sing-box style); null when it cannot be read. */
+    internal fun proxyAddress(raw: String): Endpoint? = runCatching {
+        val root = JsonUtil.parseString(raw) ?: return null
+        val outbounds = root.get("outbounds")?.takeIf { it.isJsonArray }?.asJsonArray ?: return null
+        val proxy = pickProxyOutbound(outbounds) ?: return null
+        if (proxy.has("type")) {
+            val protocol = str(proxy, "type").lowercase()
+            val transport = str(obj(proxy, "transport"), "type").lowercase()
+            Endpoint(str(proxy, "server"), str(proxy, "server_port"), protocol in UDP_PROTOCOLS || transport == "quic")
+        } else {
+            val settings = obj(proxy, "settings")
+            val node = first(settings?.get("vnext")) ?: first(settings?.get("servers")) ?: settings
+            val protocol = str(proxy, "protocol").lowercase()
+            val network = str(obj(proxy, "streamSettings"), "network").lowercase()
+            Endpoint(str(node, "address"), str(node, "port"), protocol in UDP_PROTOCOLS || network in setOf("kcp", "mkcp", "quic"))
+        }
+    }.getOrNull()
+
+    /** Where a provider's JSON connects to; [udp] when it cannot be reached by a TCP connect. */
+    internal data class Endpoint(val host: String, val port: String, val udp: Boolean)
+
+    private val UDP_PROTOCOLS = setOf("hysteria", "hysteria2", "tuic", "wireguard")
 
     /** Rating labels for the UI: what kind of server this looks like. */
     fun looksLikeBypass(r: Rating): Boolean = r.level == BypassLevel.STRONG || r.level == BypassLevel.LIKELY

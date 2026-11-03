@@ -16,6 +16,8 @@ import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.NetInfoCache
 import com.v2ray.ang.handler.NetProbe
+import com.v2ray.ang.handler.PingProbes
+import com.v2ray.ang.handler.ServerUsable
 import com.v2ray.ang.handler.ServerCountry
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.helper.MessageHelper
@@ -113,6 +115,7 @@ object BypassController {
     private const val NOTIFY_PROBLEM_GAP_MS = 30 * 60_000L
     private const val QUICK_TOTAL_MS = 8_000L
     private const val QUICK_ISO_MS = 3_000L
+    private const val TCP_PRECHECK_MS = 1_500L
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -616,6 +619,13 @@ object BypassController {
 
         val env = object : SearchEnv {
             override suspend fun isolated(id: String): IsoResult {
+                // A TCP server whose port does not even connect on this network (under a whitelist the address is simply not
+                // allowed) needs no core of its own: a connect decides in ~1.5 s instead of the whole test. UDP-based servers,
+                // groups and unreadable JSON have no such target and always get the full test.
+                ServerUsable.tcpTarget(id)?.let { (host, port) ->
+                    val connect = withContext(Dispatchers.IO) { PingProbes.tcp(host, port, TCP_PRECHECK_MS) }
+                    if (connect <= 0L) return IsoResult(false, -1L)
+                }
                 // The native test cannot be cancelled: it runs on its own thread so the limit really holds, and a test given up on
                 // keeps its slot (and the limiter's) until it returns, so hung tests never pile up into more running cores.
                 val outcome = nativeSlots.call(lim.perCandidateMs - 500L) {

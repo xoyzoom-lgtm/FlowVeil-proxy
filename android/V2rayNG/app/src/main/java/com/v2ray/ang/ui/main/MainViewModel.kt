@@ -11,6 +11,7 @@ import com.v2ray.ang.handler.FavoriteServers
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.ProxySpeedTest
 import com.v2ray.ang.handler.ServerCountry
+import com.v2ray.ang.handler.ServerUsable
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
@@ -998,7 +999,7 @@ class MainViewModel(
         cancelAllPing()
         val favorites = FavoriteServers.all()
         bestQueue = BestPick.order(servers.map { s ->
-            BestPick.Candidate(s.guid, s.guid in favorites, dataSource.decodeAffiliationInfo(s.guid)?.testDelayMillis ?: 0L, ServerCountry.isRussian(s.profile.remarks))
+            BestPick.Candidate(s.guid, s.guid in favorites, dataSource.decodeAffiliationInfo(s.guid)?.testDelayMillis ?: 0L, ServerCountry.isRussian(s.profile.remarks) || ServerUsable.isPlaceholder(s.guid))
         })
         bestWave = 0
         bestTested.clear()
@@ -1037,7 +1038,7 @@ class MainViewModel(
 
     // Servers in Russia answer fastest but do not help, so "Best" never picks them. Only servers tested in this search count.
     private fun pickBestServer(): String? =
-        currentServers().filter { it.guid in bestTested }.filterNot { ServerCountry.isRussian(it.profile.remarks) }.map { it.guid }
+        currentServers().filter { it.guid in bestTested }.filterNot { ServerCountry.isRussian(it.profile.remarks) || ServerUsable.isPlaceholder(it.guid) }.map { it.guid }
             .mapNotNull { guid -> dataSource.decodeAffiliationInfo(guid)?.testDelayMillis?.takeIf { it > 0 }?.let { guid to it } }
             .minByOrNull { it.second }
             ?.first

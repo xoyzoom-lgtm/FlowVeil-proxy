@@ -30,7 +30,7 @@ import java.net.Inet6Address
  * Everything here runs in the core process; the UI reads the result from [NetInfoCache].
  */
 object PhysicalNetwork {
-    private const val DEBOUNCE_MS = 2_500L
+    private const val DEBOUNCE_MS = 1_500L
 
     data class Snapshot(
         val type: NetType,

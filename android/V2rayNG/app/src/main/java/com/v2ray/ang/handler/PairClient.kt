@@ -23,7 +23,7 @@ object PairClient {
             val conn = open(context, "http://${qr.host}:${qr.port}/p/${qr.sid}/info")
             conn.requestMethod = "GET"
             if (conn.responseCode != 200) return@withContext null
-            val body = conn.inputStream.use { it.readBytes().take(4096).toByteArray().toString(Charsets.UTF_8) }
+            val body = conn.inputStream.use { readLimited(it, 4096) }
             Regex("\"device\"\\s*:\\s*\"([^\"]{0,60})\"").find(body)?.groupValues?.get(1) ?: ""
         } catch (e: Exception) {
             null
@@ -58,7 +58,7 @@ object PairClient {
             403 -> Result.BAD_TOKEN
             429 -> Result.LOCKED
             410 -> {
-                val text = conn.errorStream?.use { it.readBytes().take(512).toByteArray().toString(Charsets.UTF_8) }.orEmpty()
+                val text = conn.errorStream?.use { readLimited(it, 512) }.orEmpty()
                 if (text.contains("used")) Result.USED else Result.EXPIRED
             }
             404 -> Result.EXPIRED
@@ -67,6 +67,18 @@ object PairClient {
     } catch (e: Exception) {
         LogUtil.w("PairClient", "send failed: ${e.javaClass.simpleName}")
         Result.NO_ROUTE
+    }
+
+    /** At most [max] bytes as text: a computer on the network must not be able to fill the phone's memory with its answer. */
+    private fun readLimited(stream: java.io.InputStream, max: Int): String {
+        val buffer = java.io.ByteArrayOutputStream()
+        val chunk = ByteArray(512)
+        while (buffer.size() < max) {
+            val n = stream.read(chunk, 0, minOf(chunk.size, max - buffer.size()))
+            if (n < 0) break
+            buffer.write(chunk, 0, n)
+        }
+        return buffer.toString(Charsets.UTF_8.name())
     }
 
     private fun open(context: Context, url: String): HttpURLConnection {

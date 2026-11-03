@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -160,5 +163,11 @@ internal fun HomeBanner(text: String, action: String, onAction: () -> Unit, dism
     }
 }
 
+/** Room under the last list row for the dock: its own height plus the system navigation bar the dock sits above. */
 @Composable
-internal fun DockSpacer() = Spacer(Modifier.height(112.dp))
+internal fun DockSpacer() {
+    Column {
+        Spacer(Modifier.height(112.dp))
+        Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+    }
+}

@@ -10,6 +10,7 @@ import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.PingPrefs
 import com.v2ray.ang.handler.PingProbes
+import com.v2ray.ang.handler.ServerUsable
 import com.v2ray.ang.net.PingChoice
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SpeedtestManager
@@ -50,6 +51,10 @@ internal object RealPingExecutionLimiter {
     }
 }
 
+/** How many quick (TCP/TLS/ICMP) checks run at once, and the longest one may take. */
+private const val QUICK_PARALLEL = 64
+private const val QUICK_LIMIT_MS = 2_000L
+
 /**
  * Worker that runs a batch of real-ping tests independently.
  * Each batch owns its own CoroutineScope/dispatcher and can be cancelled separately.
@@ -69,8 +74,9 @@ class RealPingWorkerService(
 
     private val job = SupervisorJob()
     // Too many parallel handshakes choke mobile networks and make healthy servers time out.
-    private val concurrency = if (quick) SettingsManager.getRealPingConcurrency() else SettingsManager.getRealPingConcurrency().coerceAtMost(8)
-    private val dispatcher = Executors.newFixedThreadPool(if (quick) concurrency * 2 else concurrency).asCoroutineDispatcher()
+    // Quick ways hold no core, only a socket each: the whole list (68+ servers) goes out at once.
+    private val concurrency = if (quick) maxOf(SettingsManager.getRealPingConcurrency(), QUICK_PARALLEL) else SettingsManager.getRealPingConcurrency().coerceAtMost(8)
+    private val dispatcher = Executors.newFixedThreadPool(concurrency).asCoroutineDispatcher()
     private val scope = CoroutineScope(job + dispatcher + CoroutineName("RealPingBatchWorker"))
 
     private val runningCount = AtomicInteger(0)
@@ -78,7 +84,13 @@ class RealPingWorkerService(
 
     fun start() {
         // Ordinary servers first: the slow one-by-one JSON checks must not hold up the quick ones.
-        val ordered = if (quick) guids else guids.sortedBy { SpeedtestConfig.limiterType(it) == EConfigType.CUSTOM }
+        // Info lines of a subscription (127.0.0.1, no port) are no servers: they get "no answer" at once and never hold the run up.
+        val (infoLines, real) = guids.partition { ServerUsable.isPlaceholder(it) }
+        infoLines.forEach { guid ->
+            results[guid] = -1L
+            onEvent(RealPingEvent.Result(guid, -1L))
+        }
+        val ordered = if (quick) real else real.sortedBy { SpeedtestConfig.limiterType(it) == EConfigType.CUSTOM }
         val jobs = ordered.map { guid ->
             totalCount.incrementAndGet()
             scope.launch {
@@ -114,8 +126,8 @@ class RealPingWorkerService(
                 joinAll(*jobs.toTypedArray())
                 // A quick way that failed for every server says the way does not work on this network, not that all servers
                 // are dead: the list is checked again through the servers (once), so it never ends as one red column.
-                if (isActive && quick && PingChoice.allFailed(results.values)) {
-                    val again = guids.map { guid ->
+                if (isActive && quick && PingChoice.allFailed(real.map { results[it] ?: -1L })) {
+                    val again = real.map { guid ->
                         scope.launch {
                             val r = runCatching { PingChoice.applyTimeout(startRealPing(guid), timeoutSeconds) }.getOrDefault(-1L)
                             if (scope.isActive) onEvent(RealPingEvent.Result(guid, r))
@@ -158,7 +170,8 @@ class RealPingWorkerService(
             config.configType == EConfigType.WIREGUARD || config.configType.isComplexType() ||
             config.alpn?.split(',')?.all { it.trim().startsWith("h3") } == true
         val tcpOk = PingChoice.tcpApplicable(udp, host.isNotEmpty() && port != null)
-        val timeoutMs = (timeoutSeconds * 1000L).coerceIn(1000L, 15_000L)
+        // A connect that takes longer than this is useless as a quick answer, and a dead server must not hold the whole run up.
+        val timeoutMs = (timeoutSeconds * 1000L).coerceIn(1000L, QUICK_LIMIT_MS)
         return when {
             m == PingChoice.Method.PROXY || !tcpOk -> proxy(guid)
             m == PingChoice.Method.TCP -> PingProbes.tcp(host, port!!, timeoutMs)

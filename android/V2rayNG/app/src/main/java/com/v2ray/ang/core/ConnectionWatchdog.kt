@@ -14,6 +14,7 @@ import com.v2ray.ang.R
 import com.v2ray.ang.handler.BypassLog
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.ServerCountry
+import com.v2ray.ang.handler.ServerUsable
 import com.v2ray.ang.handler.SubscriptionErrors
 import com.v2ray.ang.net.FailoverPlan
 import com.v2ray.ang.net.SubIssue
@@ -204,7 +205,7 @@ object ConnectionWatchdog {
         val currentSub = MmkvManager.decodeServerConfig(current)?.subscriptionId ?: return
         val subs = MmkvManager.decodeSubscriptions().map { it.guid }
         val all = (subs + currentSub).distinct().flatMap { subId ->
-            MmkvManager.decodeServerList(subId).mapIndexed { i, guid ->
+            MmkvManager.decodeServerList(subId).mapIndexed { i, guid -> i to guid }.filterNot { (_, guid) -> ServerUsable.isPlaceholder(guid) }.map { (i, guid) ->
                 FailoverPlan.Server(
                     guid, subId, MmkvManager.decodeServerConfig(guid)?.remarks.orEmpty(),
                     MmkvManager.decodeServerAffiliationInfo(guid)?.testDelayMillis ?: 0L, i
