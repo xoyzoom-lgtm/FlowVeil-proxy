@@ -106,6 +106,7 @@ internal fun HomeSettings(
     var sendHwid by remember { mutableStateOf(flag(AppConfig.PREF_SEND_HWID, true)) }
     var subReminders by remember { mutableStateOf(flag(AppConfig.PREF_SUB_REMINDERS, true)) }
     var bestButton by remember { mutableStateOf(flag(AppConfig.PREF_SHOW_BEST_BUTTON, true)) }
+    var modesOn by remember { mutableStateOf(com.v2ray.ang.handler.ModePreset.shown()) }
     var directSites by remember { mutableStateOf(DirectSites.count()) }
     var showDirectSites by remember { mutableStateOf(false) }
     var batteryOk by remember { mutableStateOf(BatteryOptimization.isIgnored(context)) }
@@ -250,6 +251,12 @@ internal fun HomeSettings(
                     Group(stringResource(R.string.hs_group_connection)) {
                     SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_pref_show_best_button), null, bestButton) {
                         bestButton = it; save(AppConfig.PREF_SHOW_BEST_BUTTON, it)
+                    }
+                    SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_show_modes), stringResource(R.string.summary_show_modes), modesOn) {
+                        modesOn = it
+                        com.v2ray.ang.handler.ModePreset.setShown(it)
+                        // Turning them off ends a running mode, so a running connection restarts without its rules.
+                        if (!it) onRulesChanged()
                     }
                     SwitchRow2(R.drawable.ic_flash_on_24dp, stringResource(R.string.title_fast_mode), stringResource(R.string.summary_fast_mode), fast, info = { infoRes = R.string.title_fast_mode to R.string.info_fast }) {
                         fast = it; save(AppConfig.PREF_FAST_MODE, it); onRulesChanged()

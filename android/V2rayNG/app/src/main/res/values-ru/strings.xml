@@ -1048,6 +1048,8 @@
     <string name="share_net_no_login">Логин или пароль пустой. Выключите раздачу и включите снова.</string>
     <string name="share_net_row_title">Поделиться подключением</string>
     <string name="share_net_row_sub">Прокси для ТВ-приставки, планшета или телефона друга</string>
+    <string name="title_show_modes">Кнопки режимов на главном экране</string>
+    <string name="summary_show_modes">Игры + Discord, YouTube и соцсети, весь трафик через сервер. При выключении активный режим сбрасывается.</string>
     <string name="mode_games">Игры + Discord</string>
     <string name="mode_social">YouTube и соцсети</string>
     <string name="mode_full">Весь трафик через сервер</string>

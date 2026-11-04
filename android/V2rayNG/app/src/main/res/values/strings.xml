@@ -1052,6 +1052,8 @@ Allow FlowVeil to run without battery restrictions (and “Autostart” on Xiaom
     <string name="share_net_no_login">The login or the password is empty. Turn sharing off and on again.</string>
     <string name="share_net_row_title">Share the connection</string>
     <string name="share_net_row_sub">A proxy for a TV box, a tablet or a friend\'s phone</string>
+    <string name="title_show_modes">Mode buttons on the home screen</string>
+    <string name="summary_show_modes">Games + Discord, video and social, everything through the server. Turning them off ends the active mode.</string>
     <string name="mode_games">Games + Discord</string>
     <string name="mode_social">YouTube and social</string>
     <string name="mode_full">Everything via server</string>

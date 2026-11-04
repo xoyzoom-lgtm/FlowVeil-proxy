@@ -166,6 +166,7 @@ fun HomeScreen(
     }
 
     var modeNow by remember { mutableStateOf(ModePreset.current()) }
+    var modesShown by remember { mutableStateOf(ModePreset.shown()) }
     val modeScope = rememberCoroutineScope()
     var lanState by remember { mutableStateOf(LanShareManager.state()) }
     var sheet by remember { mutableStateOf(Sheet.NONE) }
@@ -364,7 +365,7 @@ fun HomeScreen(
                 )
             } else {
                 SubscriptionCarousel(groups, pagerState, mainViewModel, activeGroupId, now, onMore = openSub)
-                ModeRow(modeNow) { picked ->
+                if (modesShown) ModeRow(modeNow) { picked ->
                     modeNow = picked
                     modeScope.launch {
                         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModePreset.apply(context, picked) }
@@ -655,7 +656,12 @@ fun HomeScreen(
         ) {
             HomeSettings(
                 // Switches changed there (the "Best" row, delete confirmation) must show on the home screen right away.
-                onClose = { showSettings = false; mainViewModel.refreshUiSettings() },
+                onClose = {
+                    showSettings = false
+                    mainViewModel.refreshUiSettings()
+                    modesShown = ModePreset.shown()
+                    modeNow = ModePreset.current()
+                },
                 // "Subscriptions" opens the new list instead of the old "Groups" screen.
                 onNavigate = { dest -> if (dest == MainDestination.Subscriptions) showSubs = true else onNavigate(dest) },
                 onWizard = { showSettings = false; onWizard() },

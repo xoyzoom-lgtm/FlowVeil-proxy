@@ -9,6 +9,21 @@ import com.v2ray.ang.net.ModePresets
 object ModePreset {
     const val PREF = "pref_mode_preset"
 
+    /** The three buttons on the home screen are off until the user turns them on in settings. */
+    const val PREF_SHOW = "pref_show_modes"
+
+    /** A mode chosen before this switch existed (build 241) keeps its buttons visible, so it can still be seen and changed. */
+    fun shown(): Boolean = MmkvManager.decodeSettingsBool(PREF_SHOW, false) || current() != null
+
+    /** Turning the buttons off also ends the mode: its extra rules must not keep working with no way to see or undo them. */
+    fun setShown(on: Boolean) {
+        MmkvManager.encodeSettings(PREF_SHOW, on)
+        if (!on && current() != null) {
+            MmkvManager.encodeSettings(PREF, "")
+            ExtraRules.apply()
+        }
+    }
+
     fun current(): ModePresets.Mode? = ModePresets.byKey(MmkvManager.decodeSettingsString(PREF))
 
     fun apply(context: Context, mode: ModePresets.Mode) {
