@@ -650,6 +650,7 @@
     <string name="about_author">Автор</string>
     <string name="about_based_on">Основано на v2rayNG (GPL-3.0)</string>
     <string name="toast_sub_failed_reason">Не удалось загрузить серверы: %1$s</string>
+    <string name="toast_sub_saved_retry">Ссылка сохранена. Серверы скачаются сами, как только сеть их пропустит.</string>
     <string name="connect_best">Лучший</string>
     <string name="connect_best_testing">Проверяю серверы, ищу самый быстрый…</string>
     <string name="connect_best_no_servers">В этой подписке нет серверов</string>

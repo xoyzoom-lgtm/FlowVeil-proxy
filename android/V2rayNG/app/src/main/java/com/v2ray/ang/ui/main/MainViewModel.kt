@@ -639,6 +639,8 @@ class MainViewModel(
             } else {
                 toastError(R.string.toast_failure)
             }
+            // The link itself is kept: it is downloaded again by itself as soon as something lets it through.
+            toast(dataSource.getString(R.string.toast_sub_saved_retry))
         }
         refreshSelectedGuid()
     }

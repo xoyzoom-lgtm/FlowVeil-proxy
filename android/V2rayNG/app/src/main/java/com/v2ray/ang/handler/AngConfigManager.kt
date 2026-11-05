@@ -485,6 +485,14 @@ object AngConfigManager {
      * @return Subscription update result.
      */
     fun updateConfigViaSub(it: SubscriptionCache): SubscriptionUpdateResult {
+        val result = downloadSub(it)
+        // A link that could not be loaded stays saved and is tried again by itself (see SubscriptionRetry).
+        if (result.successCount > 0) SubscriptionRetry.onDone(it.guid)
+        else if (result.failureCount > 0) SubscriptionRetry.onFailed(it.guid)
+        return result
+    }
+
+    private fun downloadSub(it: SubscriptionCache): SubscriptionUpdateResult {
         try {
             // Check if disabled
             if (!it.subscription.enabled) {
