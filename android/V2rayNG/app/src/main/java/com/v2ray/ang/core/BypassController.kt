@@ -22,6 +22,7 @@ import com.v2ray.ang.handler.ServerCountry
 import com.v2ray.ang.handler.WhitelistBypass
 import com.v2ray.ang.helper.MessageHelper
 import com.v2ray.ang.net.BypassData
+import com.v2ray.ang.net.BypassFailurePolicy
 import com.v2ray.ang.net.BypassHistoryLogic
 import com.v2ray.ang.net.BypassLevel
 import com.v2ray.ang.net.BypassRules
@@ -271,11 +272,11 @@ object BypassController {
         val current = CoreServiceManager.currentServerGuid() ?: return false
         val manual = WhitelistBypass.mode() == WhitelistBypass.MODE_MANUAL
         val onOurBypass = WhitelistBypass.active == current
-        // A bypass server the user picked himself is his choice: do not move him off it.
-        if (!onOurBypass && manual && current in WhitelistBypass.servers()) {
-            BypassLog.add("the current server is a user-chosen bypass server, leaving it")
-            return false
-        }
+        // A bypass server the user picked himself is his choice while the open internet works and only that server is dead.
+        // When the network itself is restricted (or unclear) it is replaced like any other: standing still on a dead one
+        // is what made the whole feature look broken.
+        val userChosen = BypassFailurePolicy.userChoseBypassServer(onOurBypass, manual, current in WhitelistBypass.servers())
+        if (userChosen) BypassLog.add("the current server is a user-chosen bypass server: checking the network before any move")
         when (diagnoseNow()) {
             LinkDiagnosis.OK -> Unit
             LinkDiagnosis.NO_NETWORK -> {
@@ -296,9 +297,14 @@ object BypassController {
                 // The probes disagree: no guessing about the network. First the quick path (a server that worked here before),
                 // and only when that gives nothing the ordinary failover.
                 BypassLog.add("the probes disagree: quick path first, then the ordinary failover")
-                return !quickOnly(current)
+                val moved = quickOnly(current)
+                return !moved && BypassFailurePolicy.failoverOnServerDown(userChosen)
             }
             LinkDiagnosis.SERVER_DOWN -> {
+                if (!BypassFailurePolicy.failoverOnServerDown(userChosen)) {
+                    BypassLog.add("the open internet works and only this user-chosen bypass server is down, leaving it")
+                    return false
+                }
                 // The open internet works: this is a dead server, not a restriction.
                 if (onOurBypass && WhitelistBypass.autoReturn() && returnOnlyIfOriginWorks()) return false
                 if (onOurBypass) WhitelistBypass.clearState()
